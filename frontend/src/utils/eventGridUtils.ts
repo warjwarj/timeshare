@@ -1,41 +1,54 @@
-import type { CalendarEvent } from "../types/CalendarEvent";
 
-const calculateEventPositions = (
-  events: CalendarEvent[],
+// fake enum
+import { TimeSpan } from "../types/TimeSpan";
+
+// event type
+import type { StandardEvent } from "../types/StandardEvent";
+
+// this function pre-calculates an event's positioning within the grid
+function calculateEventPositions(
+  events: StandardEvent[],
   columns: number,
-  daysInMonth: number,
-  gridRowWidth: number
-): CalendarEvent[][] => {
+  cells: number,
+  gridRowWidth: number,
+  gridStart: Date,
+  cellStep: TimeSpan
+): StandardEvent[][] {
 
   // consts
-  const numOfRows = Math.ceil(daysInMonth / columns);
-  const rows: CalendarEvent[][] = Array.from({ length: numOfRows }, () => []);
+  const numOfRows = Math.ceil(cells / columns);
+  const rows: StandardEvent[][] = Array.from({ length: numOfRows }, () => []);
   const cellWidth = gridRowWidth / columns;
 
   // sort the array so start index relates to the event's lane positioning
   // if we want to start positioning events within the cells according to time within day etc this will need more thought
-  events.sort((a, b) => a.start - b.start)
+  events.sort((a, b) => a.start.getTime() - b.start.getTime())
 
   // calc the event starts / ends
   events.forEach((ev) => {
     for (let r = 0; r < numOfRows; r++) {
-      const rowStart = r * columns + 1;
-      const rowEnd = Math.min(rowStart + columns - 1, daysInMonth);
 
-      if (ev.end >= rowStart && ev.start <= rowEnd) {
-        const eventStartInRow = Math.max(ev.start, rowStart);
-        const eventEndInRow = Math.min(ev.end, rowEnd);
+      // get cellindex from date time
+      const cellStartIndex = getCellIndexFromDate(cellStep, gridStart, ev.start)
+      const cellEndIndex = getCellIndexFromDate(cellStep, gridStart, ev.end)
+
+      const rowStart = r * columns + 1;
+      const rowEnd = Math.min(rowStart + columns - 1, cells);
+
+      if (cellStartIndex <= rowEnd && cellEndIndex >= rowStart) {
+        const eventStartInRow = Math.max(cellStartIndex, rowStart);
+        const eventEndInRow = Math.min(cellEndIndex, rowEnd);
         const span = eventEndInRow - eventStartInRow + 1;
 
         const left = (eventStartInRow - rowStart) * cellWidth;
         const width = span * cellWidth;
 
         let classes = ev.extraClasses.replace(/rounded-[lr]-md/g, '');
-        if (eventStartInRow === ev.start) classes += " rounded-l-4xl";
-        if (eventEndInRow === ev.end) classes += " rounded-r-4xl";
+        if (eventStartInRow === cellStartIndex) classes += " rounded-l-4xl";
+        if (eventEndInRow === cellEndIndex) classes += " rounded-r-4xl";
 
         // Create completely new object
-        const segment: CalendarEvent = {
+        const segment: StandardEvent = {
           start: ev.start,
           end: ev.end,
           title: ev.title,
@@ -50,7 +63,7 @@ const calculateEventPositions = (
     }
   });
 
-  // thoughts
+  // IF WE WANT TO MAXIMISE GRID SPACE:
   // for each event we wish to position it as far up in that row as we can, without it overlapping another row.
   // this means that we have to calculate, for each cell that an event may span, how many other events are also rendered across this cell.
   // since we've absolutely positioned the event, we'll need to manually position it by spacing it down from the top.
@@ -66,7 +79,8 @@ const calculateEventPositions = (
   // this is maybe not the best? Might be clearer to have one lane dedicated for one event. Although this might insinuate that
   // the order of the events, in respect to their lane number, isn't arbitrary, which at the moment it is.
 
-  // hmmm
+  // IF WE DON'T REALLY CARE ABOUT MAXIMISING GRID SPACE:
+  // then we can let the events sit as normal, where one event takes up a whole lane for an entire row.
 
   // // loop over rows
   // rows.forEach(row => {
@@ -97,7 +111,32 @@ const calculateEventPositions = (
   //   });
   // });
 
+  debugger;
   return rows;
 };
 
-export { calculateEventPositions };
+// get cell index from the date. Could also return a lane index.
+function getCellIndexFromDate(cellStep: TimeSpan, gridStart: Date, dt: Date): number {
+  switch (cellStep) {
+    case TimeSpan.Day:
+      return Math.floor((dt.getTime() - gridStart.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+  }
+  return 0;
+}
+
+// get date from cell index. Date will always be rounded down to the nearest timeSpan.
+function getDateFromCellIndex(cellStep: TimeSpan, gridStart: Date, cellIndex: number): Date {
+  const ret = new Date(gridStart)
+  switch(cellStep) {
+    case TimeSpan.Day:
+      ret.setDate(gridStart.getDate() + cellIndex - 1)
+      return ret
+  }
+  return gridStart;
+}
+
+export { 
+  calculateEventPositions, 
+  getCellIndexFromDate, 
+  getDateFromCellIndex 
+};

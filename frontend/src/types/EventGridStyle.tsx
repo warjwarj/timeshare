@@ -1,6 +1,6 @@
 type EventGridStyle = {
-  RowHeightPx: number;
-  EventHeightPx: number;
+  RowHeight: string;
+  EventHeight: string;
   DefaultEventStyle: string; // tailwind classes please  
 }
 

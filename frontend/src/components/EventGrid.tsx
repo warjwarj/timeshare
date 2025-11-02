@@ -2,14 +2,15 @@
 import React, { useEffect, useRef, useState } from "react";
 
 // types
-import type { CalendarEvent } from "../types/CalendarEvent";
+import type { StandardEvent } from "../types/StandardEvent";
 import type { EventGridStyle } from "../types/EventGridStyle";
 
 // utils
-import { calculateEventPositions } from "../utils/eventGridUtils";
+import { calculateEventPositions, getDateFromCellIndex } from "../utils/eventGridUtils";
 
 // css
 import '../../index.css';
+import type { TimeSpan } from "../types/TimeSpan";
 
 
 /*
@@ -30,11 +31,14 @@ Bits using manual styling:
 type EventGrid = {
   columns: number;
   cells: number;
-  events: CalendarEvent[];
+  events: StandardEvent[];
   egStyle: EventGridStyle;
+  start: Date;
+  cellStep: TimeSpan
 };
-const EventGrid: React.FC<EventGrid> = ({ columns, cells, events, egStyle }) => {
+const EventGrid: React.FC<EventGrid> = ({ columns, cells, events, egStyle, start, cellStep }) => {
 
+  // we don't currently allow rows to be definable.
   const rows = Math.ceil(cells / columns);
 
   // use to calculate width of event bars
@@ -42,10 +46,10 @@ const EventGrid: React.FC<EventGrid> = ({ columns, cells, events, egStyle }) => 
   const [gridRowWidth, setGridRowWidth] = useState(0);
 
   // track processed events
-  const [processedEvents, setProcessedEvents] = useState<CalendarEvent[][]>([]);
+  const [processedEvents, setProcessedEvents] = useState<StandardEvent[][]>([]);
   useEffect(() => {
     if (!gridRowWidth || !cells || !columns || !events) return;
-    const result = calculateEventPositions(events, columns, cells, gridRowWidth);
+    const result = calculateEventPositions(events, columns, cells, gridRowWidth, start, cellStep);
     setProcessedEvents(result);
   }, [events, cells, columns, gridRowWidth]);
 
@@ -82,16 +86,15 @@ const EventGrid: React.FC<EventGrid> = ({ columns, cells, events, egStyle }) => 
             >
               {/* CELLS */}
               {Array.from({ length: rowEnd - rowStart + 1 }).map((_, i) => {
-                const day = rowStart + i;
                 return (
                   <div
-                    key={`cell-${day}`}
-                    className="border border-gray-300 flex"
+                    key={`cell-${rowStart + i}`}
+                    className="border border-gray-300 flex justify-center"
                     style={{
-                      height: egStyle.RowHeightPx
+                      height: egStyle.RowHeight
                     }}
                   >
-                    <span className="top-4 left-4">{day}</span>
+                    <span className="top-4">{getDateFromCellIndex(cellStep, start, rowStart + i)?.toDateString()}</span>
                   </div>
                 );
               })}
@@ -99,7 +102,7 @@ const EventGrid: React.FC<EventGrid> = ({ columns, cells, events, egStyle }) => 
 
             {/* EVENTS */}
             {processedEvents && gridRowWidth && (
-              <div className="absolute top-6 left-0 w-full pointer-events-none">
+              <div className="absolute top-8 left-0 w-full pointer-events-none">
                 {processedEvents[rowIndex]?.map((re, i) => {
                   return (
                     <span
@@ -109,13 +112,13 @@ const EventGrid: React.FC<EventGrid> = ({ columns, cells, events, egStyle }) => 
                         ${re.extraClasses}`
                       }
                       style={{
-                        height: egStyle.EventHeightPx,
+                        height: egStyle.EventHeight,
                         left: `${re.left}px`,
                         width: `${re.width}px`,
                         top: `${re.top}px`
                       }}
                     >
-                      <span>{re.title}</span>
+                      <span>Start: {re.start.toDateString()}  | End:  {re.end.toDateString()}</span>
                     </span>
                   )
                 })}
