@@ -47,6 +47,24 @@ const Grid: React.FC<GridProps> = ({ colCount, cellCount, events, egStyle, start
   // we don't currently allow rows to be definable.
   const rows = Math.ceil(cellCount / colCount);
 
+  // Track which event occupies which lane in each cell
+  // Map<cellIndex, Map<lane, eventId>>
+  const cellLaneEvents = useRef(new Map<number, Map<number, string>>())
+
+  // Get all events in a specific cell
+  function getEventsInCell(cellIndex: number): EventModel[] {
+    const laneMap = cellLaneEvents.current.get(cellIndex); // gets lanes and the event ids which are in those lanes
+    const evArr: EventModel[] = [];
+    laneMap?.forEach((evId, lane) => {
+      const evObj = events.find(ev => ev.id === evId)
+      if (evObj) {
+        evObj.lane = lane
+        evArr.push(evObj)
+      }
+    });
+    return evArr
+  }
+
   // use to calculate width of event bars
   const gridRowWidthRef = useRef<HTMLDivElement>(null);
   const [gridRowWidth, setGridRowWidth] = useState(0);
@@ -79,35 +97,34 @@ const Grid: React.FC<GridProps> = ({ colCount, cellCount, events, egStyle, start
     gridRowWidth: number,
   ): EventModel[][] {
 
-    // reduce this for performance
-    let iterationCounter = 0
+    // init the lane event cell map thing
+    for (let i=1; i <= cellCount; i++) {
+      cellLaneEvents.current.set(i, new Map<number, string>())
+    }
 
-    // consts
+    // Constants
     const numOfRows = Math.ceil(cellCount / colCount);
     const rows: EventModel[][] = Array.from({ length: numOfRows }, () => []);
     const cellWidth = gridRowWidth / colCount;
 
-    // Track which lanes are occupied in each cell
-    const cellLanes = new Map<number, Set<number>>();
-
-    // sort events so earliest events are always rendered on top of later ones
+    // Sort events so earliest events are always rendered on top of later ones
     events.sort((a, b) => a.start.getTime() - b.start.getTime());
 
-    // iter our events
+    // Iterate through events
     events.forEach((ev) => {
-
-      // cell start index of event
       const cellStartIndex = getCellIndexFromDate(cellStep, start, ev.start);
       const cellEndIndex = getCellIndexFromDate(cellStep, start, ev.end);
 
-      // Find the (lowest index, highest literal position) available lane across ALL cells this event spans
+      // Find the lowest available lane across ALL cells this event spans
       let lane = 0;
+
+      // Check if this lane is available across the entire cell range
       while (true) {
         let laneAvailable = true;
         for (let cellIndex = cellStartIndex; cellIndex <= cellEndIndex; cellIndex++) {
-          iterationCounter++
-          const occupiedLanes = cellLanes.get(cellIndex);
-          if (occupiedLanes && occupiedLanes.has(lane)) {
+          const laneMap = cellLaneEvents.current.get(cellIndex);
+          if (laneMap?.has(lane)) {
+            // Lane is occupied by another event
             laneAvailable = false;
             break;
           }
@@ -116,49 +133,62 @@ const Grid: React.FC<GridProps> = ({ colCount, cellCount, events, egStyle, start
         lane++;
       }
 
-      // Mark this lane as occupied for all cells this event spans
+      // Mark this lane as occupied by this event for all cells it spans
       for (let cellIndex = cellStartIndex; cellIndex <= cellEndIndex; cellIndex++) {
-        if (!cellLanes.has(cellIndex)) {
-          cellLanes.set(cellIndex, new Set());
-        }
-        cellLanes.get(cellIndex)!.add(lane);
+        console.log(lane, ev.id)
+        const laneMap = cellLaneEvents.current.get(cellIndex);
+        laneMap?.set(lane, ev.id);
       }
-      // Now distribute the event across rows
-      for (let r = 0; r < numOfRows; r++) {
-        iterationCounter++
+
+      // Pre-compute rounded class modifications once
+      const baseClasses = ev.extraClasses.replace(/rounded-[lr]-md/g, '');
+
+      // Distribute the event across rows
+      // Calculate which rows this event appears in
+      const firstRow = Math.floor((cellStartIndex - 1) / colCount);
+      const lastRow = Math.floor((cellEndIndex - 1) / colCount);
+
+      for (let r = firstRow; r <= lastRow && r < numOfRows; r++) {
+
         const rowStart = r * colCount + 1;
         const rowEnd = Math.min(rowStart + colCount - 1, cellCount);
-        if (cellStartIndex <= rowEnd && cellEndIndex >= rowStart) {
-          const eventStartInRow = Math.max(cellStartIndex, rowStart);
-          const eventEndInRow = Math.min(cellEndIndex, rowEnd);
-          const span = eventEndInRow - eventStartInRow + 1;
-          const left = (eventStartInRow - rowStart) * cellWidth;
-          const width = span * cellWidth;
-          let classes = ev.extraClasses.replace(/rounded-[lr]-md/g, '');
-          if (eventStartInRow === cellStartIndex) classes += " rounded-l-4xl";
-          if (eventEndInRow === cellEndIndex) classes += " rounded-r-4xl";
-          const segment: EventModel = {
-            start: ev.start,
-            end: ev.end,
-            title: ev.title,
-            extraClasses: classes.trim(),
-            left: left,
-            width: width,
-            lane: lane
-          };
-          rows[r].push(segment);
-          if (eventEndInRow === cellEndIndex) { return; }
-        }
+
+        // Calculate event boundaries within this row
+        const eventStartInRow = Math.max(cellStartIndex, rowStart);
+        const eventEndInRow = Math.min(cellEndIndex, rowEnd);
+        const span = eventEndInRow - eventStartInRow + 1;
+
+        // Calculate positioning
+        const left = (eventStartInRow - rowStart) * cellWidth;
+        const width = span * cellWidth;
+
+        // Build classes for this segment
+        let classes = baseClasses;
+        if (eventStartInRow === cellStartIndex) classes += " rounded-l-4xl";
+        if (eventEndInRow === cellEndIndex) classes += " rounded-r-4xl";
+
+        // Create segment
+        const segment: EventModel = {
+          id: ev.id,
+          start: ev.start,
+          end: ev.end,
+          title: ev.title,
+          extraClasses: classes.trim(),
+          left: left,
+          width: width,
+          lane: lane
+        };
+
+        rows[r].push(segment);
       }
     });
-    console.log("REDUCE THIS NUMBER: " + iterationCounter)
     return rows;
   }
 
   return (
-    <div      
+    <div
       id="calendar-grid-container"
-      className="flex flex-col gap-4 p-4 max-w-5xl mx-auto"
+      className="flex flex-col gap-4 p-4 max-w-5xl mx-auto overflow-x-hidden"
     >
       {/* Iterate to create cells for each row */}
       {Array.from({ length: rows }).map((_, rowIndex) => {
@@ -179,8 +209,9 @@ const Grid: React.FC<GridProps> = ({ colCount, cellCount, events, egStyle, start
                     label={getDateFromCellIndex(cellStep, start, rowStart + i)?.toDateString()}
                     rowStartIndex={rowStart}
                     rowEndIndex={rowEnd}
-                    cellIndex={i}
+                    cellIndex={rowStart + i}
                     egcStyle={{ heightStyle: egStyle.cellStyle.heightStyle }}
+                    getEvents={getEventsInCell}
                   />
                 );
               })}

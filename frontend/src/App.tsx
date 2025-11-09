@@ -17,23 +17,23 @@ function App() {
   const evGridStyle: GridStyle = {
     eventHolderStyle: {
       eventHeightStyle: "1.6em",
-      defaultEventStyle: "absolute pb-0.5 pl-2 text-white text-center text-sm flex items-center justify-left text-nowrap"
+      defaultEventStyle: "absolute pb-0.5 pl-2 text-white text-center text-sm items-center justify-left text-nowrap"
     },
     cellStyle: {
-      heightStyle: "300px",
+      heightStyle: "150px",
     }
   }
 
   return (
     <div>
       <Grid
-        colCount={2}
+        colCount={7}
         cellCount={62}
         events={TestEvents}
         egStyle={evGridStyle}
         start={new Date(2024, 11, 30)} // so the grid starts on a Monday.
         cellStep={TimeSpan.Day}
-      />;
+      />
     </div>
   )
 }

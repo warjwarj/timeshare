@@ -6,6 +6,9 @@ import { createPortal } from 'react-dom';
 import { Modal } from './Modal';
 import { CellInfoModalContent } from './CellInfoModalContent';
 
+// types
+import { type EventModel } from '../types/EventModel';
+
 // css
 import '../../index.css';
 
@@ -22,8 +25,9 @@ type CellProps = {
   rowStartIndex: number;
   cellIndex: number;
   egcStyle: CellStyle;
+  getEvents: (cellIndex: number) => EventModel[];
 };
-const Cell: React.FC<CellProps> = ({ label, rowEndIndex, rowStartIndex, cellIndex, egcStyle }) => {
+const Cell: React.FC<CellProps> = ({ label, rowEndIndex, rowStartIndex, cellIndex, egcStyle, getEvents }) => {
 
   // track popup visibility
   const [showModal, setShowModal] = useState(false);
@@ -41,8 +45,8 @@ const Cell: React.FC<CellProps> = ({ label, rowEndIndex, rowStartIndex, cellInde
         <span className="top-4">{label}</span>
       </div>
       {showModal && createPortal(
-        <Modal isOpen={showModal} onClose={() => setShowModal(false)} >
-          <CellInfoModalContent label={label}/>
+        <Modal label={label} isOpen={showModal} onClose={() => setShowModal(false)} >
+          <CellInfoModalContent eventsInCell={getEvents(cellIndex)}/>
         </Modal>,
         document.body
       )}

@@ -21,7 +21,7 @@ This component will render a row of events onto the grid
 type EventHolderStyle = {
   defaultEventStyle: string;
   eventHeightStyle: string;
-}
+};
 type EventHolderProps = {
   events: EventModel[];
   ehStyle: EventHolderStyle;
@@ -52,10 +52,12 @@ const EventHolder: React.FC<EventHolderProps> = ({ events, ehStyle }) => {
                 top: `calc(${ev.lane} * ${ehStyle.eventHeightStyle})`
               }}
             >
-              <span>{label}</span>
+              <span className="block max-w-full">
+                {label}
+              </span>
               {showModal && createPortal(
                 <Modal isOpen={showModal} onClose={() => setShowModal(false)} >
-                  <EventInfoModalContent label={label}/>
+                  <EventInfoModalContent label={label} />
                 </Modal>,
                 document.body
               )}
@@ -68,4 +70,4 @@ const EventHolder: React.FC<EventHolderProps> = ({ events, ehStyle }) => {
 };
 
 export { EventHolder };
-export type { EventHolderStyle }
+export type { EventHolderStyle };
