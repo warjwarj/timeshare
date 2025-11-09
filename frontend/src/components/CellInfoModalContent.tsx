@@ -9,7 +9,6 @@ import '../../index.css';
 */
 
 type CellInfoModalContent = {
-  label: string
   eventsInCell: EventModel[];
 };
 const CellInfoModalContent: React.FC<CellInfoModalContent> = ({ eventsInCell }) => {

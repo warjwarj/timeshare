@@ -1,6 +1,3 @@
-// react
-
-
 // components
 import { Grid } from './components/Grid';
 
@@ -15,7 +12,7 @@ function App() {
 
   // eventgrid style specifications
   const evGridStyle: GridStyle = {
-    eventHolderStyle: {
+    eventStyle: {
       eventHeightStyle: "1.6em",
       defaultEventStyle: "absolute pb-0.5 pl-2 text-white text-center text-sm items-center justify-left text-nowrap"
     },

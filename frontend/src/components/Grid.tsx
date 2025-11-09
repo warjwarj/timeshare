@@ -3,12 +3,11 @@ import React, { useEffect, useRef, useState } from "react";
 
 // components
 import { Cell } from "./Cell";
-import { EventHolder } from "./EventHolder";
+import { Event, type EventStyle } from './Event'
 
 // types
 import type { EventModel } from "../types/EventModel";
 import type { CellStyle } from "./Cell";
-import type { EventHolderStyle } from "./EventHolder";
 
 // utils
 import { getDateFromCellIndex, getCellIndexFromDate } from "../utils/eventGridUtils";
@@ -18,20 +17,11 @@ import '../../index.css';
 import type { TimeSpan } from "../types/TimeSpan";
 
 /*
-Mostly using tailwind where I can.
-However tailwind classes need to be known at compile
-So use regular css for bits that need to be dynamic. 
 
-Bits using manual styling:
-  - gridTemplateColumns on the grid rows
-  - grid row height
-  - event height
-
-  Need to think through how events are positioned 
 */
 
 type GridStyle = {
-  eventHolderStyle: EventHolderStyle;
+  eventStyle: EventStyle;
   cellStyle: CellStyle
 }
 type GridProps = {
@@ -98,7 +88,7 @@ const Grid: React.FC<GridProps> = ({ colCount, cellCount, events, egStyle, start
   ): EventModel[][] {
 
     // init the lane event cell map thing
-    for (let i=1; i <= cellCount; i++) {
+    for (let i = 1; i <= cellCount; i++) {
       cellLaneEvents.current.set(i, new Map<number, string>())
     }
 
@@ -216,16 +206,15 @@ const Grid: React.FC<GridProps> = ({ colCount, cellCount, events, egStyle, start
                 );
               })}
             </div>
-            {/* Create events for this row */}
+            {/* iterate to show events for this row */}
             {processedEvents && gridRowWidth && (
-              // processedEvents[rowIndex]
-              <EventHolder
-                events={processedEvents[rowIndex]}
-                ehStyle={{
-                  defaultEventStyle: egStyle.eventHolderStyle.defaultEventStyle,
-                  eventHeightStyle: egStyle.eventHolderStyle.eventHeightStyle
-                }}
-              />
+              <div className="absolute top-8 left-0 w-full">
+                {processedEvents[rowIndex]?.map((ev) => {
+                  return (
+                    <Event ev={ev} evStyle={egStyle.eventStyle} />
+                  )
+                })}
+              </div>
             )}
           </div>
         );
