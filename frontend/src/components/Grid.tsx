@@ -1,20 +1,21 @@
 //react
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useReducer, useRef, useMea } from "react";
 
 // components
 import { Cell } from "./Cell";
 import { Event, type EventStyle } from './Event'
 
 // types
-import type { EventModel } from "../types/EventModel";
+import type { EventDTO } from "../types/EventDTO";
 import type { CellStyle } from "./Cell";
+import type { TimeSpan } from "../types/TimeSpan";
 
 // utils
-import { getDateFromCellIndex, getCellIndexFromDate } from "../utils/eventGridUtils";
+import { getDateFromCellIndex, calculateEventPositions } from "../utils/utils";
+import { ModifyEventsReducer } from "../reducers/ModifyEventsReducer";
 
 // css
 import '../../index.css';
-import type { TimeSpan } from "../types/TimeSpan";
 
 /*
 
@@ -27,24 +28,54 @@ type GridStyle = {
 type GridProps = {
   colCount: number;
   cellCount: number;
-  events: EventModel[];
+  events: EventDTO[];
   egStyle: GridStyle;
   start: Date;
   cellStep: TimeSpan
 };
 const Grid: React.FC<GridProps> = ({ colCount, cellCount, events, egStyle, start, cellStep }) => {
 
-  // we don't currently allow rows to be definable.
-  const rows = Math.ceil(cellCount / colCount);
+  // refs
+  const cellLaneEvents = useRef(new Map<number, Map<number, string>>()) // Map<cellIndex, Map<lane, eventId>> SURELY we don't need to use a ref for this? Just save it in the event?
+  const gridRowWidthRef = useRef<HTMLDivElement>(null);
 
-  // Track which event occupies which lane in each cell
-  // Map<cellIndex, Map<lane, eventId>>
-  const cellLaneEvents = useRef(new Map<number, Map<number, string>>())
+  // reducer for events
+  const [modifiedEvents, modifyEventsDispatch] = useReducer(ModifyEventsReducer, [])
 
-  // Get all events in a specific cell
-  function getEventsInCell(cellIndex: number): EventModel[] {
+  // show events on page load
+  useEffect(() => {
+    updatAllEventsCallback(events.flat())
+  }, [])
+
+  // callback update single event
+  const updateEventCallback = useCallback((ev: EventDTO) => {
+    modifyEventsDispatch({
+      type: "UPDATE_EVENT",
+      payload: { ev }
+    })
+  }, [])
+
+  // callback update all events
+  const updatAllEventsCallback = useCallback((inputEvs: EventDTO[]) => {
+    const evs = calculateEventPositions(
+      inputEvs,
+      cellLaneEvents.current,
+      gridRowWidthRef.current?.getBoundingClientRect().width ?? 0,
+      start,
+      cellCount,
+      cellStep,
+      colCount
+    );
+    modifyEventsDispatch({
+      type: "UPDATE_ALL_EVENTS",
+      payload: { evs }
+    })
+  }, [])
+
+  // helper get all events in a specific cell
+  const getEventsInCell = (cellIndex: number): EventDTO[] => {
     const laneMap = cellLaneEvents.current.get(cellIndex); // gets lanes and the event ids which are in those lanes
-    const evArr: EventModel[] = [];
+    const evArr: EventDTO[] = [];
     laneMap?.forEach((evId, lane) => {
       const evObj = events.find(ev => ev.id === evId)
       if (evObj) {
@@ -55,133 +86,13 @@ const Grid: React.FC<GridProps> = ({ colCount, cellCount, events, egStyle, start
     return evArr
   }
 
-  // use to calculate width of event bars
-  const gridRowWidthRef = useRef<HTMLDivElement>(null);
-  const [gridRowWidth, setGridRowWidth] = useState(0);
-
-  // track processed events
-  const [processedEvents, setProcessedEvents] = useState<EventModel[][]>([]);
-  useEffect(() => {
-    if (!gridRowWidth || !cellCount || !colCount || !events) return;
-    const result = calculateEventPositions(events, gridRowWidth);
-    setProcessedEvents(result);
-  }, [events, cellCount, colCount, gridRowWidth]);
-
-  // on page load
-  useEffect(() => {
-    if (!gridRowWidthRef.current) return;
-    const updateWidth = () => {
-      if (gridRowWidthRef.current) {
-        setGridRowWidth(gridRowWidthRef.current.getBoundingClientRect().width);
-      }
-    };
-    updateWidth();
-    const observer = new ResizeObserver(updateWidth);
-    observer.observe(gridRowWidthRef.current);
-    return () => observer.disconnect();
-  }, []);
-
-  // position the elements within the grid
-  function calculateEventPositions(
-    events: EventModel[],
-    gridRowWidth: number,
-  ): EventModel[][] {
-
-    // init the lane event cell map thing
-    for (let i = 1; i <= cellCount; i++) {
-      cellLaneEvents.current.set(i, new Map<number, string>())
-    }
-
-    // Constants
-    const numOfRows = Math.ceil(cellCount / colCount);
-    const rows: EventModel[][] = Array.from({ length: numOfRows }, () => []);
-    const cellWidth = gridRowWidth / colCount;
-
-    // Sort events so earliest events are always rendered on top of later ones
-    events.sort((a, b) => a.start.getTime() - b.start.getTime());
-
-    // Iterate through events
-    events.forEach((ev) => {
-      const cellStartIndex = getCellIndexFromDate(cellStep, start, ev.start);
-      const cellEndIndex = getCellIndexFromDate(cellStep, start, ev.end);
-
-      // Find the lowest available lane across ALL cells this event spans
-      let lane = 0;
-
-      // Check if this lane is available across the entire cell range
-      while (true) {
-        let laneAvailable = true;
-        for (let cellIndex = cellStartIndex; cellIndex <= cellEndIndex; cellIndex++) {
-          const laneMap = cellLaneEvents.current.get(cellIndex);
-          if (laneMap?.has(lane)) {
-            // Lane is occupied by another event
-            laneAvailable = false;
-            break;
-          }
-        }
-        if (laneAvailable) break;
-        lane++;
-      }
-
-      // Mark this lane as occupied by this event for all cells it spans
-      for (let cellIndex = cellStartIndex; cellIndex <= cellEndIndex; cellIndex++) {
-        console.log(lane, ev.id)
-        const laneMap = cellLaneEvents.current.get(cellIndex);
-        laneMap?.set(lane, ev.id);
-      }
-
-      // Pre-compute rounded class modifications once
-      const baseClasses = ev.extraClasses.replace(/rounded-[lr]-md/g, '');
-
-      // Distribute the event across rows
-      // Calculate which rows this event appears in
-      const firstRow = Math.floor((cellStartIndex - 1) / colCount);
-      const lastRow = Math.floor((cellEndIndex - 1) / colCount);
-
-      for (let r = firstRow; r <= lastRow && r < numOfRows; r++) {
-
-        const rowStart = r * colCount + 1;
-        const rowEnd = Math.min(rowStart + colCount - 1, cellCount);
-
-        // Calculate event boundaries within this row
-        const eventStartInRow = Math.max(cellStartIndex, rowStart);
-        const eventEndInRow = Math.min(cellEndIndex, rowEnd);
-        const span = eventEndInRow - eventStartInRow + 1;
-
-        // Calculate positioning
-        const left = (eventStartInRow - rowStart) * cellWidth;
-        const width = span * cellWidth;
-
-        // Build classes for this segment
-        let classes = baseClasses;
-        if (eventStartInRow === cellStartIndex) classes += " rounded-l-4xl";
-        if (eventEndInRow === cellEndIndex) classes += " rounded-r-4xl";
-
-        // Create segment
-        const segment: EventModel = {
-          id: ev.id,
-          start: ev.start,
-          end: ev.end,
-          title: ev.title,
-          extraClasses: classes.trim(),
-          left: left,
-          width: width,
-          lane: lane
-        };
-
-        rows[r].push(segment);
-      }
-    });
-    return rows;
-  }
-
   return (
     <div
       id="calendar-grid-container"
       className="flex flex-col gap-4 p-4 max-w-5xl mx-auto overflow-x-hidden"
     >
-      {/* Iterate to create cells for each row */}
-      {Array.from({ length: rows }).map((_, rowIndex) => {
+      {/* iterate to create rows */}
+      {Array.from({ length: Math.ceil(cellCount / colCount) }).map((_, rowIndex) => {
         const rowStart = rowIndex * colCount + 1;
         const rowEnd = Math.min(rowStart + colCount - 1, cellCount);
         return (
@@ -192,10 +103,11 @@ const Grid: React.FC<GridProps> = ({ colCount, cellCount, events, egStyle, start
                 gridTemplateColumns: `repeat(${colCount}, minmax(0, 1fr))`
               }}
             >
-              {/* Iterate to create cells for this row */}
+              {/* iterate to create cells */}
               {Array.from({ length: rowEnd - rowStart + 1 }).map((_, i) => {
                 return (
                   <Cell
+                    key={rowStart + i}
                     label={getDateFromCellIndex(cellStep, start, rowStart + i)?.toDateString()}
                     rowStartIndex={rowStart}
                     rowEndIndex={rowEnd}
@@ -206,12 +118,17 @@ const Grid: React.FC<GridProps> = ({ colCount, cellCount, events, egStyle, start
                 );
               })}
             </div>
-            {/* iterate to show events for this row */}
-            {processedEvents && gridRowWidth && (
+            {/* iterate to create events */}
+            {modifiedEvents && gridRowWidthRef.current && (
               <div className="absolute top-8 left-0 w-full">
-                {processedEvents[rowIndex]?.map((ev) => {
+                {modifiedEvents[rowIndex]?.map((ev: EventDTO) => {
                   return (
-                    <Event ev={ev} evStyle={egStyle.eventStyle} />
+                    <Event
+                      key={ev.id}
+                      eventDTO={ev}
+                      evStyle={egStyle.eventStyle}
+                      updateEvent={updateEventCallback}
+                    />
                   )
                 })}
               </div>

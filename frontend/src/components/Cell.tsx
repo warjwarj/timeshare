@@ -4,10 +4,11 @@ import { createPortal } from 'react-dom';
 
 // components
 import { Modal } from './Modal';
+
 import { CellInfoModalContent } from './CellInfoModalContent';
 
 // types
-import { type EventModel } from '../types/EventModel';
+import type { EventDTO } from '../types/EventDTO';
 
 // css
 import '../../index.css';
@@ -25,7 +26,7 @@ type CellProps = {
   rowStartIndex: number;
   cellIndex: number;
   egcStyle: CellStyle;
-  getEvents: (cellIndex: number) => EventModel[];
+  getEvents: (cellIndex: number) => EventDTO[];
 };
 const Cell: React.FC<CellProps> = ({ label, rowEndIndex, rowStartIndex, cellIndex, egcStyle, getEvents }) => {
 
@@ -46,7 +47,7 @@ const Cell: React.FC<CellProps> = ({ label, rowEndIndex, rowStartIndex, cellInde
       </div>
       {showModal && createPortal(
         <Modal label={label} isOpen={showModal} onClose={() => setShowModal(false)} >
-          <CellInfoModalContent eventsInCell={getEvents(cellIndex)}/>
+          <CellInfoModalContent eventsInCell={getEvents(cellIndex)} />
         </Modal>,
         document.body
       )}
