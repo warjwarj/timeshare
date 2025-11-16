@@ -1,5 +1,5 @@
 //react
-import React, { useCallback, useEffect, useReducer, useRef, useMea } from "react";
+import React, { useCallback, useEffect, useReducer, useRef } from "react";
 
 // components
 import { Cell } from "./Cell";
@@ -9,10 +9,10 @@ import { Event, type EventStyle } from './Event'
 import type { EventDTO } from "../types/EventDTO";
 import type { CellStyle } from "./Cell";
 import type { TimeSpan } from "../types/TimeSpan";
+import type { ModifyEventsAction } from "../actions/ModifyEventsAction";
 
 // utils
 import { getDateFromCellIndex, calculateEventPositions } from "../utils/utils";
-import { ModifyEventsReducer } from "../reducers/ModifyEventsReducer";
 
 // css
 import '../../index.css';
@@ -39,12 +39,49 @@ const Grid: React.FC<GridProps> = ({ colCount, cellCount, events, egStyle, start
   const cellLaneEvents = useRef(new Map<number, Map<number, string>>()) // Map<cellIndex, Map<lane, eventId>> SURELY we don't need to use a ref for this? Just save it in the event?
   const gridRowWidthRef = useRef<HTMLDivElement>(null);
 
-  // reducer for events
-  const [modifiedEvents, modifyEventsDispatch] = useReducer(ModifyEventsReducer, [])
+  // reduced state
+  const [modifiedEvents, modifyEventsDispatch] = useReducer(ModifyEventsReducer, [[]])
+
+  // reducer function
+  function ModifyEventsReducer(
+    state: EventDTO[][],
+    action: ModifyEventsAction
+  ) {
+    let newState = state.flat()
+    switch (action.type) {
+      case 'UPDATE_EVENT':
+        newState = state.flatMap(eventRow =>
+          eventRow.map(ev =>
+            ev.id === action.payload.ev.id ? action.payload.ev : ev
+          )
+        );
+        break;
+      case 'UPDATE_ALL_EVENTS':
+        newState = action.payload.evs;
+        break;
+      case 'DELETE_EVENT':
+      default:
+        newState = state.flat();
+        break;
+    }
+    // Recalculate event positions before returning
+    return calculateEventPositions(
+      newState.flat(),
+      cellLaneEvents.current,
+      gridRowWidthRef.current?.getBoundingClientRect().width ?? 0,
+      start,
+      cellCount,
+      cellStep,
+      colCount
+    );
+  }
 
   // show events on page load
   useEffect(() => {
-    updatAllEventsCallback(events.flat())
+    modifyEventsDispatch({
+      type: "UPDATE_ALL_EVENTS",
+      payload: { evs: events }
+    })
   }, [])
 
   // callback update single event
@@ -53,24 +90,7 @@ const Grid: React.FC<GridProps> = ({ colCount, cellCount, events, egStyle, start
       type: "UPDATE_EVENT",
       payload: { ev }
     })
-  }, [])
-
-  // callback update all events
-  const updatAllEventsCallback = useCallback((inputEvs: EventDTO[]) => {
-    const evs = calculateEventPositions(
-      inputEvs,
-      cellLaneEvents.current,
-      gridRowWidthRef.current?.getBoundingClientRect().width ?? 0,
-      start,
-      cellCount,
-      cellStep,
-      colCount
-    );
-    modifyEventsDispatch({
-      type: "UPDATE_ALL_EVENTS",
-      payload: { evs }
-    })
-  }, [])
+  }, [modifiedEvents])
 
   // helper get all events in a specific cell
   const getEventsInCell = (cellIndex: number): EventDTO[] => {
@@ -96,7 +116,11 @@ const Grid: React.FC<GridProps> = ({ colCount, cellCount, events, egStyle, start
         const rowStart = rowIndex * colCount + 1;
         const rowEnd = Math.min(rowStart + colCount - 1, cellCount);
         return (
-          <div ref={gridRowWidthRef} key={`row-${rowIndex}`} className="relative w-full">
+          <div
+            ref={gridRowWidthRef}
+            key={rowIndex}
+            className="relative w-full"
+          >
             <div
               className="grid gap-0 border-b border-gray-200"
               style={{
@@ -107,7 +131,6 @@ const Grid: React.FC<GridProps> = ({ colCount, cellCount, events, egStyle, start
               {Array.from({ length: rowEnd - rowStart + 1 }).map((_, i) => {
                 return (
                   <Cell
-                    key={rowStart + i}
                     label={getDateFromCellIndex(cellStep, start, rowStart + i)?.toDateString()}
                     rowStartIndex={rowStart}
                     rowEndIndex={rowEnd}
@@ -124,7 +147,6 @@ const Grid: React.FC<GridProps> = ({ colCount, cellCount, events, egStyle, start
                 {modifiedEvents[rowIndex]?.map((ev: EventDTO) => {
                   return (
                     <Event
-                      key={ev.id}
                       eventDTO={ev}
                       evStyle={egStyle.eventStyle}
                       updateEvent={updateEventCallback}

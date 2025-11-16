@@ -31,7 +31,7 @@ const Event: React.FC<EventProps> = ({ eventDTO, evStyle, updateEvent }) => {
   const [showModal, setShowModal] = useState(false);
 
   return (
-    <>
+    <div key={eventDTO.key}>
       <span
         onClick={() => setShowModal(true)}
         key={`event-${eventDTO.id}`}
@@ -52,12 +52,12 @@ const Event: React.FC<EventProps> = ({ eventDTO, evStyle, updateEvent }) => {
         </span>
       </span>
       {showModal && createPortal(
-        <Modal label={eventDTO.title} isOpen={showModal} onClose={() => setShowModal(false)} >
+        <Modal label={`${eventDTO.title}`} isOpen={showModal} onClose={() => setShowModal(false)} >
           <EventInfoModalContent event={eventDTO} updateEvent={updateEvent} />
         </Modal>,
         document.body
       )}
-    </>
+    </div>
   )
 };
 

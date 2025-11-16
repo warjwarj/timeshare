@@ -29,7 +29,7 @@ const EventInfoModalContent: React.FC<EventInfoModalContentProps> = ({ event, up
   // format js date for the html input
   const formatDateForInput = (date: Date): string => {
     const tzOffset = date.getTimezoneOffset() * 60000;
-    if (!isValidDate(date)) { 
+    if (!isValidDate(date)) {
       return "";
     }
     return new Date(date.getTime() - tzOffset).toISOString().slice(0, 16);
@@ -85,10 +85,11 @@ const EventInfoModalContent: React.FC<EventInfoModalContentProps> = ({ event, up
           className="border rounded p-1"
         />
       </div>
-      <button className="btn btn-blue" onClick={handleSave}>
-        Save
-      </button>
-      <hr />
+      <div className="flex justify-end">
+        <button className="hover:bg-black bg-white text-black hover:text-white font-bold py-2 px-4 rounded" onClick={handleSave}>
+          Save
+        </button>
+      </div>
     </>
   );
 };

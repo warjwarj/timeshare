@@ -46,7 +46,7 @@ const Cell: React.FC<CellProps> = ({ label, rowEndIndex, rowStartIndex, cellInde
         <span className="top-4">{label}</span>
       </div>
       {showModal && createPortal(
-        <Modal label={label} isOpen={showModal} onClose={() => setShowModal(false)} >
+        <Modal label={`${label}`} isOpen={showModal} onClose={() => setShowModal(false)} >
           <CellInfoModalContent eventsInCell={getEvents(cellIndex)} />
         </Modal>,
         document.body

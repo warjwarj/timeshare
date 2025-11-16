@@ -8,7 +8,7 @@ import type { EventDTO } from  '../types/EventDTO';
 type ModifyEventsAction =
   | {
     type: 'UPDATE_ALL_EVENTS',
-    payload: { evs: EventDTO[][] }
+    payload: { evs: EventDTO[] }
   }
   | {
     type: 'UPDATE_EVENT',

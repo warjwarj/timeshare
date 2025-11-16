@@ -3,12 +3,12 @@ import { TimeSpan } from "../types/TimeSpan";
 import type { EventDTO } from "../types/EventDTO";
 
 function isValidDate(d: Date) {
-  return ( Object.prototype.toString.call(d) === "[object Date]" && !isNaN(d.getTime()) );
+  return (Object.prototype.toString.call(d) === "[object Date]" && !isNaN(d.getTime()));
 }
 
 function getCalendarDaysInMonth(year: number, month: number) {
   const monthIndex = month - 1; // 0..11 instead of 1..12
-  const names = [ 'sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat' ];
+  const names = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
   const date = new Date(year, monthIndex, 1);
   const result = [];
   while (date.getMonth() == monthIndex) {
@@ -38,111 +38,120 @@ function getDateFromCellIndex(cellStep: TimeSpan, gridStart: Date, cellIndex: nu
   return gridStart;
 }
 
-  // position the elements within the grid cellCount, cellStep, colCount, start
-  function calculateEventPositions (
-    events: EventDTO[],
-    cellLaneEvents: Map<number, Map<number, string>>,
-    gridRowWidth: number,
-    start: Date,
-    cellCount: number,
-    cellStep: string,
-    colCount: number
-  ): EventDTO[][] {
+/*
+  This function is a beast that needs to be tamed
+*/
 
-    // init the lane event cell map thing
-    for (let i = 1; i <= cellCount; i++) {
-      cellLaneEvents.set(i, new Map<number, string>())
-    }
+// position the elements within the grid cellCount, cellStep, colCount, start
+function calculateEventPositions(
+  events: EventDTO[],
+  cellLaneEvents: Map<number, Map<number, string>>,
+  gridRowWidth: number,
+  start: Date,
+  cellCount: number,
+  cellStep: string,
+  colCount: number
+): EventDTO[][] {
 
-    // Constants
-    const numOfRows = Math.ceil(cellCount / colCount);
-    const rows: EventDTO[][] = Array.from({ length: numOfRows }, () => []);
-    const cellWidth = gridRowWidth / colCount;
-
-    // Sort events so earliest events are always rendered on top of later ones
-    events.sort((a, b) => a.start.getTime() - b.start.getTime());
-
-    // Iterate through events
-    events.forEach((ev) => {
-      const cellStartIndex = getCellIndexFromDate(cellStep, start, ev.start);
-      const cellEndIndex = getCellIndexFromDate(cellStep, start, ev.end);
-
-      // Find the lowest available lane across ALL cells this event spans
-      let lane = 0;
-
-      // Check if this lane is available across the entire cell range
-      while (true) {
-        let laneAvailable = true;
-        for (let cellIndex = cellStartIndex; cellIndex <= cellEndIndex; cellIndex++) {
-          const laneMap = cellLaneEvents.get(cellIndex);
-          if (laneMap?.has(lane)) {
-            // Lane is occupied by another event
-            laneAvailable = false;
-            break;
-          }
-        }
-        if (laneAvailable) break;
-        lane++;
-      }
-
-      // Mark this lane as occupied by this event for all cells it spans
-      for (let cellIndex = cellStartIndex; cellIndex <= cellEndIndex; cellIndex++) {
-        const laneMap = cellLaneEvents.get(cellIndex);
-        laneMap?.set(lane, ev.id);
-      }
-
-      // Pre-compute rounded class modifications once
-      const baseClasses = ev.extraClasses.replace(/rounded-[lr]-md/g, '');
-
-      // Distribute the event across rows
-      // Calculate which rows this event appears in
-      const firstRow = Math.floor((cellStartIndex - 1) / colCount);
-      const lastRow = Math.floor((cellEndIndex - 1) / colCount);
-
-      for (let r = firstRow; r <= lastRow && r < numOfRows; r++) {
-
-        const rowStart = r * colCount + 1;
-        const rowEnd = Math.min(rowStart + colCount - 1, cellCount);
-
-        // Calculate event boundaries within this row
-        const eventStartInRow = Math.max(cellStartIndex, rowStart);
-        const eventEndInRow = Math.min(cellEndIndex, rowEnd);
-        const span = eventEndInRow - eventStartInRow + 1;
-
-        // Calculate positioning
-        const left = (eventStartInRow - rowStart) * cellWidth;
-        const width = span * cellWidth;
-
-        // Build classes for this segment
-        let classes = baseClasses;
-        if (eventStartInRow === cellStartIndex) classes += " rounded-l-4xl";
-        if (eventEndInRow === cellEndIndex) classes += " rounded-r-4xl";
-
-        // Create segment
-        const segment: EventDTO = {
-          id: ev.id,
-          start: ev.start,
-          end: ev.end,
-          title: ev.title,
-          extraClasses: classes.trim(),
-          colour: ev.colour,
-          left: left,
-          width: width,
-          lane: lane
-        };
-
-        rows[r].push(segment);
-      }
-    });
-    return rows;
+  // init the lane event cell map thing
+  cellLaneEvents.clear()
+  for (let i = 1; i <= cellCount; i++) {
+    cellLaneEvents.set(i, new Map<number, string>())
   }
 
-export { 
-  getCalendarDaysInMonth, 
-  getCellIndexFromDate, 
-  getDateFromCellIndex, 
-  isValidDate, 
-  calculateEventPositions 
+  // Constants
+  const numOfRows = Math.ceil(cellCount / colCount);
+  const rows: EventDTO[][] = Array.from({ length: numOfRows }, () => []);
+  const cellWidth = gridRowWidth / colCount;
+
+  // Sort events so earliest events are always rendered on top of later ones
+  events.sort((a, b) => a.start.getTime() - b.start.getTime());
+
+  // Iterate through events
+  events.forEach((ev) => {
+    const cellStartIndex = getCellIndexFromDate(cellStep, start, ev.start);
+    const cellEndIndex = getCellIndexFromDate(cellStep, start, ev.end);
+
+    // Find the lowest available lane across ALL cells this event spans
+    let lane = 0;
+
+    // Check if this lane is available across the entire cell range
+    while (true) {
+      let laneAvailable = true;
+      for (let cellIndex = cellStartIndex; cellIndex <= cellEndIndex; cellIndex++) {
+        const laneMap = cellLaneEvents.get(cellIndex);
+        if (laneMap?.has(lane)) {
+          // Lane is occupied by another event
+          laneAvailable = false;
+          break;
+        }
+      }
+      if (laneAvailable) break;
+      lane++;
+    }
+
+    // Mark this lane as occupied by this event for all cells it spans
+    for (let cellIndex = cellStartIndex; cellIndex <= cellEndIndex; cellIndex++) {
+      const laneMap = cellLaneEvents.get(cellIndex);
+      laneMap?.set(lane, ev.id);
+    }
+
+    // Pre-compute rounded class modifications once
+    const baseClasses = ev.extraClasses.replace(/rounded-[lr]-md/g, '');
+
+    // Distribute the event across rows
+    // Calculate which rows this event appears in
+    const firstRow = Math.floor((cellStartIndex - 1) / colCount);
+    const lastRow = Math.floor((cellEndIndex - 1) / colCount);
+
+    for (let r = firstRow; r <= lastRow && r < numOfRows; r++) {
+
+      const rowStart = r * colCount + 1;
+      const rowEnd = Math.min(rowStart + colCount - 1, cellCount);
+
+      // Calculate event boundaries within this row
+      const eventStartInRow = Math.max(cellStartIndex, rowStart);
+      const eventEndInRow = Math.min(cellEndIndex, rowEnd);
+      const span = eventEndInRow - eventStartInRow + 1;
+
+      // Calculate positioning
+      const left = (eventStartInRow - rowStart) * cellWidth;
+      const width = span * cellWidth;
+
+      // Build classes for this segment
+      let classes = baseClasses;
+      if (eventStartInRow === cellStartIndex) classes += " rounded-l-4xl";
+      if (eventEndInRow === cellEndIndex) classes += " rounded-r-4xl";
+      
+      // Create segment
+      const segment: EventDTO = {
+        key: `${ev.id}-${r}-${eventStartInRow}`,
+        id: ev.id,
+        start: ev.start,
+        end: ev.end,
+        title: ev.title,
+        extraClasses: classes.trim(),
+        colour: ev.colour,
+        left: left,
+        width: width,
+        lane: lane,
+      };
+
+      rows[r].push(segment);
+    }
+  });
+  console.log('Total segments:', rows.flat().length);
+  console.log('Unique event IDs:', new Set(rows.flat().map(e => e.id)).size);
+  return rows;
+}
+
+
+export {
+  getCalendarDaysInMonth,
+  getCellIndexFromDate,
+  getDateFromCellIndex,
+  isValidDate,
+  calculateEventPositions
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

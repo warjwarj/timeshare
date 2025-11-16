@@ -24,7 +24,6 @@ const CellInfoModalContent: React.FC<CellInfoModalContent> = ({ eventsInCell }) 
             <div> Lane: {ev.lane}</div>
             <div> Start: {ev.start.toDateString()}</div>
             <div> End: {ev.end.toDateString()}</div>
-            <hr />
           </div>
         )
       })}

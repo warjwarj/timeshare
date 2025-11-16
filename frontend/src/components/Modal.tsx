@@ -17,7 +17,7 @@ const Modal: React.FC<ModalProps> = ({ label, isOpen, onClose, children }) => {
           className="relative w-full max-w-2xl bg-white rounded-lg shadow-2xl overflow-y-auto m-2 sm:m-4"
         >
           <div className="flex items-center justify-between">
-            <h2 className="pl-3">{label}</h2>
+            <h1 className=" text-3xl font-bold pl-3 pt-2">{label}</h1>
             <button
               onClick={onClose}
               className="rounded-full hover:bg-gray-100 transition-colors p-1"
