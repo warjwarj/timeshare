@@ -55,7 +55,7 @@ function calculateEventPositions(
 
   // init the lane event cell map thing
   cellLaneEvents.clear()
-  for (let i = 1; i <= cellCount; i++) {
+  for (let i = 0; i <= cellCount; i++) {
     cellLaneEvents.set(i, new Map<number, string>())
   }
 
@@ -72,7 +72,7 @@ function calculateEventPositions(
     const cellStartIndex = getCellIndexFromDate(cellStep, start, ev.start);
     const cellEndIndex = getCellIndexFromDate(cellStep, start, ev.end);
 
-    // Find the lowest available lane across ALL cells this event spans
+    // Find the highest available lane across ALL cells this event spans
     let lane = 0;
 
     // Check if this lane is available across the entire cell range
@@ -80,8 +80,7 @@ function calculateEventPositions(
       let laneAvailable = true;
       for (let cellIndex = cellStartIndex; cellIndex <= cellEndIndex; cellIndex++) {
         const laneMap = cellLaneEvents.get(cellIndex);
-        if (laneMap?.has(lane)) {
-          // Lane is occupied by another event
+        if (laneMap?.has(lane) && laneMap.get(lane) != ev.id) {
           laneAvailable = false;
           break;
         }
@@ -120,28 +119,46 @@ function calculateEventPositions(
 
       // Build classes for this segment
       let classes = baseClasses;
-      if (eventStartInRow === cellStartIndex) classes += " rounded-l-4xl";
-      if (eventEndInRow === cellEndIndex) classes += " rounded-r-4xl";
+      if (eventStartInRow === cellStartIndex) {
+        classes += " rounded-l-4xl";
+      } else {
+        classes.replace(" rounded-l-4xl", "")
+      }
+      if (eventEndInRow === cellEndIndex) {
+        classes += " rounded-r-4xl";
+      } else {
+        classes.replace(" rounded-r-4xl", "")
+      }
       
-      // Create segment
-      const segment: EventDTO = {
-        key: `${ev.id}-${r}-${eventStartInRow}`,
-        id: ev.id,
-        start: ev.start,
-        end: ev.end,
-        title: ev.title,
-        extraClasses: classes.trim(),
-        colour: ev.colour,
-        left: left,
-        width: width,
-        lane: lane,
-      };
+      // unique identifier for event segment
+      const key = `${ev.id}-${r}-${eventStartInRow}`
 
-      rows[r].push(segment);
+      // find existing segment
+      const seg = rows[r].find(s => s.key === key)
+      // create or alter segment
+      if (!seg) {
+        // doesn't exist so create
+        const segment: EventDTO = {
+          key: key,
+          id: ev.id,
+          start: ev.start,
+          end: ev.end,
+          title: ev.title,
+          extraClasses: classes.trim(),
+          colour: ev.colour,
+          left: left,
+          width: width,
+          lane: lane,
+        };
+        rows[r].push(segment);
+      } else {
+        // exists so alter
+        seg.left = left;
+        seg.width = width;
+        seg.lane = lane;
+      }
     }
   });
-  console.log('Total segments:', rows.flat().length);
-  console.log('Unique event IDs:', new Set(rows.flat().map(e => e.id)).size);
   return rows;
 }
 

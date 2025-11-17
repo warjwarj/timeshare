@@ -42,7 +42,7 @@ const Grid: React.FC<GridProps> = ({ colCount, cellCount, events, egStyle, start
   // reduced state
   const [modifiedEvents, modifyEventsDispatch] = useReducer(ModifyEventsReducer, [[]])
 
-  // reducer function
+  // reducer function (pointless atm)
   function ModifyEventsReducer(
     state: EventDTO[][],
     action: ModifyEventsAction
@@ -86,9 +86,14 @@ const Grid: React.FC<GridProps> = ({ colCount, cellCount, events, egStyle, start
 
   // callback update single event
   const updateEventCallback = useCallback((ev: EventDTO) => {
+    const newState = modifiedEvents.flatMap(eventRow =>
+      eventRow.map(x =>
+        x.id === ev.id ? ev : x
+      )
+    );
     modifyEventsDispatch({
-      type: "UPDATE_EVENT",
-      payload: { ev }
+      type: "UPDATE_ALL_EVENTS",
+      payload: { evs: newState }
     })
   }, [modifiedEvents])
 
@@ -147,6 +152,7 @@ const Grid: React.FC<GridProps> = ({ colCount, cellCount, events, egStyle, start
                 {modifiedEvents[rowIndex]?.map((ev: EventDTO) => {
                   return (
                     <Event
+                      key={ev.key}
                       eventDTO={ev}
                       evStyle={egStyle.eventStyle}
                       updateEvent={updateEventCallback}
