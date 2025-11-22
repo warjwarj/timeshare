@@ -7,11 +7,7 @@ type EventDTO = {
   start: Date; // event start
   end: Date;   // inclusive
   title: string;
-  extraClasses: string;
   colour: string;
-  left: number;
-  width: number;
-  lane: number;
 };
 
 export type { EventDTO };

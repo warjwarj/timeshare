@@ -1,5 +1,5 @@
 // types
-import type { EventDTO } from '../types/EventDTO';
+import type { EventProps } from '../components/Event';
 
 // css
 import '../../index.css';
@@ -9,21 +9,21 @@ import '../../index.css';
 */
 
 type CellInfoModalContent = {
-  eventsInCell: EventDTO[];
+  eventsInCell: EventProps[];
 };
 const CellInfoModalContent: React.FC<CellInfoModalContent> = ({ eventsInCell }) => {
   return (
     <>
-      {eventsInCell.sort((a, b) => a.lane - b.lane).map((ev) => {
+      {eventsInCell.sort((a, b) => a.evStyle.lane - b.evStyle.lane).map((ev) => {
         return (
-          <div key={ev.id}>
-            <h3 className={`${ev.colour}`}>
-              <strong>{ev.title}</strong>
+          <div key={ev.key + "cell-modal-content"}>
+            <h3 className={`${ev.evStyle.colour}`}>
+              <strong>{ev.eventDTO.title}</strong>
             </h3>
-            <div> id: {ev.id}</div>
-            <div> Lane: {ev.lane}</div>
-            <div> Start: {ev.start.toDateString()}</div>
-            <div> End: {ev.end.toDateString()}</div>
+            <div> id: {ev.eventDTO.id}</div>
+            <div> Lane: {ev.evStyle.lane}</div>
+            <div> Start: {ev.eventDTO.start.toDateString()}</div>
+            <div> End: {ev.eventDTO.end.toDateString()}</div>
           </div>
         )
       })}

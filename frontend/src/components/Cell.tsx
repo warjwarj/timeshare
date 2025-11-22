@@ -7,11 +7,9 @@ import { Modal } from './Modal';
 
 import { CellInfoModalContent } from './CellInfoModalContent';
 
-// types
-import type { EventDTO } from '../types/EventDTO';
-
 // css
 import '../../index.css';
+import type { EventProps } from './Event';
 
 /*
 
@@ -26,7 +24,7 @@ type CellProps = {
   rowStartIndex: number;
   cellIndex: number;
   egcStyle: CellStyle;
-  getEvents: (cellIndex: number) => EventDTO[];
+  getEvents: (cellIndex: number) => EventProps[];
 };
 const Cell: React.FC<CellProps> = ({ label, rowEndIndex, rowStartIndex, cellIndex, egcStyle, getEvents }) => {
 

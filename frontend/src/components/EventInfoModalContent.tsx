@@ -1,11 +1,12 @@
 // react
-import { useState } from 'react'
+import { useState } from 'react';
 
 // react types
 import type { ChangeEvent } from 'react'
 
 // types
 import type { EventDTO } from '../types/EventDTO';
+import type { EventProps } from '../components/Event';
 
 // utils
 import { isValidDate } from '../utils/utils';
@@ -18,13 +19,20 @@ import '../../index.css';
 */
 
 type EventInfoModalContentProps = {
-  event: EventDTO
+  event: EventProps;
   updateEvent: (updatedEvent: EventDTO) => void;
+  closePopup: () => void;
 };
-const EventInfoModalContent: React.FC<EventInfoModalContentProps> = ({ event, updateEvent }) => {
+const EventInfoModalContent: React.FC<EventInfoModalContentProps> = ({ event, updateEvent, closePopup }) => {
+
+  // save updated event object
+  const handleSave = () => {
+    if (updateEvent) updateEvent(updatedEvent);
+    closePopup();
+  }
 
   // track the modified event before we save
-  const [updatedEvent, setUpdatedEvent] = useState(event);
+  const [updatedEvent, setUpdatedEvent] = useState(event.eventDTO);
 
   // format js date for the html input
   const formatDateForInput = (date: Date): string => {
@@ -45,20 +53,22 @@ const EventInfoModalContent: React.FC<EventInfoModalContentProps> = ({ event, up
     }));
   }
 
-  // save updated event object
-  const handleSave = () => {
-    if (updateEvent) updateEvent(updatedEvent);
-    console.log("Saved event:", updatedEvent);
-  }
 
   return (
-    <>
-      <h3 className={updatedEvent.colour}>
-        <strong>{updatedEvent.title}</strong>
+    <div
+      onKeyDown={(e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          console.log("here")
+          handleSave();
+        }
+      }}>
+      <h3 className={event.eventDTO.colour}>
+        <strong>{event.eventDTO.title}</strong>
       </h3>
 
-      <div>id: {updatedEvent.id}</div>
-      <div>Lane: {updatedEvent.lane}</div>
+      <div>id: {event.eventDTO.id}</div>
+      <div>Lane: {event.evStyle.lane}</div>
 
       <div>
         <label htmlFor="eventInfoModalContent_Start" className="block mb-1">
@@ -90,7 +100,7 @@ const EventInfoModalContent: React.FC<EventInfoModalContentProps> = ({ event, up
           Save
         </button>
       </div>
-    </>
+    </div>
   );
 };
 

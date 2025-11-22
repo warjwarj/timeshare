@@ -12,13 +12,19 @@ function App() {
 
   // eventgrid style specifications
   const evGridStyle: GridStyle = {
+    // default event style
     eventStyle: {
       eventHeightStyle: "1.6em",
-      defaultEventStyle: "absolute pb-0.5 pl-2 text-white text-center text-sm items-center justify-left text-nowrap"
+      defaultEventStyle: "absolute pb-0.5 pl-2 text-white text-center text-sm items-center justify-left text-nowrap",
+      extraClasses: "",
+      colour: "",
+      lane: 0,
+      left: 0,
+      width: 0
     },
     cellStyle: {
-      heightStyle: "150px",
-    }
+      heightStyle: "150px",      
+    },
   }
 
   return (

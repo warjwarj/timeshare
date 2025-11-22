@@ -1,18 +1,20 @@
 //react
-import React, { useCallback, useEffect, useReducer, useRef } from "react";
+import React, { useCallback, useEffect, useReducer, useRef, useState } from "react";
 
 // components
 import { Cell } from "./Cell";
-import { Event, type EventStyle } from './Event'
+import { Event } from './Event';
 
 // types
 import type { EventDTO } from "../types/EventDTO";
+import type { EventStyle } from "./Event"
+import type { EventProps } from './Event';
 import type { CellStyle } from "./Cell";
 import type { TimeSpan } from "../types/TimeSpan";
 import type { ModifyEventsAction } from "../actions/ModifyEventsAction";
 
 // utils
-import { getDateFromCellIndex, calculateEventPositions } from "../utils/utils";
+import { getDateFromCellIndex, setEventPositions } from "../utils/utils";
 
 // css
 import '../../index.css';
@@ -39,72 +41,72 @@ const Grid: React.FC<GridProps> = ({ colCount, cellCount, events, egStyle, start
   const cellLaneEvents = useRef(new Map<number, Map<number, string>>()) // Map<cellIndex, Map<lane, eventId>> SURELY we don't need to use a ref for this? Just save it in the event?
   const gridRowWidthRef = useRef<HTMLDivElement>(null);
 
-  // reduced state
-  const [modifiedEvents, modifyEventsDispatch] = useReducer(ModifyEventsReducer, [[]])
+  const [eventProps, setEventProps] = useState<EventProps[][]>()
+  const [_, eventDtosDispatch] = useReducer(ModifyEventsReducer, [])
 
-  // reducer function (pointless atm)
+  // events
   function ModifyEventsReducer(
-    state: EventDTO[][],
+    state: EventDTO[],
     action: ModifyEventsAction
   ) {
-    let newState = state.flat()
+    let newEvents = state;
     switch (action.type) {
-      case 'UPDATE_EVENT':
-        newState = state.flatMap(eventRow =>
-          eventRow.map(ev =>
-            ev.id === action.payload.ev.id ? action.payload.ev : ev
-          )
-        );
+      case 'SET_ALL_EVENTS':
+        newEvents = action.payload.evs;
         break;
-      case 'UPDATE_ALL_EVENTS':
-        newState = action.payload.evs;
+      case 'UPDATE_EVENT':
+        newEvents = state.map(ev => {
+          return ev.id == action.payload.ev.id ?
+            action.payload.ev :
+            ev
+        })
         break;
       case 'DELETE_EVENT':
+        newEvents = newEvents.filter(ev => ev.id === action.payload.ev.id)
+        break;
       default:
-        newState = state.flat();
         break;
     }
-    // Recalculate event positions before returning
-    return calculateEventPositions(
-      newState.flat(),
+    
+    // set event styles
+    setEventProps(setEventPositions(
+      newEvents,
       cellLaneEvents.current,
       gridRowWidthRef.current?.getBoundingClientRect().width ?? 0,
       start,
       cellCount,
       cellStep,
-      colCount
-    );
+      colCount,
+      egStyle.eventStyle
+    ))
+
+    return newEvents
   }
 
   // show events on page load
   useEffect(() => {
-    modifyEventsDispatch({
-      type: "UPDATE_ALL_EVENTS",
+    eventDtosDispatch({
+      type: "SET_ALL_EVENTS",
       payload: { evs: events }
     })
   }, [])
 
   // callback update single event
-  const updateEventCallback = useCallback((ev: EventDTO) => {
-    const newState = modifiedEvents.flatMap(eventRow =>
-      eventRow.map(x =>
-        x.id === ev.id ? ev : x
-      )
-    );
-    modifyEventsDispatch({
-      type: "UPDATE_ALL_EVENTS",
-      payload: { evs: newState }
+  const updateEventCallback = useCallback((moddedev: EventDTO) => {
+    eventDtosDispatch({
+      type: "UPDATE_EVENT",
+      payload: { ev: moddedev }
     })
-  }, [modifiedEvents])
+  }, [])
 
   // helper get all events in a specific cell
-  const getEventsInCell = (cellIndex: number): EventDTO[] => {
+  const getEventsInCell = (cellIndex: number): EventProps[] => {
     const laneMap = cellLaneEvents.current.get(cellIndex); // gets lanes and the event ids which are in those lanes
-    const evArr: EventDTO[] = [];
-    laneMap?.forEach((evId, lane) => {
-      const evObj = events.find(ev => ev.id === evId)
+    const evArr: EventProps[] = [];
+    laneMap?.forEach((id, lane) => {
+      const evObj = eventProps?.flat().find(ev => ev?.eventDTO.id === id)
       if (evObj) {
-        evObj.lane = lane
+        evObj.evStyle.lane = lane
         evArr.push(evObj)
       }
     });
@@ -147,16 +149,16 @@ const Grid: React.FC<GridProps> = ({ colCount, cellCount, events, egStyle, start
               })}
             </div>
             {/* iterate to create events */}
-            {modifiedEvents && gridRowWidthRef.current && (
+            {eventProps && gridRowWidthRef.current && (
               <div className="absolute top-8 left-0 w-full">
-                {modifiedEvents[rowIndex]?.map((ev: EventDTO) => {
+                {eventProps[rowIndex]?.map((evp: EventProps) => {
                   return (
-                    <Event
-                      key={ev.key}
-                      eventDTO={ev}
-                      evStyle={egStyle.eventStyle}
-                      updateEvent={updateEventCallback}
-                    />
+                    evp == null ?
+                      null :
+                      <Event
+                        eventProps={evp}
+                        updateEvent={updateEventCallback}
+                      />
                   )
                 })}
               </div>

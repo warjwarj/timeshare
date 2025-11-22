@@ -19,47 +19,67 @@ import '../../index.css';
 type EventStyle = {
   defaultEventStyle: string;
   eventHeightStyle: string;
+  extraClasses: string;
+  colour: string;
+  left: number;
+  width: number;
+  lane: number;
 }
 type EventProps = {
-  eventDTO: EventDTO
+  readonly eventDTO: EventDTO
   evStyle: EventStyle
+  key: string
+};
+const Event: React.FC<{
+  eventProps: EventProps,
   updateEvent: (updatedEvent: EventDTO) => void;
-};
-const Event: React.FC<EventProps> = ({ eventDTO, evStyle, updateEvent }) => {
+}> = ({
+  eventProps,
+  updateEvent
+}) => {
 
-  // track popup visibility
-  const [showModal, setShowModal] = useState(false);
+    // track popup visibility
+    const [showModal, setShowModal] = useState(false);
 
-  return (
-    <div key={eventDTO.key}>
-      <span
-        onClick={() => setShowModal(true)}
-        key={`event-${eventDTO.id}`}
-        className={
-          `${evStyle.defaultEventStyle}
-          ${eventDTO.extraClasses}
-          ${eventDTO.colour}`
-        }
-        style={{
-          height: `${evStyle.eventHeightStyle}px`,
-          left: `${eventDTO.left}px`,
-          width: `${eventDTO.width}px`,
-          top: `calc(${eventDTO.lane} * ${evStyle.eventHeightStyle})`
-        }}
-      >
-        <span className="block max-w-full">
-          {eventDTO.title}
+    return (
+      <div key={eventProps.eventDTO.key}>
+        <span
+          onClick={() => setShowModal(true)}
+          key={`event-${eventProps.eventDTO.id}`}
+          className={
+            `${eventProps.evStyle.defaultEventStyle}
+              ${eventProps.evStyle.extraClasses}
+              ${eventProps.evStyle.colour}`
+          }
+          style={{
+            height: `${eventProps.evStyle.eventHeightStyle}px`,
+            left: `${eventProps.evStyle.left}px`,
+            width: `${eventProps.evStyle.width}px`,
+            top: `calc(${eventProps.evStyle.lane + 1} * ${eventProps.evStyle.eventHeightStyle})`
+          }}
+        >
+          <span className="block max-w-full">
+            {eventProps.eventDTO.title}
+          </span>
         </span>
-      </span>
-      {showModal && createPortal(
-        <Modal label={`${eventDTO.title}`} isOpen={showModal} onClose={() => setShowModal(false)} >
-          <EventInfoModalContent event={eventDTO} updateEvent={updateEvent} />
-        </Modal>,
-        document.body
-      )}
-    </div>
-  )
-};
+        {showModal && createPortal(
+          <Modal
+            label={ `${eventProps.eventDTO.title}` }
+            isOpen={showModal}
+            onClose={ () => setShowModal(false) }
+          >
+            <EventInfoModalContent
+              event={ eventProps }
+              updateEvent={ updateEvent }
+              closePopup={ () => setShowModal(false) }
+            />
+          </Modal>,
+          document.body
+        )}
+      </div>
+    )
+  };
 
 export { Event };
 export type { EventStyle }
+export type { EventProps }

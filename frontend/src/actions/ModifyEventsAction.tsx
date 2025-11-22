@@ -6,21 +6,10 @@ import type { EventDTO } from  '../types/EventDTO';
 */
 
 type ModifyEventsAction =
-  | {
-    type: 'UPDATE_ALL_EVENTS',
-    payload: { evs: EventDTO[] }
-  }
-  | {
-    type: 'UPDATE_EVENT',
-    payload: { ev: EventDTO }
-  }
-  | {
-    type: 'ADD_EVENT',
-    payload: { ev: EventDTO }
-  }
-  | {
-    type: 'DELETE_EVENT',
-    payload: { ev: EventDTO; }
-  }
+  | { type: 'SET_ALL_EVENTS'; payload: { evs: EventDTO[] } }
+  | { type: 'UPDATE_EVENT'; payload: { ev: EventDTO } }
+  | { type: 'ADD_EVENT'; payload: { ev: EventDTO } }
+  | { type: 'DELETE_EVENT'; payload: { ev: EventDTO } };
+
 
 export type { ModifyEventsAction }

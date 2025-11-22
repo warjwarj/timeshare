@@ -1,5 +1,7 @@
 // fake enum
 import { TimeSpan } from "../types/TimeSpan";
+
+import type { EventProps, EventStyle } from "../components/Event";
 import type { EventDTO } from "../types/EventDTO";
 
 function isValidDate(d: Date) {
@@ -39,19 +41,24 @@ function getDateFromCellIndex(cellStep: TimeSpan, gridStart: Date, cellIndex: nu
 }
 
 /*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  SET EVENT POSITIONS
+  create event style objects
+
   This function is a beast that needs to be tamed
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-// position the elements within the grid cellCount, cellStep, colCount, start
-function calculateEventPositions(
-  events: EventDTO[],
+function setEventPositions(
+  evDtos: EventDTO[],
   cellLaneEvents: Map<number, Map<number, string>>,
   gridRowWidth: number,
   start: Date,
   cellCount: number,
   cellStep: string,
-  colCount: number
-): EventDTO[][] {
+  colCount: number,
+  defaultEventStyle: EventStyle
+): EventProps[][] {
 
   // init the lane event cell map thing
   cellLaneEvents.clear()
@@ -61,14 +68,15 @@ function calculateEventPositions(
 
   // Constants
   const numOfRows = Math.ceil(cellCount / colCount);
-  const rows: EventDTO[][] = Array.from({ length: numOfRows }, () => []);
+  const rows: EventProps[][] = Array.from({ length: numOfRows }, () => []);
   const cellWidth = gridRowWidth / colCount;
 
   // Sort events so earliest events are always rendered on top of later ones
-  events.sort((a, b) => a.start.getTime() - b.start.getTime());
+  evDtos.sort((a, b) => a.start.getTime() - b.start.getTime());
 
   // Iterate through events
-  events.forEach((ev) => {
+  evDtos.forEach((ev) => {
+
     const cellStartIndex = getCellIndexFromDate(cellStep, start, ev.start);
     const cellEndIndex = getCellIndexFromDate(cellStep, start, ev.end);
 
@@ -95,16 +103,12 @@ function calculateEventPositions(
       laneMap?.set(lane, ev.id);
     }
 
-    // Pre-compute rounded class modifications once
-    const baseClasses = ev.extraClasses.replace(/rounded-[lr]-md/g, '');
-
     // Distribute the event across rows
     // Calculate which rows this event appears in
     const firstRow = Math.floor((cellStartIndex - 1) / colCount);
     const lastRow = Math.floor((cellEndIndex - 1) / colCount);
 
     for (let r = firstRow; r <= lastRow && r < numOfRows; r++) {
-
       const rowStart = r * colCount + 1;
       const rowEnd = Math.min(rowStart + colCount - 1, cellCount);
 
@@ -117,48 +121,42 @@ function calculateEventPositions(
       const left = (eventStartInRow - rowStart) * cellWidth;
       const width = span * cellWidth;
 
-      // Build classes for this segment
-      let classes = baseClasses;
+      // unique identifier for event segment
+      const key = `${ev.id}-${r}-${eventStartInRow}`
+
+      // add rounded corners where needed
+      let classes = "";
       if (eventStartInRow === cellStartIndex) {
         classes += " rounded-l-4xl";
       } else {
-        classes.replace(" rounded-l-4xl", "")
+        classes = classes.replace(" rounded-l-4xl", "")
       }
       if (eventEndInRow === cellEndIndex) {
         classes += " rounded-r-4xl";
       } else {
-        classes.replace(" rounded-r-4xl", "")
+        classes = classes.replace(" rounded-r-4xl", "")
       }
-      
-      // unique identifier for event segment
-      const key = `${ev.id}-${r}-${eventStartInRow}`
 
-      // find existing segment
-      const seg = rows[r].find(s => s.key === key)
-      // create or alter segment
-      if (!seg) {
-        // doesn't exist so create
-        const segment: EventDTO = {
-          key: key,
-          id: ev.id,
-          start: ev.start,
-          end: ev.end,
-          title: ev.title,
-          extraClasses: classes.trim(),
-          colour: ev.colour,
-          left: left,
-          width: width,
-          lane: lane,
-        };
-        rows[r].push(segment);
-      } else {
-        // exists so alter
-        seg.left = left;
-        seg.width = width;
-        seg.lane = lane;
+      // create style
+      const evStyle: EventStyle = {
+        eventHeightStyle: defaultEventStyle.eventHeightStyle,
+        defaultEventStyle: defaultEventStyle.defaultEventStyle,
+        extraClasses: classes.trim(),
+        colour: ev.colour,
+        left: left,
+        width: width,
+        lane: lane,
       }
+
+      // create eventProps object and push it to the row
+      rows[r].push({
+        key: key,
+        evStyle: evStyle,
+        eventDTO: ev
+      })
     }
   });
+  console.log("Created " + rows.flat().length + " segments from " + evDtos.length + " rows")
   return rows;
 }
 
@@ -168,7 +166,7 @@ export {
   getCellIndexFromDate,
   getDateFromCellIndex,
   isValidDate,
-  calculateEventPositions
+  setEventPositions
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
