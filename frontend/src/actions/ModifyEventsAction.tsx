@@ -10,6 +10,4 @@ type ModifyEventsAction =
   | { type: 'UPDATE_EVENT'; payload: { ev: EventDTO } }
   | { type: 'ADD_EVENT'; payload: { ev: EventDTO } }
   | { type: 'DELETE_EVENT'; payload: { ev: EventDTO } };
-
-
 export type { ModifyEventsAction }

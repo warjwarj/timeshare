@@ -2,13 +2,19 @@
 import { Grid } from './components/Grid';
 
 // types
+import type { GridStyle } from './components/Grid';
 import { TimeSpan } from './types/TimeSpan'; // why does ts not have enums??
-import type { GridStyle } from './components/Grid'
 
 // utils
-import TestEvents from './utils/TestEvents'
+import { useReducer } from 'react';
+import { EventsContext, EventsDispatchContext } from './contexts/EventsContext.tsx';
+import { EventsReducer } from './reducers/EventsReducer';
+import TestEvents from './utils/TestEvents';
 
 function App() {
+
+  // events reducer
+  const [events, eventsDispatch] = useReducer(EventsReducer, TestEvents)
 
   // eventgrid style specifications
   const evGridStyle: GridStyle = {
@@ -23,20 +29,24 @@ function App() {
       width: 0
     },
     cellStyle: {
-      heightStyle: "150px",      
+      heightStyle: "150px",
     },
   }
 
   return (
     <div>
-      <Grid
-        colCount={7}
-        cellCount={62}
-        events={TestEvents}
-        egStyle={evGridStyle}
-        start={new Date(2024, 11, 30)} // so the grid starts on a Monday.
-        cellStep={TimeSpan.Day}
-      />
+      <EventsContext value={events}>
+        <EventsDispatchContext value={eventsDispatch}>
+          <Grid
+            colCount={7}
+            cellCount={62}
+            events={TestEvents}
+            egStyle={evGridStyle}
+            start={new Date(2024, 11, 30)} // so the grid starts on a Monday.
+            cellStep={TimeSpan.Day}
+          />
+        </EventsDispatchContext>
+      </EventsContext>
     </div>
   )
 }

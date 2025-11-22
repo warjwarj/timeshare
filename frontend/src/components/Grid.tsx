@@ -1,5 +1,5 @@
 //react
-import React, { useCallback, useEffect, useReducer, useRef, useState } from "react";
+import React, { useCallback, useContext, useEffect, useRef, useState } from "react";
 
 // components
 import { Cell } from "./Cell";
@@ -7,17 +7,16 @@ import { Event } from './Event';
 
 // types
 import type { EventDTO } from "../types/EventDTO";
-import type { EventStyle } from "./Event"
-import type { EventProps } from './Event';
-import type { CellStyle } from "./Cell";
 import type { TimeSpan } from "../types/TimeSpan";
-import type { ModifyEventsAction } from "../actions/ModifyEventsAction";
+import type { CellStyle } from "./Cell";
+import type { EventProps, EventStyle } from "./Event";
 
 // utils
 import { getDateFromCellIndex, setEventPositions } from "../utils/utils";
 
 // css
 import '../../index.css';
+import { EventsContext, EventsDispatchContext } from "../contexts/EventsContext";
 
 /*
 
@@ -35,42 +34,23 @@ type GridProps = {
   start: Date;
   cellStep: TimeSpan
 };
-const Grid: React.FC<GridProps> = ({ colCount, cellCount, events, egStyle, start, cellStep }) => {
+const Grid: React.FC<GridProps> = ({ colCount, cellCount, egStyle, start, cellStep }) => {
+
+  // events context
+  const events = useContext(EventsContext)
+  const eventsDispatch = useContext(EventsDispatchContext)
 
   // refs
   const cellLaneEvents = useRef(new Map<number, Map<number, string>>()) // Map<cellIndex, Map<lane, eventId>> SURELY we don't need to use a ref for this? Just save it in the event?
   const gridRowWidthRef = useRef<HTMLDivElement>(null);
 
+  // event props state
   const [eventProps, setEventProps] = useState<EventProps[][]>()
-  const [_, eventDtosDispatch] = useReducer(ModifyEventsReducer, [])
 
-  // events
-  function ModifyEventsReducer(
-    state: EventDTO[],
-    action: ModifyEventsAction
-  ) {
-    let newEvents = state;
-    switch (action.type) {
-      case 'SET_ALL_EVENTS':
-        newEvents = action.payload.evs;
-        break;
-      case 'UPDATE_EVENT':
-        newEvents = state.map(ev => {
-          return ev.id == action.payload.ev.id ?
-            action.payload.ev :
-            ev
-        })
-        break;
-      case 'DELETE_EVENT':
-        newEvents = newEvents.filter(ev => ev.id === action.payload.ev.id)
-        break;
-      default:
-        break;
-    }
-    
-    // set event styles
+  // update event styles
+  useEffect(() => {
     setEventProps(setEventPositions(
-      newEvents,
+      events,
       cellLaneEvents.current,
       gridRowWidthRef.current?.getBoundingClientRect().width ?? 0,
       start,
@@ -79,21 +59,11 @@ const Grid: React.FC<GridProps> = ({ colCount, cellCount, events, egStyle, start
       colCount,
       egStyle.eventStyle
     ))
-
-    return newEvents
-  }
-
-  // show events on page load
-  useEffect(() => {
-    eventDtosDispatch({
-      type: "SET_ALL_EVENTS",
-      payload: { evs: events }
-    })
-  }, [])
+  }, [events])
 
   // callback update single event
   const updateEventCallback = useCallback((moddedev: EventDTO) => {
-    eventDtosDispatch({
+    eventsDispatch({
       type: "UPDATE_EVENT",
       payload: { ev: moddedev }
     })
@@ -136,12 +106,14 @@ const Grid: React.FC<GridProps> = ({ colCount, cellCount, events, egStyle, start
             >
               {/* iterate to create cells */}
               {Array.from({ length: rowEnd - rowStart + 1 }).map((_, i) => {
+                const cellIndex = rowStart + i;
                 return (
                   <Cell
-                    label={getDateFromCellIndex(cellStep, start, rowStart + i)?.toDateString()}
+                    key={cellIndex}
+                    label={getDateFromCellIndex(cellStep, start, cellIndex)?.toDateString()}
                     rowStartIndex={rowStart}
                     rowEndIndex={rowEnd}
-                    cellIndex={rowStart + i}
+                    cellIndex={cellIndex}
                     egcStyle={{ heightStyle: egStyle.cellStyle.heightStyle }}
                     getEvents={getEventsInCell}
                   />
@@ -156,6 +128,7 @@ const Grid: React.FC<GridProps> = ({ colCount, cellCount, events, egStyle, start
                     evp == null ?
                       null :
                       <Event
+                        key={evp.key}
                         eventProps={evp}
                         updateEvent={updateEventCallback}
                       />
@@ -171,4 +144,4 @@ const Grid: React.FC<GridProps> = ({ colCount, cellCount, events, egStyle, start
 };
 
 export { Grid };
-export type { GridStyle }
+export type { GridStyle };
