@@ -48,14 +48,14 @@ const Event: React.FC<{
           key={`event-${eventProps.eventDTO.id}`}
           className={
             `${eventProps.evStyle.defaultEventStyle}
-              ${eventProps.evStyle.extraClasses}
-              ${eventProps.evStyle.colour}`
+              ${eventProps.evStyle.extraClasses}`
           }
           style={{
             height: `${eventProps.evStyle.eventHeightStyle}px`,
             left: `${eventProps.evStyle.left}px`,
             width: `${eventProps.evStyle.width}px`,
-            top: `calc(${eventProps.evStyle.lane + 1} * ${eventProps.evStyle.eventHeightStyle})`
+            top: `calc(${eventProps.evStyle.lane + 1} * ${eventProps.evStyle.eventHeightStyle})`,
+            backgroundColor: eventProps.evStyle.colour
           }}
         >
           <span className="block max-w-full">

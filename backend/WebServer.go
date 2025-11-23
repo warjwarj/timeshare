@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
-	"strings"
+	"os"
 	"time"
 
 	"go.uber.org/zap"
@@ -50,28 +50,61 @@ func NewWebServer(port string, logger *zap.Logger) (*WebServer, error) {
 func (s *WebServer) routes() {
 	s.mux.HandleFunc("/", s.handleHome())
 	s.mux.HandleFunc("/health", s.handleHealth())
-	s.mux.HandleFunc("/api/testevents", s.handleUsers())
+	s.mux.HandleFunc("/api/testevents", s.handleTestEvents())
 }
 
-// middleware wraps the handler with logging and CORS
+// apply middleware to the http handler
 func (s *WebServer) middleware(next http.Handler) http.Handler {
 	return loggingMiddleware(corsMiddleware(next))
 }
 
-// Start starts the HTTP server
+// start server
 func (s *WebServer) Start() error {
 	s.logger.Info("Server starting on %s", zap.String("", s.server.Addr))
 	return s.server.ListenAndServe()
 }
 
-// Shutdown gracefully shuts down the server
+// shutdown server through context
 func (s *WebServer) Shutdown(ctx context.Context) error {
 	s.logger.Info("Server shutting down...", zap.String("", s.server.Addr))
 	log.Println("Server shutting down...")
 	return s.server.Shutdown(ctx)
 }
 
-// Handler functions
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+	Route handlers
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+type EventDTO struct {
+	Key    string    `json:"key"`
+	ID     string    `json:"id"`
+	Start  time.Time `json:"start"` // event start
+	End    time.Time `json:"end"`   // inclusive
+	Title  string    `json:"title"`
+	Colour string    `json:"colour"`
+}
+
+func (s *WebServer) handleTestEvents() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/api/testevents" {
+			http.NotFound(w, r)
+			return
+		}
+
+		byts, err := os.ReadFile("testevents.json")
+		if err != nil {
+			s.logger.Error("couldn't read json file ", zap.Error(err))
+		}
+
+		respondJSON(w, http.StatusOK, Response{
+			Success: true,
+			Message: string(byts),
+		})
+	}
+}
+
 func (s *WebServer) handleHome() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/" {
@@ -81,7 +114,7 @@ func (s *WebServer) handleHome() http.HandlerFunc {
 
 		respondJSON(w, http.StatusOK, Response{
 			Success: true,
-			Message: "Welcome to the API",
+			Message: "api active ^_^",
 		})
 	}
 }
@@ -104,89 +137,12 @@ func (s *WebServer) handleHealth() http.HandlerFunc {
 	}
 }
 
-func (s *WebServer) handleUsers() http.HandlerFunc {
-	type user struct {
-		ID    int    `json:"id"`
-		Name  string `json:"name"`
-		Email string `json:"email"`
-	}
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+	Middleware
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
 
-	return func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case http.MethodGet:
-			users := []user{
-				{ID: 1, Name: "John Doe", Email: "john@example.com"},
-				{ID: 2, Name: "Jane Smith", Email: "jane@example.com"},
-			}
-
-			respondJSON(w, http.StatusOK, Response{
-				Success: true,
-				Data:    users,
-			})
-
-		case http.MethodPost:
-			s.handleCreateUser(w, r)
-
-		default:
-			respondError(w, http.StatusMethodNotAllowed, "Method not allowed")
-		}
-	}
-}
-
-func (s *WebServer) handleUserByID() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodGet {
-			respondError(w, http.StatusMethodNotAllowed, "Method not allowed")
-			return
-		}
-
-		// Extract ID from path: /api/users/{id}
-		path := strings.TrimPrefix(r.URL.Path, "/api/users/")
-		if path == "" {
-			respondError(w, http.StatusBadRequest, "User ID is required")
-			return
-		}
-
-		respondJSON(w, http.StatusOK, Response{
-			Success: true,
-			Data: map[string]string{
-				"id":    path,
-				"name":  "John Doe",
-				"email": "john@example.com",
-			},
-		})
-	}
-}
-
-func (s *WebServer) handleCreateUser(w http.ResponseWriter, r *http.Request) {
-	type createUserRequest struct {
-		Name  string `json:"name"`
-		Email string `json:"email"`
-	}
-
-	var req createUserRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		respondError(w, http.StatusBadRequest, "Invalid request body")
-		return
-	}
-
-	if req.Name == "" || req.Email == "" {
-		respondError(w, http.StatusBadRequest, "Name and email are required")
-		return
-	}
-
-	respondJSON(w, http.StatusCreated, Response{
-		Success: true,
-		Message: "User created successfully",
-		Data: map[string]interface{}{
-			"id":    3,
-			"name":  req.Name,
-			"email": req.Email,
-		},
-	})
-}
-
-// Middleware
 func loggingMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()

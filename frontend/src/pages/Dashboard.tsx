@@ -1,9 +1,16 @@
+import { useContext, useLayoutEffect } from 'react'
+import axios from 'axios';
+
 // components
 import { Grid } from '../components/Grid';
 
 // types
 import { TimeSpan } from '../types/TimeSpan';
 import type { GridStyle } from '../components/Grid';
+
+// utils
+import { EventsDispatchContext } from "../contexts/EventsContext";
+import type { EventDTO } from '../types/EventDTO';
 
 // eventgrid style
 const evGridStyle: GridStyle = {
@@ -24,6 +31,20 @@ const evGridStyle: GridStyle = {
 }
 
 const Dashboard: React.FC = () => {
+
+  // retrieve events on page load
+  const eventsDispatch = useContext(EventsDispatchContext)
+  useLayoutEffect(() => {
+    axios.get(import.meta.env.VITE_API_URL)
+    .then(res => {
+      const dtos = res.data.message
+      eventsDispatch({
+        type: "SET_ALL_EVENTS",
+        payload: { evs: JSON.parse(dtos) as EventDTO[] }
+      })
+    })
+  }, [])
+
   return (
     <div>
       <h1>Dashboard</h1>

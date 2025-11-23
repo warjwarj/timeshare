@@ -53,7 +53,6 @@ const EventInfoModalContent: React.FC<EventInfoModalContentProps> = ({ event, up
     }));
   }
 
-
   return (
     <div
       onKeyDown={(e) => {
@@ -63,7 +62,10 @@ const EventInfoModalContent: React.FC<EventInfoModalContentProps> = ({ event, up
           handleSave();
         }
       }}>
-      <h3 className={event.eventDTO.colour}>
+      <h3 style={{
+        backgroundColor: event.eventDTO.colour
+      }}
+      >
         <strong>{event.eventDTO.title}</strong>
       </h3>
 

@@ -2,6 +2,9 @@
 import type { EventDTO } from "../types/EventDTO";
 import type { ModifyEventsAction } from "../actions/ModifyEventsAction";
 
+// utils
+import { isValidDate } from "../utils/utils";
+
 // events
 function EventsReducer(
   state: EventDTO[],
@@ -10,7 +13,13 @@ function EventsReducer(
   let newEvents = state;
   switch (action.type) {
     case 'SET_ALL_EVENTS':
-      newEvents = action.payload.evs;
+      newEvents = action.payload.evs.map(ev => {
+        const startDate = new Date(ev.start)
+        const endDate = new Date(ev.end)
+        if (isValidDate(startDate) && isValidDate(endDate)) {
+          return { ...ev, start: startDate, end: endDate }
+        }
+      }).filter(x => x != null);
       break;
     case 'UPDATE_EVENT':
       newEvents = state.map(ev => {
