@@ -1,0 +1,35 @@
+[
+  { "id": "1", "start": "2025-01-02", "end": "2025-01-06", "title": "Conference", "colour": "bg-blue-500" },
+  { "id": "2", "start": "2025-01-01", "end": "2025-01-04", "title": "Meeting", "colour": "bg-green-500" },
+  { "id": "3", "start": "2025-01-03", "end": "2025-01-03", "title": "Vacation", "colour": "bg-red-500" },
+  { "id": "4", "start": "2025-01-15", "end": "2025-01-20", "title": "Project Sprint", "colour": "bg-yellow-500" },
+  { "id": "5", "start": "2025-01-05", "end": "2025-01-08", "title": "Workshop", "colour": "bg-purple-500" },
+  { "id": "6", "start": "2025-01-07", "end": "2025-01-10", "title": "Team Offsite", "colour": "bg-pink-500" },
+  { "id": "7", "start": "2025-01-09", "end": "2025-01-12", "title": "Code Review", "colour": "bg-indigo-500" },
+  { "id": "8", "start": "2025-01-11", "end": "2025-01-13", "title": "1:1 Sync", "colour": "bg-teal-500" },
+  { "id": "9", "start": "2025-01-04", "end": "2025-01-05", "title": "Lunch Break", "colour": "bg-orange-500" },
+  { "id": "10", "start": "2025-01-13", "end": "2025-01-14", "title": "Client Call", "colour": "bg-emerald-500" },
+  { "id": "11", "start": "2025-01-21", "end": "2025-01-25", "title": "Hackathon", "colour": "bg-fuchsia-500" },
+  { "id": "12", "start": "2025-01-23", "end": "2025-01-27", "title": "QA Testing", "colour": "bg-rose-500" },
+  { "id": "13", "start": "2025-01-26", "end": "2025-01-29", "title": "Planning Week", "colour": "bg-cyan-500" },
+  { "id": "14", "start": "2025-01-10", "end": "2025-01-11", "title": "Coffee Chat", "colour": "bg-lime-500" },
+  { "id": "15", "start": "2025-01-18", "end": "2025-01-22", "title": "System Upgrade", "colour": "bg-sky-500" },
+  { "id": "16", "start": "2025-01-08", "end": "2025-01-09", "title": "Standup", "colour": "bg-gray-500" },
+
+  { "id": "17", "start": "2025-01-14", "end": "2025-01-16", "title": "Design Review", "colour": "bg-pink-300" },
+  { "id": "18", "start": "2025-01-17", "end": "2025-01-19", "title": "Client Workshop", "colour": "bg-blue-300" },
+  { "id": "19", "start": "2025-01-20", "end": "2025-01-22", "title": "Team Retrospective", "colour": "bg-green-300" },
+
+  { "id": "20", "start": "2025-01-30", "end": "2025-02-03", "title": "Conference Prep", "colour": "bg-blue-400" },
+  { "id": "21", "start": "2025-02-02", "end": "2025-02-06", "title": "Marketing Launch", "colour": "bg-red-400" },
+  { "id": "22", "start": "2025-02-04", "end": "2025-02-09", "title": "Product Demo", "colour": "bg-green-400" },
+  { "id": "23", "start": "2025-02-08", "end": "2025-02-11", "title": "Client Training", "colour": "bg-yellow-400" },
+  { "id": "24", "start": "2025-02-10", "end": "2025-02-14", "title": "End of Quarter Review", "colour": "bg-purple-400" },
+  { "id": "25", "start": "2025-02-15", "end": "2025-02-19", "title": "Annual Summit", "colour": "bg-pink-400" },
+  { "id": "26", "start": "2025-02-18", "end": "2025-02-21", "title": "Design Sprint", "colour": "bg-teal-400" },
+  { "id": "27", "start": "2025-02-20", "end": "2025-02-24", "title": "Innovation Week", "colour": "bg-orange-400" },
+
+  { "id": "28", "start": "2025-02-05", "end": "2025-02-07", "title": "Budget Review", "colour": "bg-indigo-300" },
+  { "id": "29", "start": "2025-02-12", "end": "2025-02-13", "title": "Team Lunch", "colour": "bg-emerald-300" },
+  { "id": "30", "start": "2025-02-22", "end": "2025-02-25", "title": "Client Presentation", "colour": "bg-yellow-300" }
+]

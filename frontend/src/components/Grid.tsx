@@ -25,16 +25,15 @@ import { EventsContext, EventsDispatchContext } from "../contexts/EventsContext"
 type GridStyle = {
   eventStyle: EventStyle;
   cellStyle: CellStyle
-}
-type GridProps = {
   colCount: number;
   cellCount: number;
-  events: EventDTO[];
+}
+type GridProps = {
   egStyle: GridStyle;
   start: Date;
   cellStep: TimeSpan
 };
-const Grid: React.FC<GridProps> = ({ colCount, cellCount, egStyle, start, cellStep }) => {
+const Grid: React.FC<GridProps> = ({ egStyle, start, cellStep }) => {
 
   // events context
   const events = useContext(EventsContext)
@@ -54,9 +53,9 @@ const Grid: React.FC<GridProps> = ({ colCount, cellCount, egStyle, start, cellSt
       cellLaneEvents.current,
       gridRowWidthRef.current?.getBoundingClientRect().width ?? 0,
       start,
-      cellCount,
+      egStyle.cellCount,
       cellStep,
-      colCount,
+      egStyle.colCount,
       egStyle.eventStyle
     ))
   }, [events])
@@ -89,9 +88,9 @@ const Grid: React.FC<GridProps> = ({ colCount, cellCount, egStyle, start, cellSt
       className="flex flex-col gap-4 p-4 max-w-5xl mx-auto overflow-x-hidden"
     >
       {/* iterate to create rows */}
-      {Array.from({ length: Math.ceil(cellCount / colCount) }).map((_, rowIndex) => {
-        const rowStart = rowIndex * colCount + 1;
-        const rowEnd = Math.min(rowStart + colCount - 1, cellCount);
+      {Array.from({ length: Math.ceil(egStyle.cellCount / egStyle.colCount) }).map((_, rowIndex) => {
+        const rowStart = rowIndex * egStyle.colCount + 1;
+        const rowEnd = Math.min(rowStart + egStyle.colCount - 1, egStyle.cellCount);
         return (
           <div
             ref={gridRowWidthRef}
@@ -101,7 +100,7 @@ const Grid: React.FC<GridProps> = ({ colCount, cellCount, egStyle, start, cellSt
             <div
               className="grid gap-0 border-b border-gray-200"
               style={{
-                gridTemplateColumns: `repeat(${colCount}, minmax(0, 1fr))`
+                gridTemplateColumns: `repeat(${egStyle.colCount}, minmax(0, 1fr))`
               }}
             >
               {/* iterate to create cells */}
@@ -144,4 +143,4 @@ const Grid: React.FC<GridProps> = ({ colCount, cellCount, egStyle, start, cellSt
 };
 
 export { Grid };
-export type { GridStyle };
+export type { GridStyle, GridProps };
