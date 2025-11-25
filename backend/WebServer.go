@@ -23,17 +23,21 @@ type WebServer struct {
 	mux    *http.ServeMux
 	server *http.Server
 	logger *zap.Logger
+	routes []func() http.HandlerFunc
 }
 
 // NewWebServer creates a new server instance
-func NewWebServer(port string, logger *zap.Logger) (*WebServer, error) {
-
+func NewWebServer(
+	port string,
+	logger *zap.Logger,
+	routesToMap map[string]func(http.ResponseWriter, *http.Request),
+) (*WebServer, error) {
 	// create server and map routes
 	s := &WebServer{
 		mux:    http.NewServeMux(),
 		logger: logger,
 	}
-	s.routes()
+	s.mapRoutes(routesToMap)
 	s.server = &http.Server{
 		Addr:         ":" + port,
 		Handler:      s.middleware(s.mux),
@@ -41,13 +45,17 @@ func NewWebServer(port string, logger *zap.Logger) (*WebServer, error) {
 		WriteTimeout: 15 * time.Second,
 		IdleTimeout:  60 * time.Second,
 	}
-
 	// return the server
 	return s, nil
 }
 
 // routes configures all server routes
-func (s *WebServer) routes() {
+func (s *WebServer) mapRoutes(
+	routesToMap map[string]func(http.ResponseWriter, *http.Request),
+) {
+	for path, r := range routesToMap {
+		s.mux.HandleFunc(path, r)
+	}
 	s.mux.HandleFunc("/", s.handleHome())
 	s.mux.HandleFunc("/health", s.handleHealth())
 	s.mux.HandleFunc("/api/testevents", s.handleTestEvents())
@@ -76,15 +84,6 @@ func (s *WebServer) Shutdown(ctx context.Context) error {
 	Route handlers
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
-
-type EventDTO struct {
-	Key    string    `json:"key"`
-	ID     string    `json:"id"`
-	Start  time.Time `json:"start"` // event start
-	End    time.Time `json:"end"`   // inclusive
-	Title  string    `json:"title"`
-	Colour string    `json:"colour"`
-}
 
 func (s *WebServer) handleTestEvents() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -166,7 +165,12 @@ func corsMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-// Helper functions
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+	Helpers
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
 func respondJSON(w http.ResponseWriter, status int, payload interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)

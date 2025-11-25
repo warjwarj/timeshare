@@ -15,7 +15,12 @@ import (
 
 func main() {
 
-	// logger
+	/*
+		~~~~~~~~~~~~~~~~~~~~~~~~~~
+			Logger
+		~~~~~~~~~~~~~~~~~~~~~~~~~~
+	*/
+
 	var logger *zap.Logger
 	if PROD {
 		tmp, err := zap.NewProduction()
@@ -32,16 +37,43 @@ func main() {
 	}
 	defer logger.Sync()
 
-	// instatiate server
-	server, err := NewWebServer(PORT, logger)
+	/*
+		~~~~~~~~~~~~~~~~~~~~~~~~~~
+			DB
+		~~~~~~~~~~~~~~~~~~~~~~~~~~
+	*/
+
+	_, err := NewDbConn("postgres://admin:admin@localhost:5324/mydb", logger)
+	if err != nil {
+		logger.Fatal("fatal connecting to database: ", zap.Error(err))
+	}
+
+	/*
+		~~~~~~~~~~~~~~~~~~~~~~~~~~
+			WebServer
+		~~~~~~~~~~~~~~~~~~~~~~~~~~
+	*/
+
+	routes := map[string]func(http.ResponseWriter, *http.Request){
+		"/register": handleRegister(),
+		"/login":    handleLogin(),
+	}
+
+	server, err := NewWebServer(PORT, logger, routes)
 	if err != nil {
 		logger.Fatal("fatal error creating server: ", zap.Error(err))
 	}
-	// channel for shutdown
+
+	/*
+		~~~~~~~~~~~~~~~~~~~~~~~~~~
+			Start server
+		~~~~~~~~~~~~~~~~~~~~~~~~~~
+	*/
+
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 
-	// start server async
+	// start server
 	go func() {
 		if err := server.Start(); err != nil && err != http.ErrServerClosed {
 			logger.Fatal("server failed to start: ", zap.Error(err))
