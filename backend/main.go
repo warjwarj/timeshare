@@ -43,22 +43,26 @@ func main() {
 		~~~~~~~~~~~~~~~~~~~~~~~~~~
 	*/
 
-	_, err := NewDbConn("postgres://admin:admin@localhost:5324/mydb", logger)
+	dbconn, err := NewDbConn("postgres://admin:admin@localhost:5324/mydb", logger)
 	if err != nil {
 		logger.Fatal("fatal connecting to database: ", zap.Error(err))
 	}
 
 	/*
 		~~~~~~~~~~~~~~~~~~~~~~~~~~
-			WebServer
+			API
 		~~~~~~~~~~~~~~~~~~~~~~~~~~
 	*/
 
-	routes := map[string]func(http.ResponseWriter, *http.Request){
-		"/register": handleRegister(),
-		"/login":    handleLogin(),
+	// services
+	authService := NewAuthService(dbconn)
+
+	// collate routes and handlers
+	routes := []RouteMap{
+		authService.GetRoutes(),
 	}
 
+	// server
 	server, err := NewWebServer(PORT, logger, routes)
 	if err != nil {
 		logger.Fatal("fatal error creating server: ", zap.Error(err))

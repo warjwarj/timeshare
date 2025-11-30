@@ -13,8 +13,6 @@ type DbConn struct {
 }
 
 func NewDbConn(connstr string, logger *zap.Logger) (*DbConn, error) {
-
-	// urlExample := "postgres://username:password@localhost:5432/database_name"
 	conn, err := pgx.Connect(context.Background(), connstr)
 	if err != nil {
 		logger.Fatal("Unable to connect to database: %v\n", zap.Error(err))

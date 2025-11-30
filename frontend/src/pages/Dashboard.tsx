@@ -35,7 +35,7 @@ const Dashboard: React.FC = () => {
   // retrieve events on page load
   const eventsDispatch = useContext(EventsDispatchContext)
   useLayoutEffect(() => {
-    axios.get(import.meta.env.VITE_API_URL)
+    axios.get(import.meta.env.VITE_API_URL + "/api/testevents")
     .then(res => {
       const dtos = res.data.message
       eventsDispatch({

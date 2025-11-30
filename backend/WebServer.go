@@ -11,13 +11,6 @@ import (
 	"go.uber.org/zap"
 )
 
-// Response represents a standard API response
-type Response struct {
-	Success bool        `json:"success"`
-	Message string      `json:"message,omitempty"`
-	Data    interface{} `json:"data,omitempty"`
-}
-
 // WebServer holds the HTTP server and dependencies
 type WebServer struct {
 	mux    *http.ServeMux
@@ -26,11 +19,15 @@ type WebServer struct {
 	routes []func() http.HandlerFunc
 }
 
-// NewWebServer creates a new server instance
+// each service will have their own routes.
+// This type describes a service's routes, and their handlers.
+type RouteMap map[string]func(http.ResponseWriter, *http.Request)
+
+// constructor
 func NewWebServer(
 	port string,
 	logger *zap.Logger,
-	routesToMap map[string]func(http.ResponseWriter, *http.Request),
+	routesToMap []RouteMap,
 ) (*WebServer, error) {
 	// create server and map routes
 	s := &WebServer{
@@ -49,13 +46,18 @@ func NewWebServer(
 	return s, nil
 }
 
-// routes configures all server routes
+// map routes and handlers
 func (s *WebServer) mapRoutes(
-	routesToMap map[string]func(http.ResponseWriter, *http.Request),
+	routeMaps []RouteMap,
 ) {
-	for path, r := range routesToMap {
-		s.mux.HandleFunc(path, r)
+	// iterate list of route maps.
+	for _, rm := range routeMaps {
+		for rt, handler := range rm {
+			s.mux.HandleFunc(rt, handler)
+		}
 	}
+
+	// just for testing
 	s.mux.HandleFunc("/", s.handleHome())
 	s.mux.HandleFunc("/health", s.handleHealth())
 	s.mux.HandleFunc("/api/testevents", s.handleTestEvents())
@@ -63,7 +65,9 @@ func (s *WebServer) mapRoutes(
 
 // apply middleware to the http handler
 func (s *WebServer) middleware(next http.Handler) http.Handler {
-	return loggingMiddleware(corsMiddleware(next))
+	return loggingMiddleware(
+		corsMiddleware(next),
+	)
 }
 
 // start server
@@ -97,9 +101,9 @@ func (s *WebServer) handleTestEvents() http.HandlerFunc {
 			s.logger.Error("couldn't read json file ", zap.Error(err))
 		}
 
-		respondJSON(w, http.StatusOK, Response{
-			Success: true,
-			Message: string(byts),
+		respondJSON(w, http.StatusOK, map[string]interface{}{
+			"Success": true,
+			"Message": string(byts),
 		})
 	}
 }
@@ -111,9 +115,9 @@ func (s *WebServer) handleHome() http.HandlerFunc {
 			return
 		}
 
-		respondJSON(w, http.StatusOK, Response{
-			Success: true,
-			Message: "api active ^_^",
+		respondJSON(w, http.StatusOK, map[string]interface{}{
+			"Success": true,
+			"Message": "api active ^_^",
 		})
 	}
 }
@@ -125,10 +129,10 @@ func (s *WebServer) handleHealth() http.HandlerFunc {
 			return
 		}
 
-		respondJSON(w, http.StatusOK, Response{
-			Success: true,
-			Message: "Server is healthy",
-			Data: map[string]string{
+		respondJSON(w, http.StatusOK, map[string]interface{}{
+			"Success": true,
+			"Message": "Server is healthy",
+			"Data": map[string]string{
 				"status": "up",
 				"time":   time.Now().Format(time.RFC3339),
 			},
@@ -178,8 +182,8 @@ func respondJSON(w http.ResponseWriter, status int, payload interface{}) {
 }
 
 func respondError(w http.ResponseWriter, status int, message string) {
-	respondJSON(w, status, Response{
-		Success: false,
-		Message: message,
+	respondJSON(w, status, map[string]interface{}{
+		"Success": false,
+		"Message": message,
 	})
 }

@@ -12,8 +12,8 @@ func RespondJSON(w http.ResponseWriter, status int, payload interface{}) {
 }
 
 func RespondError(w http.ResponseWriter, status int, message string) {
-	respondJSON(w, status, Response{
-		Success: false,
-		Message: message,
+	respondJSON(w, status, map[string]interface{}{
+		"Success": false,
+		"Message": message,
 	})
 }

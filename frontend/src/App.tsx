@@ -10,7 +10,7 @@ function App() {
     <div>
       <nav style={{ marginBottom: '1rem' }}>
         <Link to="/">Home</Link> |
-        <Link to="/login">Register</Link> |
+        <Link to="/login">Login</Link> |
         <Link to="/about">About</Link> |
       </nav>      
       <Routes>

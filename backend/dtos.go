@@ -14,5 +14,9 @@ type EventDTO struct {
 type RegisterDTO struct {
 	Email string `json:"Email"`
 	Pass  string `json:"Pass"`
-	Name  string `json:"Name"`
+}
+
+type LoginDTO struct {
+	Email string `json:"Email"`
+	Pass  string `json:"Pass"`
 }

@@ -9,7 +9,7 @@ const API = import.meta.env.VITE_API_URL as string;
 const LoginForm: React.FC = () => {
 
   const [email, setEmail] = useState<string>("");
-  const [password, setPassword] = useState<string>("");
+  const [pass, setPassword] = useState<string>("");
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [isRegister, setIsRegister] = useState<boolean>(false);
 
@@ -20,7 +20,7 @@ const LoginForm: React.FC = () => {
       setErrorMessage("Username cannot be blank.");
       return;
     }
-    if (!password) {
+    if (!pass) {
       setErrorMessage("Password cannot be blank.");
       return;
     }
@@ -31,7 +31,7 @@ const LoginForm: React.FC = () => {
 
     if (isRegister) {
       try {
-        const res = await axios.post(`${API}/register`, { email, password });
+        const res = await axios.post(`${API}/register`, { email, pass });
         console.log(res)
         setErrorMessage("SUCCESS: Registered! Now log in.");
       } catch (err) {
@@ -39,7 +39,7 @@ const LoginForm: React.FC = () => {
       }
     } else {
       try {
-        const res = await axios.post(`${API}/login`, { email, password });
+        const res = await axios.post(`${API}/login`, { email, pass });
         console.log(res)
         login()
       } catch (err) {
@@ -112,7 +112,7 @@ const LoginForm: React.FC = () => {
                 type="password"
                 id="password"
                 name="password"
-                value={password}
+                value={pass}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="password"
                 className="block w-full px-3 py-1.5 rounded-md bg-grey-400"
