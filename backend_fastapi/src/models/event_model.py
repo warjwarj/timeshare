@@ -1,10 +1,21 @@
-from pydantic import BaseModel, Field
-from datetime import datetime
+from uuid import uuid4
+from sqlalchemy import Column, String
+from sqlalchemy.ext.declarative import declarative_base
 
-class EventModel(BaseModel):
-  """Event model"""
-  id: str
-  start: datetime
-  end: datetime
-  title: str = Field(min_length=1, max_length=100)
-  colour: str = Field(pattern=r"^#(?:[0-9a-fA-F]{3}){1,2}$") # check colour is in hex code format
+Base = declarative_base()
+
+class EventModel(Base):
+  """
+  
+  Event model. Only for use when interacting directly with the db.
+  
+  """
+  __tablename__: str = "events"
+  
+  id = Column(String, primary_key=True, default=lambda: str(uuid4()))
+  start= Column(String, index=True, nullable=True)
+  end = Column(String, index=True, nullable=True)
+  title = Column(String, index=True, nullable=True)
+  colour = Column(String, index=True, nullable=True)
+    
+    

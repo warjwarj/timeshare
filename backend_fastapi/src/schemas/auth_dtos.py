@@ -1,19 +1,13 @@
 from pydantic import BaseModel
-
-class RegisterReq(BaseModel):
-  name: str
-  email: str
-  password: str
-
-class LoginReq(BaseModel):
-  name: str
-  email: str
-  password: str  
+from datetime import datetime
   
-class CreateTokenRes(BaseModel):
-  access_token: str
-  token_type: str
-
-class UserResponse(BaseModel):
-  email: str
-  full_name: str
+class JwtPayload:
+  """
+  
+  The data we serialise into a JWT payload.
+  
+  """
+  user_id: str
+  role: str
+  exp: datetime
+  iat: datetime
