@@ -1,5 +1,5 @@
 from uuid import uuid4
-from sqlalchemy import Column, String
+from sqlalchemy import Column, String, Index
 from sqlalchemy.ext.declarative import declarative_base
 
 Base = declarative_base()
@@ -17,5 +17,8 @@ class EventModel(Base):
   end = Column(String, index=True, nullable=True)
   title = Column(String, index=True, nullable=True)
   colour = Column(String, index=True, nullable=True)
-    
-    
+  
+  # example index - come back to this
+  __table_args__: tuple[Index] = (
+    Index('idx_title_start', 'title', 'start'),
+  )

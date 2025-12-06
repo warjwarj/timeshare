@@ -1,42 +1,74 @@
-from fastapi import APIRouter, HTTPException
+import logging
+from fastapi import APIRouter, Depends
+from typing import Annotated
+from services import AuthService
+from schemas import LoginRequest, LoginResponse, RegisterRequest, RegisterResponse, JwtPayload
+from schemas import UserDTO
+from dependancies import AuthServiceDep, IsAuthedDep
 
-from services.auth_service import AuthService
-from schemas.auth_dtos import UserDTO
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Module vars
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-from models.user_model import UserModel
-
-router = APIRouter(
+auth_router = APIRouter(
   prefix="/auth", 
   tags=["auth"]
 )
 
-@router.post("/register", response_model=UserDTO, status_code=201)
-async def register(request: UserDTO):
+logger = logging.getLogger(__name__)
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Routes
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+@auth_router.post("/register", response_model=RegisterResponse, status_code=201)
+async def register(
+    request: RegisterRequest, 
+    auth_service: AuthServiceDep
+  ):
   """
-  
   Route for registering a user.
-  returns the registered user model.
-  
+  returns the registered user model.  
   """
-  return AuthService.register_user(
+  
+  return auth_service.register_user(
     email=request.email,
     password=request.password,
     full_name=request.full_name
   )
   
-@router.post("/login", response_model=UserDTO, status_code=201)
-async def login(request: UserDTO):
+@auth_router.post("/login", response_model=LoginResponse, status_code=201)
+async def login(
+    request: LoginRequest,
+    auth_service: AuthServiceDep
+  ):
+  """  
+  Route for logging in a user.  
   """
   
-  Route for logging in a user.
-  Returns 
-  
-  """
   # this will raise an exception if unauthorised
-  user = AuthService.login_user(
+  user: UserDTO = auth_service.login_user(
     email=request.email,
     password=request.password,
     full_name=request.full_name
   )
-  token = AuthService.encode_token(user)
-  return { "success": True, "access_token": token, "token_type": "bearer" }
+  
+  token: JwtPayload = AuthService.create_token(user)
+  
+  return LoginResponse(
+    success=True,
+    access_token=AuthService.encode_token(token),
+    token_type="bearer",
+    user_id=user.id,
+    expires_at=token.expires_at
+  )
+
+@auth_router.post("/whoami", response_model=(UserDTO))
+async def login(
+    auth_service: AuthServiceDep,
+    jwt_payload: IsAuthedDep,
+  ):
+  """
+  Protected route, get current user information  
+  """
+  return auth_service.get_current_user_data(jwt_payload)

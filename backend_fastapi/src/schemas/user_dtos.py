@@ -1,6 +1,6 @@
-from datetime import datetime
 from typing import Optional
 from dataclasses import dataclass
+  
 
 @dataclass
 class UserDTO:
@@ -13,4 +13,4 @@ class UserDTO:
   name: str
   email: str
   password: Optional[str]
-  role: str
+  role: str # don't read the role from the user dto store it in the jwt

@@ -11,7 +11,16 @@ import threading
 from models.user_model import UserModel, map_to_dto
 from schemas.user_dtos import UserDTO
 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Module vars
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# sqlalchemy thing
 Base = declarative_base()
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# UserRepository
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 class UserRepository:
   """
@@ -22,7 +31,8 @@ class UserRepository:
   
   def __new__(cls, *args, **kwargs):
     """      
-    Ensure thread safe singleton      
+    Ensure thread safe singleton. 
+    __new__ runs before init so we can only use the __init__ for actual initialisation.
     """
     if not cls._instance:
       with cls._lock:

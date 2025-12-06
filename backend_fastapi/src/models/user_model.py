@@ -20,7 +20,7 @@ class UserModel(Base):
   password: Column[str] = Column(Text, nullable=True) # text instead of string for variable length
   role: Column[str] = Column(String(64), index=True, nullable=True)
   
-  # Composite index for common queries
+  # example index - come back to this
   __table_args__: tuple[Index] = (
     Index('idx_email_role', 'email', 'role'),
   )
