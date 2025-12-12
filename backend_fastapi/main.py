@@ -1,31 +1,37 @@
+import logging
+import sys
 from fastapi import FastAPI
+from sqlalchemy import create_engine
+from sqlalchemy.orm import declarative_base, sessionmaker
 
-from routers import auth_router
+from src.routers.auth_router import auth_router
+from src.routers.events_router import events_router
+from src.repositories.users_repository import UserRepository
 
+from settings import settings
 
 # app object
 app = FastAPI()
 
-# 
+# routers
 app.include_router(auth_router)
+app.include_router(events_router)
 
 # echo for testing
-@app.get("/api/{echo}")
-async def root(echo: str):
-  return {"message": f"You sent {echo}"}
+# @app.get("/api/{echo}")
+# async def root(echo: str):
+#   return {"message": f"You sent {echo}"}
 
-# if __name__ == "__main__":
+
+# if __name__ == "main":
+#   print(__name__)
   
 #   # configure logging
 #   logging.basicConfig(stream=sys.stdout, level=logging.INFO)
   
-#   # fastapi thing no idea what it does lol
-#   Base = declarative_base()
-  
-#   # PostgreSQL connection string
-#   DATABASE_URL = "postgresql://admin:admin@localhost:5324/timeshare"
-  
-#   # Setup database connection
+#   # db stuff
+#   DATABASE_URL = f"postgresql://{settings.POSTGRES_USER}:{settings.POSTGRES_PASSWORD}@{settings.POSTGRES_HOST}:{settings.POSTGRES_PORT}/{settings.POSTGRES_DB}"   
+#   print(DATABASE_URL) 
 #   engine = create_engine(
 #     DATABASE_URL,
 #     echo=True,
@@ -33,14 +39,11 @@ async def root(echo: str):
 #     max_overflow=20,
 #     pool_pre_ping=True,
 #     pool_recycle=3600
-#   )
-#   Base.metadata.create_all(engine)
+#   )  
+#   sesh_maker = sessionmaker(autocommit=False, autoflush=False, bind=engine)
   
-#   # Create session factory
-#   SessionFactory = sessionmaker(bind=engine)
-  
-#   # Initialize the singleton (first time only)
-#   user_repo = UserRepository(SessionFactory)
+#   # init singletons
+#   user_repo = UserRepository()
   
 #   # Subsequent calls return the same instance
 #   user_repo2 = UserRepository()  # No need to pass session_factory again

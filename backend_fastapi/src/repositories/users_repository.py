@@ -1,22 +1,20 @@
 from _thread import LockType
 from sqlalchemy import Select, select, inspect
 from sqlalchemy.orm import sessionmaker, declarative_base
-from sqlalchemy import Column, String, Text
-from sqlalchemy.dialects.postgresql import UUID
-from uuid import uuid4
-from typing import Optional, List, Tuple
+from typing import Optional, Tuple
 from contextlib import contextmanager
 import threading
+import logging
 
-from models.user_model import UserModel, map_to_dto
-from schemas.user_dtos import UserDTO
+from src.models.user_model import UserModel, Base, map_to_dto
+from src.schemas.user_dtos import UserDTO
+from src.db.session import get_sessionmaker, yield_session, get_engine, DB_URL
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Module vars
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-# sqlalchemy thing
-Base = declarative_base()
+logger = logging.getLogger(__name__)
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # UserRepository
@@ -25,8 +23,11 @@ Base = declarative_base()
 class UserRepository:
   """
   Singleton repository class for handling database operations on User entities
+    
+  This doesn't currently need to be a singleton but it feels right... maybe for staying threadsafe down the line or something it might be important  
   """
   _instance = None
+  _initialised = False
   _lock: LockType = threading.Lock()
   
   def __new__(cls, *args, **kwargs):
@@ -41,31 +42,25 @@ class UserRepository:
           cls._instance = super(UserRepository, cls).__new__(cls)
     return cls._instance
   
-  def __init__(self, session_factory: sessionmaker = None) -> None:
+  def __init__(self) -> None:
     """
-    Initialize repository with a session factory (only on first instantiation)
-    
-    Args:
-      session_factory: SQLAlchemy session factory for creating database sessions
+    Initialize repository    
     """
     # Only initialize once
-    if not hasattr(self, '_initialized'):
-      if session_factory is None:
-        raise ValueError("session_factory must be provided on first instantiation")
-      self.session_factory = session_factory
-      self.engine = session_factory.kw.get('bind')
-      self._ensure_tables_exist() # check users table exists
-      self._initialized = True
+    if not self._initialised:
+      self._ensure_tables_exist()
+      self._initialised = True
       
   def _ensure_tables_exist(self):
     """
     Check if the database table exists and create it if it doesn't
     """
     try:
-      inspector = inspect(self.engine)
+      engine = get_engine(DB_URL)
+      inspector = inspect(engine)
       existing_tables = inspector.get_table_names()      
       if UserModel.__tablename__ not in existing_tables:
-        Base.metadata.create_all(self.engine, tables=[UserModel.__table__])
+        Base.metadata.create_all(engine, tables=[UserModel.__table__])
     except Exception as e:
       print("ERROR CREATING TABLE", e)
       raise
@@ -85,23 +80,6 @@ class UserRepository:
         raise RuntimeError("UserRepository not initialized. Call UserRepository(session_factory) first.")
     return cls._instance
   
-  @contextmanager
-  def get_session(self):
-    """
-    Context manager for database sessions with automatic commit/rollback.
-    If an operation fails we can roll the changes back.
-    And commit the changes if succcess
-    """
-    session = self.session_factory()
-    try:
-      yield session
-      session.commit()
-    except Exception:
-      session.rollback()
-      raise
-    finally:
-      session.close()
-  
   def create_user(self, user: UserDTO) -> UserDTO:
     """
     Create a new user in the database
@@ -112,9 +90,8 @@ class UserRepository:
     Returns:
       UserModel: The created user object
     """
-    with self.get_session() as session:
+    with yield_session(DB_URL) as session:
       user_model = UserModel(
-        # UUID generated automatically by default=uuid4 in model
         name=user.name,
         email=user.email,
         password=user.password,
@@ -123,7 +100,6 @@ class UserRepository:
       session.add(user_model)
       session.flush()
       session.refresh(user_model)
-      
       return map_to_dto(user_model)
   
   def get_user_by_id(self, user_id: str) -> Optional[UserDTO]:
@@ -136,7 +112,7 @@ class UserRepository:
     Returns:
       UserModel or None if not found
     """
-    with self.get_session() as session:
+    with yield_session(DB_URL) as session:
       stmt: Select[Tuple[UserModel]] = select(UserModel).where(UserModel.id == user_id)
       result = session.execute(stmt)
       return map_to_dto(result.scalar_one_or_none())
@@ -151,7 +127,7 @@ class UserRepository:
     Returns:
       UserModel or None if not found
     """
-    with self.get_session() as session:
+    with yield_session(DB_URL) as session:
       stmt: Select[Tuple[UserModel]] = select(UserModel).where(UserModel.email == email)
       result = session.execute(stmt)
       return map_to_dto(result.scalar_one_or_none())
@@ -167,7 +143,7 @@ class UserRepository:
     Returns:
       Updated UserModel or None if not found
     """
-    with self.get_session() as session:
+    with yield_session(DB_URL) as session:
       stmt: Select[Tuple[UserModel]] = select(UserModel).where(UserModel.id == user_id)
       result = session.execute(stmt)
       user_model = result.scalar_one_or_none()
@@ -191,7 +167,7 @@ class UserRepository:
     Returns:
       True if deleted, False if not found or failed
     """
-    with self.get_session() as session:
+    with yield_session(DB_URL) as session:
       stmt: Select[Tuple[UserModel]] = select(UserModel).where(UserModel.id == user_id)
       result = session.execute(stmt)
       user = result.scalar_one_or_none()

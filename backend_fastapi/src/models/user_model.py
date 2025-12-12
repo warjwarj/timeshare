@@ -2,7 +2,7 @@ from sqlalchemy import Column, String, Index, Text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.dialects.postgresql import UUID
 from uuid import uuid4
-from schemas.user_dtos import UserDTO
+from src.schemas.user_dtos import UserDTO
 
 Base = declarative_base()
 

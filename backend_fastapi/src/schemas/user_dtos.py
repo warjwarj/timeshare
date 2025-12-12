@@ -1,5 +1,7 @@
 from typing import Optional
+from datetime import datetime
 from dataclasses import dataclass
+from uuid import UUID
   
 
 @dataclass
@@ -9,8 +11,9 @@ class UserDTO:
   DTO for communicating information pertaining to a user.
   
   """
-  id: Optional[str]
   name: str
   email: str
-  password: Optional[str]
-  role: str # don't read the role from the user dto store it in the jwt
+  role: Optional[str] = None  # don't read the role from the user dto store it in the jwt
+  id: Optional[UUID] = None
+  password: Optional[str] = None
+  created_at: Optional[datetime] = None

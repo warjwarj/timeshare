@@ -14,16 +14,14 @@ class LoginRequest(BaseModel):
   email: Optional[Annotated[str, StringConstraints(max_length=255)]]
   password: Annotated[str, StringConstraints(max_length=255)]
 
-@dataclass
 class LoginResponse(BaseModel):
   """
   Dataclass for responding to a login request
   """
   success: bool
   access_token: str
-  token_type: str
+  token_type: Optional[Annotated[str, StringConstraints(max_length=255)]]
   user_id: UUID
-  expires_at: datetime
   
 class RegisterRequest(BaseModel):
   """
@@ -34,15 +32,15 @@ class RegisterRequest(BaseModel):
   password: Optional[Annotated[str, StringConstraints(max_length=255)]]
   role: Optional[Annotated[str, StringConstraints(max_length=255)]]
 
-@dataclass
-class RegisterResponse(BaseModel):
-  """
-  Pydantic class for validating a login request.
-  """
-  name: Annotated[str, StringConstraints(max_length=255)]
-  email: Annotated[str, StringConstraints(max_length=255)]
-  password: Optional[Annotated[str, StringConstraints(max_length=255)]]
-  role: Optional[Annotated[str, StringConstraints(max_length=255)]]
+# @dataclass
+# class RegisterResponse(BaseModel):
+#   """
+#   Pydantic class for validating a login request.
+#   """
+#   name: Annotated[str, StringConstraints(max_length=255)]
+#   email: Annotated[str, StringConstraints(max_length=255)]
+#   password: Optional[Annotated[str, StringConstraints(max_length=255)]]
+#   role: Optional[Annotated[str, StringConstraints(max_length=255)]]
 
 @dataclass
 class JwtPayload:

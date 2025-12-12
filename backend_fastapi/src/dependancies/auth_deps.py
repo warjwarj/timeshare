@@ -1,6 +1,8 @@
-from services import AuthService
-from typing import Annotated, Depends
-from schemas import JwtPayload
+from typing import Annotated
+from fastapi import Depends
+
+from src.services.auth_service import AuthService
+from src.schemas.auth_dtos import JwtPayload
 
 def get_auth_service() -> AuthService:
   """
@@ -8,7 +10,7 @@ def get_auth_service() -> AuthService:
   """
   return AuthService()
 
-AuthServiceDep = Annotated[dict, Depends(get_auth_service)]
+AuthServiceDep = Annotated[AuthService, Depends(get_auth_service)]
 
 def verify_token(
     token: str,
@@ -18,6 +20,7 @@ def verify_token(
   Dependancy for reading a jwt from a request.
   Should error if it fails, and return the decoded jwt if it's valid.
   """
+  print(token)
   return auth_service.verify_token(token)
  
 IsAuthedDep = Annotated[JwtPayload, Depends(verify_token)]
