@@ -1,0 +1,22 @@
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-label="Single-line pocket watch" role="img">
+
+  <g fill="none" stroke="#E06A1A" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+
+    <!-- Loop -->
+    <circle cx="100" cy="20" r="8"></circle>
+    <line x1="100" y1="28" x2="100" y2="42"></line>
+
+    <!-- Watch body -->
+    <circle cx="100" cy="115" r="60"></circle>
+
+    <!-- Hour hand -->
+    <line x1="100" y1="115" x2="100" y2="85"></line>
+
+    <!-- Minute hand -->
+    <line x1="100" y1="115" x2="130" y2="115"></line>
+
+    <!-- Center pin -->
+    <circle cx="100" cy="115" r="2"></circle>
+
+  </g>
+</svg>

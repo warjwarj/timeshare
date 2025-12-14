@@ -1,4 +1,4 @@
-import { useContext, useLayoutEffect } from 'react'
+import { useContext, useEffect, useLayoutEffect } from 'react'
 import axios from 'axios';
 
 // components
@@ -10,7 +10,7 @@ import type { GridStyle } from '../components/Grid';
 
 // utils
 import { EventsDispatchContext } from "../contexts/EventsContext";
-import type { EventDTO } from '../types/EventDTO';
+import { apiClient } from "../utils/apiClient";
 
 // eventgrid style
 const evGridStyle: GridStyle = {
@@ -34,20 +34,23 @@ const Dashboard: React.FC = () => {
 
   // retrieve events on page load
   const eventsDispatch = useContext(EventsDispatchContext)
-  useLayoutEffect(() => {
-    axios.get(import.meta.env.VITE_API_URL + "/api/testevents")
-    .then(res => {
-      const dtos = res.data.message
-      eventsDispatch({
-        type: "SET_ALL_EVENTS",
-        payload: { evs: JSON.parse(dtos) as EventDTO[] }
+
+  useEffect(() => {
+    const controller = new AbortController();
+    apiClient.get("/events/testevents", { signal: controller.signal })
+      .then(res => {
+        eventsDispatch({
+          type: "SET_ALL_EVENTS",
+          payload: { evs: res.data }
+        })
       })
-    })
-  }, [])
+    return () => {
+      controller.abort();
+    };
+  }, [eventsDispatch]);
 
   return (
-    <div>
-      <h1>Dashboard</h1>
+    <div className="bg-gray-50 dark:bg-gray-900">
       <Grid
         egStyle={evGridStyle}
         start={new Date(2024, 11, 30)} // so the grid starts on a Monday.

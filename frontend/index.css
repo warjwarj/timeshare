@@ -7,15 +7,57 @@
 }
 
 html {
-  margin: 0; 
+  margin: 0;
   padding: 0;
   font-size: 62.5%;
   font-family: var(--font-sans);
-  max-width: 100vh;
+  max-width: 100%;
+  max-height: 100%;
 }
 
 body {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+}
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+
+
+  /* --color-primary-50: #fffbeb;
+  --color-primary-100: #fef3c7;
+  --color-primary-200: #fde68a;
+  --color-primary-300: #fcd34d;
+  --color-primary-400: #fbbf24;
+  --color-primary-500: #f59e0b;
+  --color-primary-600: #CC5500;
+  --color-primary-700: #b45309;
+  --color-primary-800: #92400e;
+  --color-primary-900: #78350f;
+  --color-primary-950: #451a03; */
+
+  --color-primary-50: #eff6ff;
+  --color-primary-100: #dbeafe;
+  --color-primary-200: #bfdbfe;
+  --color-primary-300: #93c5fd;
+  --color-primary-400: #60a5fa;
+  --color-primary-500: #3b82f6;
+  --color-primary-600: #2563eb; /* main colour */
+  --color-primary-700: #1d4ed8;
+  --color-primary-800: #1e40af;
+  --color-primary-900: #1e3a8a;
+  --color-primary-950: #172554;
+
+  /* Custom font families */
+  --font-body: "Open Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+    "Roboto", "Helvetica Neue", "Arial", "Noto Sans", sans-serif,
+    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol",
+    "Noto Color Emoji";
+
+  --font-sans: "Open Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+    "Roboto", "Helvetica Neue", "Arial", "Noto Sans", sans-serif,
+    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol",
+    "Noto Color Emoji";
 }

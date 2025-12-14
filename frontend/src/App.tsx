@@ -1,24 +1,39 @@
-import { Routes, Route, Link } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 
-import { Home } from '../src/pages/Home'
-import { NotFound } from '../src/pages/NotFound'
+import { NotFound } from './pages/NotFound'
 import { LoginForm } from './pages/Login';
+import { RegisterForm } from './pages/Register';
+import { Home } from './pages/Home';
 
+import { Navbar } from './components/Navbar';
+import { ProtectedRoute } from './components/ProtectedRoute';
+
+const links = [
+  { name: 'Home', path: '/Home' },
+  { name: 'Login', path: '/login' },
+  { name: 'About', path: '/about' },
+];
 
 function App() {
+
   return (
-    <div>
-      <nav style={{ marginBottom: '1rem' }}>
-        <Link to="/">Home</Link> |
-        <Link to="/login">Login</Link> |
-        <Link to="/about">About</Link> |
-      </nav>      
+    <>
+      <Navbar links={links} />
       <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/login" element={<LoginForm />} />
+        <Route path="/" element={<Navigate to="/home"/>} />
+        <Route path="/login" element={ <LoginForm /> } />
+        <Route path="/register" element={ <RegisterForm /> } />
+        <Route
+          path="/home"
+          element={
+            <ProtectedRoute>
+              <Home />
+            </ProtectedRoute>
+          }
+        />
         <Route path="*" element={<NotFound />} />
       </Routes>
-    </div>
+    </>
   )
 }
 

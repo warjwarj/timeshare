@@ -4,6 +4,18 @@ import { TimeSpan } from "../types/TimeSpan";
 import type { EventProps, EventStyle } from "../components/Event";
 import type { EventDTO } from "../types/EventDTO";
 
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  Api request helper to include token
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  Date utils
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
 function isValidDate(d: Date) {
   return (Object.prototype.toString.call(d) === "[object Date]" && !isNaN(d.getTime()));
 }
@@ -156,7 +168,6 @@ function setEventPositions(
       })
     }
   });
-  console.log("Created " + rows.flat().length + " segments from " + evDtos.length + " rows")
   return rows;
 }
 

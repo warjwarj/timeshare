@@ -65,7 +65,6 @@ async def login(
     success=True,
     access_token=encoded_token,
     token_type="bearer",
-    user_id=str(u.id),
   )
 
 @auth_router.post("/whoami")

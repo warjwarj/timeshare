@@ -44,11 +44,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
   except (VerifyMismatchError or VerificationError or InvalidHashError):
     raise HTTPException(
       status_code=HTTPStatus.UNAUTHORIZED,
-      detail={
-        "success": False,
-        "message": "INVALID_PASSWORD",
-        "timestamp": getUtcDatetimeNow()
-      }
+      detail="Invalid password."
     )
 
 def create_token(user: UserDTO, expires_delta: Optional[timedelta] = None) -> dict:
@@ -76,11 +72,11 @@ def encode_token(jwt_payload: dict) -> str:
   # encrypt user id
   try:
     jwt_payload['user_id'] = cipher.encrypt(jwt_payload['user_id'])
+    return jwt.encode(jwt_payload, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
   except Exception:
     raise HTTPException(
       status_code=HTTPStatus.BAD_REQUEST
-    )  
-  return jwt.encode(jwt_payload, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+    ) 
 
 def decode_token(encoded_token: str) -> dict:
   """    
@@ -123,7 +119,7 @@ def register_user(req: UserDTO) -> UserDTO:
   if users_repo.get_user_by_email(req.email):
     raise HTTPException(
       status_code=HTTPStatus.UNAUTHORIZED,
-      detail="email already registered"
+      detail="Email already registered."
     )
   hashed_password = hash_password(req.password)
   return users_repo.create_user(UserDTO(
@@ -146,21 +142,13 @@ def login_user(req: UserDTO) -> UserDTO:
   if not user_record:
     raise HTTPException(
       status_code=HTTPStatus.UNAUTHORIZED,
-      detail={
-        "success": False,
-        "message": "INVALID_USER",
-        "timestamp": getUtcDatetimeNow()
-      }
+      detail="Invalid user."
     )
   # verify password
   if not verify_password(req.password, user_record.password):
     raise HTTPException(
       status_code=HTTPStatus.UNAUTHORIZED,
-      detail={
-        "success": False,
-        "message": "INVALID_PASSWORD",
-        "timestamp": getUtcDatetimeNow()
-      }
+      detail="Invalid password for user."
     )
   return user_record
 

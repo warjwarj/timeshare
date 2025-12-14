@@ -1,18 +1,16 @@
-import { useContext, useState } from "react";
 import type { FormEvent } from 'react';
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { AuthContext } from "../contexts/AuthContext";
-import { apiClient } from "../utils/apiClient";
 import "../../index.css";
+import { apiClient } from "../utils/apiClient";
 
-const LoginForm: React.FC = () => {
-
-  const { login } = useContext(AuthContext)
+const RegisterForm: React.FC = () => {
 
   const navigate = useNavigate();
 
   // states
+  const [name, setName] = useState<string>("");
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [errorMessage, setErrorMessage] = useState<string>("");
@@ -21,33 +19,36 @@ const LoginForm: React.FC = () => {
   const submit = async (e: FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
-      setErrorMessage("Please fill in the usenname and password fields.");
+      setErrorMessage("Please fill in required fields.");
       return;
     }
 
     try {
-      const res = await apiClient.post("/auth/login", {
-        name: "TEST_NAME_CHANGE_THIS_OR_REMOVE",
+      const res = await apiClient.post("/auth/register", {
+        name: name,
         email: email,
         password: password,
         role: "TEST_ROLE_CHANGE_THIS_OR_REMOVE"
-      })
-      if (res.status === 200) {
-        login(res.data["access_token"])
-        navigate("/home")
+      }, { validateStatus: () => true })
+
+      if (res.status === 201) {
+        navigate("/login")
       } else {
         setErrorMessage(res.data["detail"])
       }
     } catch (err) {
-      setErrorMessage(`ERROR: Login failed ` + err);
+      setErrorMessage(`ERROR: Registration failed ` + err);
     }
-  }
 
+  }
   return (
-    <div className="w-full text-xl bg-gray-50 dark:bg-gray-900">
+    <div className="text-xl bg-gray-50 dark:bg-gray-900">
       <div className="flex flex-col items-center justify-center px-6 py-8 mx-auto md:h-screen lg:py-0">
         <div className="inline-flex items-center gap-3 mb-6">
-          <a href="#" className="text-5xl font-semibold text-gray-900 dark:text-white">
+          <a
+            href="#"
+            className="text-5xl font-semibold text-gray-900 dark:text-white"
+          >
             Timeshare
           </a>
         </div>
@@ -55,20 +56,31 @@ const LoginForm: React.FC = () => {
           <div className="p-6 space-y-4 md:space-y-6 sm:p-8">
             <div className="flex items-end justify-between mb-6 w-full">
               <h1 className="text-xl font-semibold text-gray-900 md:text-2xl dark:text-white">
-                Sign in to your account
+                Register your account
               </h1>
               <a
-                href="/register"
+                href="/login"
                 className="text-sm pb-1 font-medium text-primary-600 hover:text-primary-700 hover:underline dark:text-primary-500"
               >
-                Register?
+                Login?
               </a>
             </div>
             <form onSubmit={submit} className="space-y-4 md:space-y-6" action="#">
               <div>
+                <label htmlFor="email" className="block mb-2 font-medium text-gray-900 dark:text-white">Name</label>
+                <input
+                  id="name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Raskolnikov"
+                  className="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                  required
+                />
+              </div>
+              <div>
                 <label htmlFor="email" className="block mb-2 font-medium text-gray-900 dark:text-white">Email</label>
                 <input
-                  id="username"
+                  id="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="test@example.com"
@@ -92,14 +104,10 @@ const LoginForm: React.FC = () => {
               <div className="flex items-center justify-between">
                 <p className="text-sm font-medium text-red-600 hover:underline dark:text-red-500">{errorMessage}</p>
               </div>
-              <div className="flex items-center justify-between">
-                <a href="#" className="text-sm font-medium text-primary-600 hover:underline dark:text-primary-500">Forgot password?</a>
-              </div>
               <button
                 type="submit"
-                className="w-full text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
-              >
-                Login
+                className="w-full text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800">
+                Register
               </button>
             </form>
           </div>
@@ -109,4 +117,5 @@ const LoginForm: React.FC = () => {
   );
 }
 
-export { LoginForm }
+export { RegisterForm };
+

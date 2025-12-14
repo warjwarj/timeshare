@@ -7,14 +7,14 @@ from src.services.auth_service import decode_token
 from src.schemas.auth_dtos import JwtPayload
 
 def verify_token(
-    token: Annotated[str, Header()],
+    Authorization: Annotated[str, Header()],
   ) -> JwtPayload:
   """
   Dependancy for reading a jwt from a request.
   Should error if it fails, and return the decoded jwt if it's valid.
   """
   
-  token = token.strip()
+  token = Authorization.strip()
   if token.startswith("Bearer "):
     token = token[7:]
     

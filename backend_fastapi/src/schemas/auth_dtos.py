@@ -21,7 +21,6 @@ class LoginResponse(BaseModel):
   success: bool
   access_token: str
   token_type: Optional[Annotated[str, StringConstraints(max_length=255)]]
-  user_id: UUID
   
 class RegisterRequest(BaseModel):
   """

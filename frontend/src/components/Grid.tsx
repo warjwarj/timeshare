@@ -48,6 +48,7 @@ const Grid: React.FC<GridProps> = ({ egStyle, start, cellStep }) => {
 
   // update event styles
   useEffect(() => {
+    const controller = new AbortController()
     setEventProps(setEventPositions(
       events,
       cellLaneEvents.current,
@@ -58,7 +59,10 @@ const Grid: React.FC<GridProps> = ({ egStyle, start, cellStep }) => {
       egStyle.colCount,
       egStyle.eventStyle
     ))
-  }, [events])
+    return () => {
+      controller.abort();
+    };
+  }, [events, start, egStyle.cellCount, cellStep, egStyle.colCount, egStyle.eventStyle])
 
   // callback update single event
   const updateEventCallback = useCallback((moddedev: EventDTO) => {
