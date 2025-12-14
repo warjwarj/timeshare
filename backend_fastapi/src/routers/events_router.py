@@ -32,6 +32,7 @@ async def testevents_id(
     id: str,
     jwt_payload: IsAuthedDep
 ):
+  print(jwt_payload)
   filename = os.path.join(os.path.dirname(__file__), "./testevents.json")
   with open(filename) as f:
     jsn = json.load(f)

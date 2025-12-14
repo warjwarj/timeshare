@@ -1,26 +1,24 @@
 from typing import Annotated
-from fastapi import Depends
+from fastapi import Depends, Header
 
-from src.services.auth_service import AuthService
+import jwt
+
+from src.services.auth_service import decode_token
 from src.schemas.auth_dtos import JwtPayload
 
-def get_auth_service() -> AuthService:
-  """
-  Dependancy for the auth service. FastAPI will inject into routes
-  """
-  return AuthService()
-
-AuthServiceDep = Annotated[AuthService, Depends(get_auth_service)]
-
 def verify_token(
-    token: str,
-    auth_service: AuthServiceDep
+    token: Annotated[str, Header()],
   ) -> JwtPayload:
   """
   Dependancy for reading a jwt from a request.
   Should error if it fails, and return the decoded jwt if it's valid.
   """
-  print(token)
-  return auth_service.verify_token(token)
+  
+  token = token.strip()
+  if token.startswith("Bearer "):
+    token = token[7:]
+    
+  decoded_token = decode_token(token)
+  return decoded_token
  
-IsAuthedDep = Annotated[JwtPayload, Depends(verify_token)]
+IsAuthedDep = Annotated[dict, Depends(verify_token)]

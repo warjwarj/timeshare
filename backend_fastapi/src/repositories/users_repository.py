@@ -21,19 +21,14 @@ logger = logging.getLogger(__name__)
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 class UserRepository:
-  """
-  Singleton repository class for handling database operations on User entities
-    
-  This doesn't currently need to be a singleton but it feels right... maybe for staying threadsafe down the line or something it might be important  
-  """
+  
   _instance = None
   _initialised = False
   _lock: LockType = threading.Lock()
   
   def __new__(cls, *args, **kwargs):
-    """      
-    Ensure thread safe singleton. 
-    __new__ runs before init so we can only use the __init__ for actual initialisation.
+    """
+    Singleton repository class for handling database operations on User entities.
     """
     if not cls._instance:
       with cls._lock:
@@ -44,7 +39,7 @@ class UserRepository:
   
   def __init__(self) -> None:
     """
-    Initialize repository    
+    Initialize the singleton.
     """
     # Only initialize once
     if not self._initialised:

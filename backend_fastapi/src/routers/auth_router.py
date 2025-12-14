@@ -1,13 +1,11 @@
 import logging
 from http import HTTPStatus
-
 from fastapi import APIRouter
-from fastapi.responses import Response 
 
-from src.services.auth_service import AuthService
-from src.schemas.auth_dtos import LoginRequest, LoginResponse, RegisterRequest, JwtPayload
+from src.services.auth_service import register_user, create_token, encode_token, login_user, get_current_user_data
+from src.schemas.auth_dtos import LoginRequest, LoginResponse, RegisterRequest
 from src.schemas.user_dtos import UserDTO
-from src.dependancies.auth_deps import AuthServiceDep, IsAuthedDep
+from src.dependancies.auth_deps import IsAuthedDep
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Module vars
@@ -26,15 +24,14 @@ logger = logging.getLogger(__name__)
 
 @auth_router.post("/register", status_code=HTTPStatus.CREATED)
 async def register(
-    request: RegisterRequest, 
-    auth_service: AuthServiceDep
+    request: RegisterRequest,
   ):
   """
   Route for registering a user.
   returns the registered user model.  
   """
   # will raise exception if unauthorised
-  auth_service.register_user(UserDTO(
+  register_user(UserDTO(
     id=None,
     email=request.email,
     password=request.password,
@@ -46,7 +43,6 @@ async def register(
 @auth_router.post("/login", response_model=LoginResponse, status_code=HTTPStatus.OK)
 async def login(
     request: LoginRequest,
-    auth_service: AuthServiceDep
   ):
   """  
   Route for logging in a user.  
@@ -60,10 +56,10 @@ async def login(
   )
   
   # this will raise an exception if unauthorised
-  u = auth_service.login_user(u)
+  u = login_user(u)
     
-  token = auth_service.create_token(u)
-  encoded_token = auth_service.encode_token(token)
+  token = create_token(u)
+  encoded_token = encode_token(token)
   
   return LoginResponse(
     success=True,
@@ -74,10 +70,9 @@ async def login(
 
 @auth_router.post("/whoami")
 async def login(
-    auth_service: AuthServiceDep,
     jwt_payload: IsAuthedDep,
   ):
   """
   Protected route, get current user information  
   """
-  return auth_service.get_current_user_data(jwt_payload)
+  return get_current_user_data(jwt_payload)

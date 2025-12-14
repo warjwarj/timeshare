@@ -4,18 +4,20 @@ import axios, { AxiosError } from "axios";
 
 import "../../index.css";
 
-const API = import.meta.env.VITE_API_URL as string;
+const API = import.meta.env.VITE_API_URL as string + "/auth";
 
 const LoginForm: React.FC = () => {
 
+  // states
   const [email, setEmail] = useState<string>("");
   const [pass, setPassword] = useState<string>("");
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [isRegister, setIsRegister] = useState<boolean>(false);
 
+  // login/register submit handler
   const submit = async (e: FormEvent) => {
-    e.preventDefault();
 
+    e.preventDefault();
     if (!email) {
       setErrorMessage("Username cannot be blank.");
       return;
@@ -31,7 +33,12 @@ const LoginForm: React.FC = () => {
 
     if (isRegister) {
       try {
-        const res = await axios.post(`${API}/register`, { email, pass });
+        const res = await axios.post(`${API}/register`, { 
+          name: "TEST_NAME_CHANGE_THIS", 
+          email: email, 
+          password: pass,
+          role: "TEST_ROLE_CHANGE_THIS"
+        });
         console.log(res)
         setErrorMessage("SUCCESS: Registered! Now log in.");
       } catch (err) {
@@ -39,7 +46,12 @@ const LoginForm: React.FC = () => {
       }
     } else {
       try {
-        const res = await axios.post(`${API}/login`, { email, pass });
+        const res = await axios.post(`${API}/login`, { 
+          name: "TEST_NAME_CHANGE_THIS", 
+          email: email, 
+          password: pass,
+          role: "TEST_ROLE_CHANGE_THIS"
+        });
         console.log(res)
         login()
       } catch (err) {

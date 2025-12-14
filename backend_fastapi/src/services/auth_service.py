@@ -1,9 +1,8 @@
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone, time
 from http import HTTPStatus
 from typing import Optional
 from argon2 import PasswordHasher
 from argon2.exceptions import VerificationError, VerifyMismatchError, InvalidHashError
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi import HTTPException, Depends
 from http import HTTPStatus
 import jwt
@@ -11,6 +10,8 @@ import jwt
 from src.repositories.users_repository import UserRepository
 from src.schemas.auth_dtos import JwtPayload
 from src.schemas.user_dtos import UserDTO
+from src.utils.utils import getUnixEpoch, getUtcDatetimeNow
+from src.utils.encoder import SecureEncoder
 
 from settings import settings
 
@@ -18,133 +19,156 @@ from settings import settings
 # Module vars
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-# fastapi security scheme
-security = HTTPBearer()
+passhasher = PasswordHasher()
+
+cipher = SecureEncoder("REALLY REALLY SAFE PASSWORD")
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# AuthService
+# Services
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-class AuthService:
-  def __init__(self):
-    self.users_repo = UserRepository()
-    self.passhasher = PasswordHasher()
     
-  def hash_password(self, password: str) -> str:
-    """    
-    Hash a password for storage    
-    """
-    
-    return self.passhasher.hash(password)  
-
-  def verify_password(self, plain_password: str, hashed_password: str) -> bool:
-    """    
-    Verify a password against a hash    
-    """
-    try:
-      return self.passhasher.verify(hashed_password, plain_password)  
-    except (VerifyMismatchError or VerificationError or InvalidHashError):
-      raise HTTPException(
-        status_code=HTTPStatus.UNAUTHORIZED,
-        detail={
-          "success": False,
-          "message": "INVALID_PASSWORD",
-          "timestamp": datetime.now(timezone.utc)
-        }
-      )
-
-  def create_token(self, user: UserDTO, expires_delta: Optional[timedelta] = None) -> JwtPayload:
-    """    
-    Create a JWT access token    
-    """
-    
-    if expires_delta:
-      expires = datetime.now(timezone.utc) + expires_delta
-    else:
-      expires = datetime.now(timezone.utc) + timedelta(minutes=15)
+def hash_password(password: str) -> str:
+  """    
+  Hash a password for storage    
+  """
       
-    jwt_payload = {
-      "user_id": str(user.id),
-      "role": user.role,
-      "expires_at": str(expires),
-      "iat": str(datetime.now(timezone.utc))
-    }
-    return jwt_payload
+  return passhasher.hash(password)  
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+  """    
+  Verify a password against a hash    
+  """
   
-  def encode_token(self, jwt_payload: dict) -> str:
-    """
-    Encode an access token
-    """
-    
-    encoded_jwt = jwt.encode(jwt_payload, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
-    return encoded_jwt
+  try:
+    return passhasher.verify(hashed_password, plain_password)  
+  except (VerifyMismatchError or VerificationError or InvalidHashError):
+    raise HTTPException(
+      status_code=HTTPStatus.UNAUTHORIZED,
+      detail={
+        "success": False,
+        "message": "INVALID_PASSWORD",
+        "timestamp": getUtcDatetimeNow()
+      }
+    )
+
+def create_token(user: UserDTO, expires_delta: Optional[timedelta] = None) -> dict:
+  """    
+  Create a JWT access token    
+  """
   
-  def verify_token(self, credentials: HTTPAuthorizationCredentials = Depends(security)) -> JwtPayload:
-    """    
-    Verify a access token   
-    """
+  if expires_delta:
+    expires = datetime.now(timezone.utc) + expires_delta
+  else:
+    expires = datetime.now(timezone.utc) + timedelta(minutes=15)
     
-    token = credentials.credentials    
-    try:
-      payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
-      return payload
-    except jwt.ExpiredSignatureError:
-      print("Token has expired")
-      return None
-    except jwt.InvalidTokenError:
-      print("Invalid token")
-      return None
+  jwt_payload = {
+    "user_id": str(user.id),
+    "expires_at": str(expires), # this can be iso string
+    "iat": getUnixEpoch() # jwt needs an int for iat
+  }
+  return jwt_payload  
+
+def encode_token(jwt_payload: dict) -> str:
+  """
+  Encode an access token
+  """
   
-  def register_user(self, req: UserDTO) -> UserDTO:
-    """    
-    initial register of a new user    
-    """
+  # encrypt user id
+  try:
+    jwt_payload['user_id'] = cipher.encrypt(jwt_payload['user_id'])
+  except Exception:
+    raise HTTPException(
+      status_code=HTTPStatus.BAD_REQUEST
+    )  
+  return jwt.encode(jwt_payload, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+
+def decode_token(encoded_token: str) -> dict:
+  """    
+  Verify a access token   
+  """
+  users_repo = UserRepository()
     
-    if self.users_repo.get_user_by_email(req.email):
+  try:
+    payload = jwt.decode(encoded_token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+    
+    # decrypt user id and check if valid
+    decrypted = cipher.decrypt(payload['user_id'])    
+    user = users_repo.get_user_by_id(decrypted)
+    
+    if not user:
       raise HTTPException(
         status_code=HTTPStatus.UNAUTHORIZED,
-        detail="email already registered"
       )
-    hashed_password = self.hash_password(req.password)
-    self.users_repo.create_user(UserDTO(
-      email=req.email,
-      name=req.name,
-      password=hashed_password,
-      created_at=datetime.now(timezone.utc)
-    ))
-    return True
+    return payload
+  except jwt.ExpiredSignatureError:
+    raise HTTPException(
+      status_code=HTTPStatus.FORBIDDEN,
+    )
+  except jwt.InvalidTokenError:
+    raise HTTPException(
+      status_code=HTTPStatus.UNAUTHORIZED,
+    )
+  except Exception:
+    raise HTTPException(
+      status_code=HTTPStatus.BAD_REQUEST,
+    )
+
+def register_user(req: UserDTO) -> UserDTO:
+  """    
+  initial register of a new user    
+  """
   
-  def login_user(self, req: UserDTO) -> UserDTO:
-    """    
-    authenticate a login attempt    
-    """
-    
-    user_record = self.users_repo.get_user_by_email(req.email)
-    
-    # check user exists
-    if not user_record:
-      raise HTTPException(
-        status_code=HTTPStatus.UNAUTHORIZED,
-        detail={
-          "success": False,
-          "message": "INVALID_USER",
-          "timestamp": datetime.now(timezone.utc)
-        }
-      )
-    # verify password
-    if not self.verify_password(req.password, user_record.password):
-      raise HTTPException(
-        status_code=HTTPStatus.UNAUTHORIZED,
-        detail={
-          "success": False,
-          "message": "INVALID_PASSWORD",
-          "timestamp": datetime.now(timezone.utc)
-        }
-      )
-    return user_record
+  users_repo = UserRepository()
   
-  def get_current_user_data(self, jwt_payload: JwtPayload) -> UserDTO:
-    """
-    given an auth token, retreive the information of the user represented by this token
-    """
-    return self.users_repo.get_user_by_id(jwt_payload.user_id)
+  if users_repo.get_user_by_email(req.email):
+    raise HTTPException(
+      status_code=HTTPStatus.UNAUTHORIZED,
+      detail="email already registered"
+    )
+  hashed_password = hash_password(req.password)
+  return users_repo.create_user(UserDTO(
+    email=req.email,
+    name=req.name,
+    password=hashed_password,
+    created_at=getUtcDatetimeNow()
+  ))
+
+def login_user(req: UserDTO) -> UserDTO:
+  """    
+  authenticate a login attempt    
+  """
+  
+  users_repo = UserRepository()
+  
+  user_record = users_repo.get_user_by_email(req.email)
+  
+  # check user exists
+  if not user_record:
+    raise HTTPException(
+      status_code=HTTPStatus.UNAUTHORIZED,
+      detail={
+        "success": False,
+        "message": "INVALID_USER",
+        "timestamp": getUtcDatetimeNow()
+      }
+    )
+  # verify password
+  if not verify_password(req.password, user_record.password):
+    raise HTTPException(
+      status_code=HTTPStatus.UNAUTHORIZED,
+      detail={
+        "success": False,
+        "message": "INVALID_PASSWORD",
+        "timestamp": getUtcDatetimeNow()
+      }
+    )
+  return user_record
+
+def get_current_user_data(jwt_payload: JwtPayload) -> UserDTO:
+  """
+  given an auth token, retreive the information of the user represented by this token
+  """
+  
+  users_repo = UserRepository()
+  
+  return users_repo.get_user_by_id(jwt_payload.user_id)
