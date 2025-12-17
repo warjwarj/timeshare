@@ -2,7 +2,9 @@ from fastapi import APIRouter
 import json
 import logging
 import os
+
 from src.dependancies.auth_deps import IsAuthedDep
+from src.services.events_service import get_all_events
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Module vars
@@ -19,14 +21,17 @@ logger = logging.getLogger(__name__)
 # Routes
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-# get testevents
+@events_router.get("/allevents")
+async def testevents(jwt_payload: IsAuthedDep):
+  get_all_events("asasd")
+  return True
+
 @events_router.get("/testevents")
 async def testevents(jwt_payload: IsAuthedDep):
   filename = os.path.join(os.path.dirname(__file__), "./testevents.json")
   with open(filename) as f:
     return json.load(f)
 
-# get testevent by id
 @events_router.get("/testevents/{id}")
 async def testevents_id(
     id: str,
