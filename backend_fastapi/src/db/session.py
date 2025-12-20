@@ -3,7 +3,7 @@ from contextlib import contextmanager
 
 from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import Session, sessionmaker
 
 from settings import settings
 
@@ -44,12 +44,14 @@ def get_sessionmaker(database_url: str, echo=False) -> sessionmaker:
   return sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 @contextmanager
-def yield_session(database_url: str) -> Generator:
+def yield_session(database_url: str) -> Generator[Session]:
   """
   Context manager for database sessions with automatic commit/rollback.
   Rolls back changes if catches exception, else commits them.
   """
-  session = get_sessionmaker(database_url)()
+  session_factory = get_sessionmaker(database_url)
+  session = session_factory()
+  
   try:
     yield session
     session.commit()

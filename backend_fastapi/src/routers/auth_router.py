@@ -3,8 +3,8 @@ from http import HTTPStatus
 from fastapi import APIRouter
 
 from src.services.auth_service import register_user, create_token, encode_token, login_user, get_current_user_data
-from src.schemas.auth_dtos import LoginRequest, LoginResponse, RegisterRequest
-from src.schemas.user_dtos import UserDTO
+from src.schemas.requests.auth_requests import LoginRequest, LoginResponse, RegisterRequest
+from src.schemas.dtos.user_dto import UserDTO
 from src.dependancies.auth_deps import IsAuthedDep
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -32,7 +32,7 @@ async def register(
   """
   # will raise exception if unauthorised
   register_user(UserDTO(
-    id=None,
+    uuid=None,
     email=request.email,
     password=request.password,
     name=request.name,
@@ -49,7 +49,7 @@ async def login(
   """
   
   u = UserDTO(
-    id=None,
+    uuid=None,
     email=request.email,
     password=request.password,
     name=request.name,

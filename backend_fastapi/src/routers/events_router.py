@@ -4,7 +4,7 @@ import logging
 import os
 
 from src.dependancies.auth_deps import IsAuthedDep
-from src.services.events_service import get_all_events
+from src.services.events_service import get_all_events, add_event
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Module vars
@@ -21,9 +21,13 @@ logger = logging.getLogger(__name__)
 # Routes
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-@events_router.get("/allevents")
-async def testevents(jwt_payload: IsAuthedDep):
-  get_all_events("asasd")
+@events_router.get("/all")
+async def all(jwt_payload: IsAuthedDep):
+  return get_all_events(jwt_payload["user_uuid"])
+
+@events_router.post("/add")
+async def add(jwt_payload: IsAuthedDep):
+  add_event("asasd")
   return True
 
 @events_router.get("/testevents")

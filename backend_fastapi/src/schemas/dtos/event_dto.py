@@ -10,8 +10,8 @@ class EventDTO():
   
   """
   
-  id: str
-  start: str
-  end: str
+  uuid: str
+  start: datetime
+  end: datetime
   title: str
   colour: str

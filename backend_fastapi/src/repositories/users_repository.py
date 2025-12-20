@@ -9,7 +9,7 @@ from sqlalchemy.orm import declarative_base, sessionmaker
 
 from src.db.session import DB_URL, get_engine, get_sessionmaker, yield_session
 from src.models.user_model import Base, UserModel, map_to_dto
-from src.schemas.user_dtos import UserDTO
+from src.schemas.dtos.user_dto import UserDTO
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Module vars
@@ -97,19 +97,19 @@ class UserRepository:
       session.refresh(user_model)
       return map_to_dto(user_model)
 
-  def get_user_by_id(self, user_id: str) -> Optional[UserDTO]:
+  def get_user_by_id(self, user_uuid: str) -> Optional[UserDTO]:
     """
     Retrieve a user by their ID
 
     Args:
-     user_id: The user's ID
+     user_uuid: The user's ID
 
     Returns:
      UserModel or None if not found
     """
     with yield_session(DB_URL) as session:
       stmt: Select[Tuple[UserModel]] = select(UserModel).where(
-        UserModel.id == user_id
+        UserModel.uuid == user_uuid
       )
       result = session.execute(stmt)
       return map_to_dto(result.scalar_one_or_none())
@@ -131,12 +131,12 @@ class UserRepository:
       result = session.execute(stmt)
       return map_to_dto(result.scalar_one_or_none())
 
-  def update_user(self, user_id: str, **kwargs) -> Optional[UserDTO]:
+  def update_user(self, user_uuid: str, **kwargs) -> Optional[UserDTO]:
     """
     Update a user's information
 
     Args:
-     user_id: The user's ID
+     user_uuid: The user's ID
      **kwargs: Fields to update (name, email, password, role)
 
     Returns:
@@ -144,7 +144,7 @@ class UserRepository:
     """
     with yield_session(DB_URL) as session:
       stmt: Select[Tuple[UserModel]] = select(UserModel).where(
-        UserModel.id == user_id
+        UserModel.id == user_uuid
       )
       result = session.execute(stmt)
       user_model = result.scalar_one_or_none()
@@ -158,19 +158,19 @@ class UserRepository:
         return map_to_dto(user_model)
       return None
 
-  def delete_user(self, user_id: str) -> bool:
+  def delete_user(self, user_uuid: str) -> bool:
     """
     Delete a user from the database
 
     Args:
-     user_id: The user's ID
+     user_uuid: The user's ID
 
     Returns:
      True if deleted, False if not found or failed
     """
     with yield_session(DB_URL) as session:
       stmt: Select[Tuple[UserModel]] = select(UserModel).where(
-        UserModel.id == user_id
+        UserModel.id == user_uuid
       )
       result = session.execute(stmt)
       user = result.scalar_one_or_none()

@@ -14,6 +14,6 @@ class UserDTO:
   name: str
   email: str
   role: Optional[str] = None
-  id: Optional[UUID] = None
+  uuid: Optional[UUID] = None
   password: Optional[str] = None
   created_at: Optional[datetime] = None

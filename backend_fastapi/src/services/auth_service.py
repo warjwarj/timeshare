@@ -8,8 +8,8 @@ from http import HTTPStatus
 import jwt
 
 from src.repositories.users_repository import UserRepository
-from src.schemas.auth_dtos import JwtPayload
-from src.schemas.user_dtos import UserDTO
+from src.schemas.dtos.jwt_payload import JwtPayload
+from src.schemas.dtos.user_dto import UserDTO
 from src.utils.utils import getUnixEpoch, getUtcDatetimeNow
 from src.utils.encoder import SecureEncoder
 
@@ -58,7 +58,7 @@ def create_token(user: UserDTO, expires_delta: Optional[timedelta] = None) -> di
     expires = datetime.now(timezone.utc) + timedelta(minutes=15)
     
   jwt_payload = {
-    "user_id": str(user.id),
+    "user_uuid": str(user.uuid),
     "expires_at": str(expires), # this can be iso string
     "iat": getUnixEpoch() # jwt needs an int for iat
   }
@@ -71,7 +71,7 @@ def encode_token(jwt_payload: dict) -> str:
   
   # encrypt user id
   try:
-    jwt_payload['user_id'] = cipher.encrypt(jwt_payload['user_id'])
+    jwt_payload['user_uuid'] = cipher.encrypt(jwt_payload['user_uuid'])
     return jwt.encode(jwt_payload, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
   except Exception:
     raise HTTPException(
@@ -88,8 +88,9 @@ def decode_token(encoded_token: str) -> dict:
     payload = jwt.decode(encoded_token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
     
     # decrypt user id and check if valid
-    decrypted = cipher.decrypt(payload['user_id'])    
+    decrypted = cipher.decrypt(payload['user_uuid'])    
     user = users_repo.get_user_by_id(decrypted)
+    print(user)
     
     if not user:
       raise HTTPException(
@@ -159,4 +160,4 @@ def get_current_user_data(jwt_payload: JwtPayload) -> UserDTO:
   
   users_repo = UserRepository()
   
-  return users_repo.get_user_by_id(jwt_payload.user_id)
+  return users_repo.get_user_by_id(jwt_payload.user_uuid)

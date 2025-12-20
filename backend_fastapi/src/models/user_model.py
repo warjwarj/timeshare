@@ -2,7 +2,7 @@ from sqlalchemy import Column, String, Index, Text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.dialects.postgresql import UUID
 from uuid import uuid4
-from src.schemas.user_dtos import UserDTO
+from src.schemas.dtos.user_dto import UserDTO
 
 Base = declarative_base()
 
@@ -14,7 +14,7 @@ class UserModel(Base):
   """
   __tablename__: str = "users"
       
-  id: Column[UUID] = Column(UUID(as_uuid=True), primary_key=True, default=uuid4) # native postgres uuid type
+  uuid: Column[UUID] = Column(UUID(as_uuid=True), primary_key=True, default=uuid4) # native postgres uuid type
   name: Column[str] = Column(String(255), index=True, nullable=True)
   email: Column[str] = Column(String(255), index=True, nullable=True, unique=True)
   password: Column[str] = Column(Text, nullable=True) # text instead of string for variable length
@@ -28,7 +28,7 @@ class UserModel(Base):
 def map_to_dto(user_model: UserModel):
   if user_model is not None:
     return UserDTO(
-      id=user_model.id,
+      uuid=user_model.uuid,
       name=user_model.name,
       email=user_model.email,
       password=user_model.password,
