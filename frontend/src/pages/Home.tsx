@@ -11,12 +11,13 @@ import { CollapseButton } from "../components/CollapseButton.tsx";
 
 // users homepage
 const Home: React.FC = () => {
-
+  
   // events reducer
   const [events, eventsDispatch] = useReducer(EventsReducer, TestEvents)
-
-  // track sidebar visibility
-  const [isCollapsed, setIsCollapsed] = useState(false)
+  
+  // Track sidebar visibility. Default to closed if on phone view
+  const isPhone = window.matchMedia('(min-width: 768px)').matches;
+  const [isCollapsed, setIsCollapsed] = useState(!isPhone)
 
   const sidebarLinks: SidebarLink[] = [
     { label: 'Dashboard', path: '/' },

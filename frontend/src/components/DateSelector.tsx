@@ -78,7 +78,7 @@ const DateSelector: React.FC<DateSelectorProps> = ({ startDate }) => {
         <div className="h-full flex items-center justify-end gap-5 p-2">
 
           {/* selected date */}
-          <div className=" rounded-lg">
+          <div className="rounded-lg">
             <p className="text-sm font-medium">Selected Date:</p>
             <p className="text-lg font-semibold">
               {formatDate(selectedDate)}
