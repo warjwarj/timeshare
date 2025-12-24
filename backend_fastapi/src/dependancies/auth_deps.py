@@ -19,7 +19,6 @@ def verify_token(
     token = token[7:]
     
   decoded_token = decode_token(token)
-  print(decoded_token)
   return decoded_token
  
 IsAuthedDep = Annotated[dict, Depends(verify_token)]

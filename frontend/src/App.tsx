@@ -8,17 +8,19 @@ import { Home } from './pages/Home';
 import { Navbar } from './components/Navbar';
 import { ProtectedRoute } from './components/ProtectedRoute';
 
-const links = [
-  { name: 'Home', path: '/Home' },
+const rightlinks = [
   { name: 'Login', path: '/login' },
   { name: 'About', path: '/about' },
 ];
 
-function App() {
+const leftlinks = [
+  { name: 'Timeshare', path: '/home' },
+];
 
+function App() {
   return (
     <>
-      <Navbar links={links} />
+      <Navbar leftlinks={leftlinks} rightlinks={rightlinks} />
       <Routes>
         <Route path="/" element={<Navigate to="/home"/>} />
         <Route path="/login" element={ <LoginForm /> } />

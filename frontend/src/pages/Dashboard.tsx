@@ -1,5 +1,4 @@
-import { useContext, useEffect, useLayoutEffect } from 'react'
-import axios from 'axios';
+import { useContext, useEffect } from 'react'
 
 // components
 import { Grid } from '../components/Grid';
@@ -13,7 +12,7 @@ import { EventsDispatchContext } from "../contexts/EventsContext";
 import { apiClient } from "../utils/apiClient";
 
 // eventgrid style
-const evGridStyle: GridStyle = {
+const gridStyle: GridStyle = {
   eventStyle: {
     eventHeightStyle: "1.6em",
     defaultEventStyle: "absolute pb-0.5 pl-2 text-white text-center text-sm items-center justify-left text-nowrap",
@@ -37,8 +36,9 @@ const Dashboard: React.FC = () => {
 
   useEffect(() => {
     const controller = new AbortController();
-    apiClient.get("/events/testevents", { signal: controller.signal })
+    apiClient.get("/events/all", { signal: controller.signal })
       .then(res => {
+        if (!res) { return; }
         eventsDispatch({
           type: "SET_ALL_EVENTS",
           payload: { evs: res.data }
@@ -50,10 +50,10 @@ const Dashboard: React.FC = () => {
   }, [eventsDispatch]);
 
   return (
-    <div className="bg-gray-50 dark:bg-gray-900">
+    <div id="Dashboard" className="flex">
       <Grid
-        egStyle={evGridStyle}
-        start={new Date(2024, 11, 30)} // so the grid starts on a Monday.
+        egStyle={gridStyle}
+        start={new Date(2024, 11, 30)}
         cellStep={TimeSpan.Day}
       />
     </div>

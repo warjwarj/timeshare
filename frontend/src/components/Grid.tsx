@@ -77,7 +77,7 @@ const Grid: React.FC<GridProps> = ({ egStyle, start, cellStep }) => {
     const laneMap = cellLaneEvents.current.get(cellIndex); // gets lanes and the event ids which are in those lanes
     const evArr: EventProps[] = [];
     laneMap?.forEach((id, lane) => {
-      const evObj = eventProps?.flat().find(ev => ev?.eventDTO.id === id)
+      const evObj = eventProps?.flat().find(ev => ev?.eventDTO.uuid === id)
       if (evObj) {
         evObj.evStyle.lane = lane
         evArr.push(evObj)
@@ -89,7 +89,7 @@ const Grid: React.FC<GridProps> = ({ egStyle, start, cellStep }) => {
   return (
     <div
       id="calendar-grid-container"
-      className="flex flex-col gap-4 p-4 max-w-5xl mx-auto overflow-x-hidden"
+      className="w-full h-full flex flex-col gap-4 p-4 w-full box-border"
     >
       {/* iterate to create rows */}
       {Array.from({ length: Math.ceil(egStyle.cellCount / egStyle.colCount) }).map((_, rowIndex) => {
@@ -99,10 +99,10 @@ const Grid: React.FC<GridProps> = ({ egStyle, start, cellStep }) => {
           <div
             ref={gridRowWidthRef}
             key={rowIndex}
-            className="relative w-full"
+            className="relative w-auto"
           >
             <div
-              className="grid gap-0 border-b border-gray-200"
+              className="grid gap-0 border-light-border dark:border-dark-border"
               style={{
                 gridTemplateColumns: `repeat(${egStyle.colCount}, minmax(0, 1fr))`
               }}

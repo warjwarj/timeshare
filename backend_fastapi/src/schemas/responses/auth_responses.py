@@ -1,25 +1,23 @@
 from pydantic import BaseModel
-from dataclasses import dataclass
-from datetime import datetime
 from typing import Annotated
 from typing import Optional
 from pydantic import StringConstraints
-from uuid import UUID
+from dataclasses import dataclass
 
-class LoginResponse(BaseModel):
+@dataclass
+class LoginResponse():
   """
   Dataclass for responding to a login request
   """
   success: bool
   access_token: str
-  token_type: Optional[Annotated[str, StringConstraints(max_length=255)]]
-
+  token_type: str
+  
 @dataclass
-class JwtPayload:
+class RegisterResponse():
   """
-  Dataclass epresents the data encoded into a jwt payaload
+  Pydantic class for responding to a register request.
   """
-  user_uuid: str
-  role: str
-  expires_at: datetime
-  iat: datetime
+  success: bool
+  name: str
+  email: str

@@ -23,13 +23,13 @@ function EventsReducer(
       break;
     case 'UPDATE_EVENT':
       newEvents = state.map(ev => {
-        return ev.id == action.payload.ev.id ?
+        return ev.uuid == action.payload.ev.uuid ?
           action.payload.ev :
           ev
       })
       break;
     case 'DELETE_EVENT':
-      newEvents = newEvents.filter(ev => ev.id === action.payload.ev.id)
+      newEvents = newEvents.filter(ev => ev.uuid === action.payload.ev.uuid)
       break;
     default:
       break;

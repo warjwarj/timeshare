@@ -45,7 +45,7 @@ const Event: React.FC<{
       <div key={eventProps.eventDTO.key}>
         <span
           onClick={() => setShowModal(true)}
-          key={`event-${eventProps.eventDTO.id}`}
+          key={`event-${eventProps.eventDTO.uuid}`}
           className={
             `${eventProps.evStyle.defaultEventStyle}
               ${eventProps.evStyle.extraClasses}`
@@ -59,12 +59,12 @@ const Event: React.FC<{
           }}
         >
           <span className="block max-w-full">
-            {eventProps.eventDTO.title}
+            {eventProps.eventDTO.name}
           </span>
         </span>
         {showModal && createPortal(
           <Modal
-            label={ `${eventProps.eventDTO.title}` }
+            label={ `${eventProps.eventDTO.name}` }
             isOpen={showModal}
             onClose={ () => setShowModal(false) }
           >

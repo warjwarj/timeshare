@@ -13,7 +13,8 @@ class UserDTO:
   """
   name: str
   email: str
-  role: Optional[str] = None
   uuid: Optional[UUID] = None
+  role: Optional[str] = None
   password: Optional[str] = None
   created_at: Optional[datetime] = None
+  updated_at: Optional[datetime] = None

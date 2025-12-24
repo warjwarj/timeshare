@@ -100,7 +100,7 @@ function setEventPositions(
       let laneAvailable = true;
       for (let cellIndex = cellStartIndex; cellIndex <= cellEndIndex; cellIndex++) {
         const laneMap = cellLaneEvents.get(cellIndex);
-        if (laneMap?.has(lane) && laneMap.get(lane) != ev.id) {
+        if (laneMap?.has(lane) && laneMap.get(lane) != ev.uuid) {
           laneAvailable = false;
           break;
         }
@@ -112,7 +112,7 @@ function setEventPositions(
     // Mark this lane as occupied by this event for all cells it spans
     for (let cellIndex = cellStartIndex; cellIndex <= cellEndIndex; cellIndex++) {
       const laneMap = cellLaneEvents.get(cellIndex);
-      laneMap?.set(lane, ev.id);
+      laneMap?.set(lane, ev.uuid);
     }
 
     // Distribute the event across rows
@@ -134,7 +134,7 @@ function setEventPositions(
       const width = span * cellWidth;
 
       // unique identifier for event segment
-      const key = `${ev.id}-${r}-${eventStartInRow}`
+      const key = `${ev.uuid}-${r}-${eventStartInRow}`
 
       // add rounded corners where needed
       let classes = "";

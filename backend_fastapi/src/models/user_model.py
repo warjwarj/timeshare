@@ -1,37 +1,37 @@
-from sqlalchemy import Column, String, Index, Text
+from sqlalchemy import String, Index, Text
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.dialects.postgresql import UUID
-from uuid import uuid4
 from src.schemas.dtos.user_dto import UserDTO
+from sqlalchemy.orm import Mapped, mapped_column
+
+from src.models.mixins import TimestampMixin, UUIDMixin
 
 Base = declarative_base()
 
-class UserModel(Base):
+class UserModel(Base, TimestampMixin, UUIDMixin):
   """
   
-  User model. Only for use when interacting directly with the db.
+  User model
   
   """
   __tablename__: str = "users"
-      
-  uuid: Column[UUID] = Column(UUID(as_uuid=True), primary_key=True, default=uuid4) # native postgres uuid type
-  name: Column[str] = Column(String(255), index=True, nullable=True)
-  email: Column[str] = Column(String(255), index=True, nullable=True, unique=True)
-  password: Column[str] = Column(Text, nullable=True) # text instead of string for variable length
-  role: Column[str] = Column(String(64), index=True, nullable=True)
+    
+  name: Mapped[str | None] = mapped_column(String(255), index=True)
+  email: Mapped[str | None] = mapped_column(String(255), index=True, unique=True)
+  password: Mapped[str] = mapped_column(Text, nullable=False)
+  role: Mapped[str | None] = mapped_column(String(64), index=True)
   
   # example index - come back to this
   __table_args__: tuple[Index] = (
     Index('idx_email_role', 'email', 'role'),
   )
   
-def map_to_dto(user_model: UserModel):
-  if user_model is not None:
+  def map_to_dto(self):
     return UserDTO(
-      uuid=user_model.uuid,
-      name=user_model.name,
-      email=user_model.email,
-      password=user_model.password,
-      role=user_model.role
+      name=self.name,
+      email=self.email,
+      password=self.password,
+      role=self.role,
+      created_at=self.created_at,
+      updated_at=self.updated_at,
+      uuid=self.uuid
     )
-  return None

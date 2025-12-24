@@ -36,7 +36,7 @@ const Cell: React.FC<CellProps> = ({ label, rowEndIndex, rowStartIndex, cellInde
       <div
         onClick={() => setShowModal(true)}
         key={`row:${rowStartIndex}-${rowEndIndex}, cell:${cellIndex}`}
-        className="border border-gray-300 flex justify-center text-black dark:text-white"
+        className="border bg-light-background border-light-border dark:border-dark-border flex justify-center text-black dark:bg-dark-background dark:text-white"
         style={{
           height: egcStyle.heightStyle
         }}

@@ -1,10 +1,12 @@
 from fastapi import APIRouter
 import json
 import logging
+from http import HTTPStatus
 import os
 
 from src.dependancies.auth_deps import IsAuthedDep
-from src.services.events_service import get_all_events, add_event
+from src.services.events_service import get_all_events, create_event, create_multiple_events
+from src.schemas.requests.event_requests import CreateEventRequest, CreateMultipleEventsRequest
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Module vars
@@ -21,37 +23,23 @@ logger = logging.getLogger(__name__)
 # Routes
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-@events_router.get("/all")
+@events_router.get("/all", status_code=HTTPStatus.OK)
 async def all(jwt_payload: IsAuthedDep):
+  """
+  Get all events visible to user.
+  """
   return get_all_events(jwt_payload["user_uuid"])
 
-@events_router.post("/add")
-async def add(jwt_payload: IsAuthedDep):
-  add_event("asasd")
-  return True
+@events_router.post("/create", status_code=HTTPStatus.CREATED)
+async def create(jwt_payload: IsAuthedDep, event: CreateEventRequest):
+  """
+  Create an event.
+  """
+  return create_event(jwt_payload["user_uuid"], event)
 
-@events_router.get("/testevents")
-async def testevents(jwt_payload: IsAuthedDep):
-  filename = os.path.join(os.path.dirname(__file__), "./testevents.json")
-  with open(filename) as f:
-    return json.load(f)
-
-@events_router.get("/testevents/{id}")
-async def testevents_id(
-    id: str,
-    jwt_payload: IsAuthedDep
-):
-  print(jwt_payload)
-  filename = os.path.join(os.path.dirname(__file__), "./testevents.json")
-  with open(filename) as f:
-    jsn = json.load(f)
-    return [ev for ev in jsn if ev["id"] == id]
-
-# # create event
-# @app.post("/api/create_event/")
-# async def create_event(req: CreateEvent) -> EventModel:
-#   event = EventModel(
-#     id=str(uuid.uuid4()),
-#     **req.model_dump()
-#   )
-#   return event
+@events_router.post("/create-multiple", status_code=HTTPStatus.CREATED)
+async def create(jwt_payload: IsAuthedDep, event: CreateMultipleEventsRequest):
+  """
+  Create multiple events
+  """
+  return create_multiple_events(jwt_payload["user_uuid"], event)

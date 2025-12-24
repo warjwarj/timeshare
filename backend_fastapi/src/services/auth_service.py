@@ -88,15 +88,16 @@ def decode_token(encoded_token: str) -> dict:
     payload = jwt.decode(encoded_token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
     
     # decrypt user id and check if valid
-    decrypted = cipher.decrypt(payload['user_uuid'])    
-    user = users_repo.get_user_by_id(decrypted)
-    print(user)
+    payload['user_uuid'] = cipher.decrypt(payload['user_uuid'])
+    user = users_repo.get_record(uuid=payload['user_uuid'])
     
     if not user:
       raise HTTPException(
         status_code=HTTPStatus.UNAUTHORIZED,
       )
+    
     return payload
+  
   except jwt.ExpiredSignatureError:
     raise HTTPException(
       status_code=HTTPStatus.FORBIDDEN,
@@ -117,27 +118,26 @@ def register_user(req: UserDTO) -> UserDTO:
   
   users_repo = UserRepository()
   
-  if users_repo.get_user_by_email(req.email):
+  if users_repo.get_record(email=req.email):
     raise HTTPException(
       status_code=HTTPStatus.UNAUTHORIZED,
       detail="Email already registered."
     )
   hashed_password = hash_password(req.password)
-  return users_repo.create_user(UserDTO(
+  return users_repo.add_record(
     email=req.email,
     name=req.name,
     password=hashed_password,
     created_at=getUtcDatetimeNow()
-  ))
+  )
 
 def login_user(req: UserDTO) -> UserDTO:
   """    
-  authenticate a login attempt    
-  """
-  
+  Authenticate a login attempt
+  """  
   users_repo = UserRepository()
   
-  user_record = users_repo.get_user_by_email(req.email)
+  user_record = users_repo.get_record(email=req.email)
   
   # check user exists
   if not user_record:
@@ -160,4 +160,7 @@ def get_current_user_data(jwt_payload: JwtPayload) -> UserDTO:
   
   users_repo = UserRepository()
   
-  return users_repo.get_user_by_id(jwt_payload.user_uuid)
+  return users_repo.get_record(
+    multiple=True,
+    uuid=jwt_payload["user_uuid"]
+  )

@@ -3,10 +3,10 @@
 // ... and for the object we use to pass the data around.
 type EventDTO = {
   key: string; 
-  id: string
+  uuid: string
   start: Date; // event start
   end: Date;   // inclusive
-  title: string;
+  name: string;
   colour: string;
 };
 

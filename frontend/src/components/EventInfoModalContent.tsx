@@ -13,6 +13,7 @@ import { isValidDate } from '../utils/utils';
 
 // css
 import '../../index.css';
+import { SaveButton } from './SaveButton';
 
 /*
 
@@ -55,10 +56,10 @@ const EventInfoModalContent: React.FC<EventInfoModalContentProps> = ({ event, up
 
   return (
     <div
+      className="text-light-primary-text dark:text-dark-primary-text"
       onKeyDown={(e) => {
         if (e.key === "Enter") {
           e.preventDefault();
-          console.log("here")
           handleSave();
         }
       }}>
@@ -66,10 +67,10 @@ const EventInfoModalContent: React.FC<EventInfoModalContentProps> = ({ event, up
         backgroundColor: event.eventDTO.colour
       }}
       >
-        <strong>{event.eventDTO.title}</strong>
+        <strong>{event.eventDTO.name}</strong>
       </h3>
 
-      <div>id: {event.eventDTO.id}</div>
+      <div>Id: {event.eventDTO.uuid}</div>
       <div>Lane: {event.evStyle.lane}</div>
 
       <div>
@@ -97,11 +98,7 @@ const EventInfoModalContent: React.FC<EventInfoModalContentProps> = ({ event, up
           className="border rounded p-1"
         />
       </div>
-      <div className="flex justify-end">
-        <button className="hover:bg-black bg-white text-black hover:text-white font-bold py-2 px-4 rounded" onClick={handleSave}>
-          Save
-        </button>
-      </div>
+      <SaveButton onClick={handleSave} children={"Save"} />
     </div>
   );
 };

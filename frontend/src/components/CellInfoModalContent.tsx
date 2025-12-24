@@ -16,16 +16,18 @@ const CellInfoModalContent: React.FC<CellInfoModalContent> = ({ eventsInCell }) 
     <>
       {eventsInCell.sort((a, b) => a.evStyle.lane - b.evStyle.lane).map((ev) => {
         return (
-          <div key={ev.key + "cell-modal-content"}>
+          <div className="bg-light-background dark:bg-dark-background text-light-primary-text dark:text-dark-primary-text" key={ev.key + "cell-modal-content"}>
             <h3 style={{
               backgroundColor: ev.eventDTO.colour
             }}>
-              <strong>{ev.eventDTO.title}</strong>
+              <strong>{ev.eventDTO.name}</strong>
             </h3>
-            <div> id: {ev.eventDTO.id}</div>
-            <div> Lane: {ev.evStyle.lane}</div>
-            <div> Start: {ev.eventDTO.start.toDateString()}</div>
-            <div> End: {ev.eventDTO.end.toDateString()}</div>
+            <div>
+              <div> id: {ev.eventDTO.uuid}</div>
+              <div> Lane: {ev.evStyle.lane}</div>
+              <div> Start: {ev.eventDTO.start.toDateString()}</div>
+              <div> End: {ev.eventDTO.end.toDateString()}</div>
+            </div>
           </div>
         )
       })}

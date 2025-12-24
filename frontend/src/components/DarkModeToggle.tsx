@@ -32,44 +32,50 @@ const DarkModeToggle: React.FC = () => {
       data-tooltip-target="tooltip-toggle"
       type="button"
       onClick={toggleTheme}
-      className="inline-flex items-center justify-center ml-1 mt-1 px-3 py-1 h-[3rem] rounded-xl text-sm font-medium text-body text-primary-600 dark:text-primary-400 transition duration-200 hover:text-heading hover:text-primary-700 dark:hover:text-primary-200 hover:bg-neutral-secondary-soft hover:bg-primary-100 dark:hover:bg-primary-600 "
+      className="
+        inline-flex items-center justify-center
+        m-1 p-1 h-12
+        rounded-xl text-sm font-medium
+        bg-light-background dark:bg-dark-background
+        text-light-primary-text dark:text-dark-primary-text
+        transition duration-200
+        hover:bg-dark-background dark:hover:bg-light-background
+        hover:text-dark-primary-text dark:hover:text-light-primary-text
+      "
       aria-label="Toggle dark mode"
     >
       {/* Moon icon (dark mode) */}
-      <svg
+      <svg xmlns="http://www.w3.org/2000/svg" 
         id="theme-toggle-dark-icon"
-        className={`${isDark ? 'hidden' : 'block'} w-full h-full`}
-        aria-hidden="true"
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
-        viewBox="0 0 24 24"
+        className={`${isDark ? 'hidden' : 'block'} w-full h-full mb-1`}
+        width="24" 
+        height="24" 
+        viewBox="0 0 24 24" 
+        fill="none" 
+        stroke="currentColor" 
+        strokeWidth="1.5" 
+        strokeLinecap="round" 
+        strokeLinejoin="round" 
       >
-        <path
-          stroke="currentColor"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth="2"
-          d="M12 21a9 9 0 0 1-.5-17.986V3c-.354.966-.5 1.911-.5 3a9 9 0 0 0 9 9c.239 0 .254.018.488 0A9.004 9.004 0 0 1 12 21Z"
-        />
+          <path d="M18 5h4"/><path d="M20 3v4"/><path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401"/>
       </svg>
       {/* Sun icon (light mode) */}
       <svg
         id="theme-toggle-light-icon"
-        className={`${isDark ? 'block' : 'hidden'} w-full h-full`}
+        className={`${isDark ? 'block' : 'hidden'} w-full h-full mb-1`}
         aria-hidden="true"
         xmlns="http://www.w3.org/2000/svg"
         fill="none"
         viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.5"
       >
         <path
-          stroke="currentColor"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth="2"
           d="M12 5V3m0 18v-2M7.05 7.05 5.636 5.636m12.728 12.728L16.95 16.95M5 12H3m18 0h-2M7.05 16.95l-1.414 1.414M18.364 5.636 16.95 7.05M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z"
         />
       </svg>
-      <span className="sr-only">Toggle dark mode</span>
     </button>
   );
 };

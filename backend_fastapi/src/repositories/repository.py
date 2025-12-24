@@ -1,7 +1,7 @@
 import logging
 import threading
 from _thread import LockType
-from typing import TypeVar, Generic, List, Optional
+from typing import TypeVar, Generic, List, Optional, Iterable
 from abc import ABC
 
 from sqlalchemy import inspect
@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ModelClass = TypeVar('ModelClass')
-DtoClass = TypeVar('D')
+DtoClass = TypeVar('DtoClass')
 
 class Repository(ABC, Generic[ModelClass, DtoClass]):
     
@@ -33,6 +33,7 @@ class Repository(ABC, Generic[ModelClass, DtoClass]):
   
   _instances = {}
   _locks = {}
+  
 
   def __new__(cls, *args, **kwargs):
     """
@@ -76,64 +77,103 @@ class Repository(ABC, Generic[ModelClass, DtoClass]):
       print("ERROR CREATING TABLE", e)
       raise
   
-  def update_record(self, uuid: str, **kwargs) -> ModelClass | None:
+  def update_record(self, uuid: str, **kwargs) -> DtoClass | None:
     """
-    Update a record of model_class
+    Update a record by it's uuid
     """
+    try:
     
-    if not self.model_class.hasattr(self.model_class, "uuid"):
-      raise ValueError(f"{self.model_class} must define 'uuid'")
-    
-    with yield_session(DB_URL) as session:
-      session.query(self.model_class).filter(self.model_class.uuid).update(kwargs)
-    
-    return self.get_record_by_uuid(uuid)
-
-  def add_record(self, **kwargs) -> ModelClass | None:
-    """
-    Add a record of T
-    """
-    
-    for attr in kwargs:
-      if not self.model_class.hasattr(self.model_class, attr):
-        raise ValueError(f"{self.model_class} must define '{attr}'")
-    
-    rec = self.model_class(**kwargs)
-    with yield_session(DB_URL) as session:
-      session.add(rec)
-    return rec
-  
-  def get_record_by_uuid(self, uuid: str) -> DtoClass | None:
-    """
-    Retreive a record of T by it's uuid
-    """
-    
-    with yield_session(DB_URL) as session:
-      return session.query(self.model_class).filter(
-          self.model_class.uuid == uuid
-        ).first().map_to_dto()
+      for attr in kwargs:
+        if not hasattr(self.model_class, attr):
+          raise ValueError(f"{self.model_class} must define '{attr}'")
       
-  def get_all_matching(self, **kwargs) -> list[DtoClass]:
-    """
-    Get all entities matching the provided field values.
-    """
+      with yield_session(DB_URL) as session:
+        session.query(self.model_class).filter(self.model_class.uuid).update(kwargs)
+      
+      return self.get_record_by_uuid(uuid)
+    
+    except Exception as e:
+      print(f"ERROR UPDATING RECORD: {e}")
 
-    valid_filters = {}
-    for key, value in kwargs.items():
-      if hasattr(self.model_class, key):
-        valid_filters[key] = value
-    with yield_session(DB_URL) as session:
-      models = session.query(self.model_class).filter_by(**valid_filters).all()
-      return [m.map_to_dto() for m in models]
+  def add_record(self, **kwargs) -> DtoClass | None:
+    """
+    Add a record and get a dto of that record which was added
+    """
+    try:
+      
+      for attr in kwargs:
+        if not hasattr(self.model_class, attr):
+          raise ValueError(f"{self.model_class} must define '{attr}'")
+      
+      with yield_session(DB_URL) as session:
+        model = self.model_class(**kwargs)
+        session.add(model)
+        session.commit()
+        session.refresh(model)
+        dto = model.map_to_dto()
+        return dto
+      
+    except Exception as e:
+      print(f"ERROR ADDING RECORD: {e}")
+
+  def add_multiple_records(self, records: Iterable[ModelClass]) -> list[DtoClass] | None:
+    """
+    Add a record and get a dto of that record which was added
+    """
+    try:
+      
+      with yield_session(DB_URL) as session:
+        session.add_all(records)
+        session.commit()
+        [session.refresh(r) for r in records]
+        return [r.map_to_dto() for r in records]
+      
+    except Exception as e:
+      print(f"ERROR ADDING MULTIPLE RECORDS: {e}")
+      
+  def get_record(self, multiple: bool = False, **kwargs) -> DtoClass | list[DtoClass] | None:
+    """
+    Get one or more records that match the provided filters
+    
+    :param kwargs: key/val pairs where the key is the field name, and the value is what we want to filter on.
+    :param all: Whether to retreive every record matching the provided filters, or just the first.
+    :return: None, or one or more records matching the provided filters.
+    :rtype: DtoClass | list[DtoClass] | None:
+    """
+    try:
+      
+      valid_filters = {}
+      for key, value in kwargs.items():
+        if hasattr(self.model_class, key):
+          valid_filters[key] = value
+          
+      with yield_session(DB_URL) as session:
+        if multiple:
+          records = session.query(self.model_class).filter_by(**valid_filters).all()
+          if records:
+            return [r.map_to_dto() for r in records]
+        else:
+          rec = session.query(self.model_class).filter_by(**valid_filters).first()
+          if rec:
+            return rec.map_to_dto()
+      
+      return []
+              
+    except Exception as e:
+      print(f"ERROR GETTING RECORD: {e}")
       
       
   def delete_record(self, uuid: str) -> ModelClass | None:
     """
     Delete a record of T by it's uuid
     """
+    try:
     
-    rec = self.get_record_by_uuid(uuid)    
-    with yield_session(DB_URL) as session:
-      if rec:
-        session.delete(rec)
-    return rec
+      rec = self.get_record_by_uuid(uuid)    
+      with yield_session(DB_URL) as session:
+        if rec:
+          session.delete(rec)
+      return rec
+    
+    except Exception as e:
+      print(f"ERROR DELETING RECORD: {e}")

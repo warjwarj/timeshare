@@ -1,17 +1,19 @@
 from pydantic import BaseModel, Field, field_validator
 from datetime import datetime
+from typing import Optional
+from dataclasses import dataclass
 
-
-
+@dataclass
 class EventDTO():
+  """  
+  EventDTO  
   """
   
-  EventDTO
-  
-  """
-  
-  uuid: str
+  uuid: Optional[str]
   start: datetime
   end: datetime
-  title: str
+  name: str
   colour: str
+  created_by_user_uuid: str
+  created_at: Optional[datetime] = None
+  updated_at: Optional[datetime] = None

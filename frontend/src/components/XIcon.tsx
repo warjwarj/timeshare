@@ -12,7 +12,12 @@ const XIcon: React.FC<XIconProps> = ({ onClick, ...props }) => (
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
     onClick={onClick}
-    className={`cursor-pointer transition-colors ${props.className ?? ""}`}
+    className={`inline-flex items-center justify-center
+      m-1 mr-2 py-1 h-[3rem]
+      rounded-xl text-sm font-medium
+      bg-light-background dark:bg-dark-background
+      text-light-primary-text dark:text-dark-primary-text
+      transition duration-200`}
     {...props}
   >
     <path
