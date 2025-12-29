@@ -1,22 +1,15 @@
-//react
-import React, { useCallback, useContext, useEffect, useRef, useState } from "react";
-
-// components
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import '../../index.css';
+import type { EventDTO } from "../types/EventDTO";
+import type { TimeSpan } from "../types/dateTypes";
+import { getDateFromCellIndex, setEventPositions } from "../utils/utils";
+import type { CellStyle } from "./Cell";
 import { Cell } from "./Cell";
+import type { EventProps, EventStyle } from "./Event";
 import { Event } from './Event';
 
-// types
-import type { EventDTO } from "../types/EventDTO";
-import type { TimeSpan } from "../types/TimeSpan";
-import type { CellStyle } from "./Cell";
-import type { EventProps, EventStyle } from "./Event";
-
-// utils
-import { getDateFromCellIndex, setEventPositions } from "../utils/utils";
-
-// css
-import '../../index.css';
-import { EventsContext, EventsDispatchContext } from "../contexts/EventsContext";
+import { selectProcessedEvents, getEvents, updateEvent } from '../store/slices/eventsSlice';
+import { ourUseSelector, ourUseDispatch } from '../store/hooks';
 
 /*
 
@@ -34,10 +27,8 @@ type GridProps = {
   cellStep: TimeSpan
 };
 const Grid: React.FC<GridProps> = ({ egStyle, start, cellStep }) => {
-
-  // events context
-  const events = useContext(EventsContext)
-  const eventsDispatch = useContext(EventsDispatchContext)
+  const events = ourUseSelector(selectProcessedEvents)
+  const dispatch = ourUseDispatch()
 
   // refs
   const cellLaneEvents = useRef(new Map<number, Map<number, string>>()) // Map<cellIndex, Map<lane, eventId>> SURELY we don't need to use a ref for this? Just save it in the event?
@@ -46,9 +37,18 @@ const Grid: React.FC<GridProps> = ({ egStyle, start, cellStep }) => {
   // event props state
   const [eventProps, setEventProps] = useState<EventProps[][]>()
 
+  // get events on page load
+  useEffect(() => {
+    const endDate = new Date(start);
+    endDate.setMonth(endDate.getMonth() + 1);    
+    const prm = dispatch(getEvents({ start: start, end: endDate }))
+    return () => {
+      prm.abort()
+    };
+  }, [dispatch, start]);
+
   // update event styles
   useEffect(() => {
-    const controller = new AbortController()
     setEventProps(setEventPositions(
       events,
       cellLaneEvents.current,
@@ -59,18 +59,12 @@ const Grid: React.FC<GridProps> = ({ egStyle, start, cellStep }) => {
       egStyle.colCount,
       egStyle.eventStyle
     ))
-    return () => {
-      controller.abort();
-    };
   }, [events, start, egStyle.cellCount, cellStep, egStyle.colCount, egStyle.eventStyle])
 
   // callback update single event
   const updateEventCallback = useCallback((moddedev: EventDTO) => {
-    eventsDispatch({
-      type: "UPDATE_EVENT",
-      payload: { ev: moddedev }
-    })
-  }, [])
+    dispatch(updateEvent(moddedev))
+  }, [dispatch])
 
   // helper get all events in a specific cell
   const getEventsInCell = (cellIndex: number): EventProps[] => {
@@ -147,4 +141,5 @@ const Grid: React.FC<GridProps> = ({ egStyle, start, cellStep }) => {
 };
 
 export { Grid };
-export type { GridStyle, GridProps };
+export type { GridProps, GridStyle };
+

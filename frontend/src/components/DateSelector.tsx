@@ -5,9 +5,10 @@ import { Calendar } from './svgs/Calendar';
 
 type DateSelectorProps = {
   startDate: Date;
+  onlyMonthSelector: boolean;
 }
 
-const DateSelector: React.FC<DateSelectorProps> = ({ startDate }) => {
+const DateSelector: React.FC<DateSelectorProps> = ({ startDate, onlyMonthSelector }) => {
 
   const [selectedDate, setSelectedDate] = useState<Date | null>(startDate);
   const [currentMonth, setCurrentMonth] = useState(new Date());

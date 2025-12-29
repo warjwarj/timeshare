@@ -79,21 +79,29 @@ class Repository(ABC, Generic[ModelClass, DtoClass]):
   
   def update_record(self, uuid: str, **kwargs) -> DtoClass | None:
     """
-    Update a record by it's uuid
+    Update a record by its uuid
     """
-    try:
+    if not kwargs:
+      raise ValueError("No fields provided for update")
     
-      for attr in kwargs:
-        if not hasattr(self.model_class, attr):
-          raise ValueError(f"{self.model_class} must define '{attr}'")
-      
-      with yield_session(DB_URL) as session:
-        session.query(self.model_class).filter(self.model_class.uuid).update(kwargs)
-      
-      return self.get_record_by_uuid(uuid)
+    # Validate all fields exist on model
+    for attr in kwargs:
+      if not hasattr(self.model_class, attr):
+        raise ValueError(f"{self.model_class.__name__} has no attribute '{attr}'")  
     
-    except Exception as e:
-      print(f"ERROR UPDATING RECORD: {e}")
+    with yield_session(DB_URL) as session:
+      record = session.query(self.model_class).filter(
+        self.model_class.uuid == uuid
+      ).first()                
+      if not record:
+        return None
+      
+      for key, value in kwargs.items():
+        setattr(record, key, value)        
+      session.commit()
+      session.refresh(record)
+      
+      return record.map_to_dto() if record else None
 
   def add_record(self, **kwargs) -> DtoClass | None:
     """
@@ -134,7 +142,7 @@ class Repository(ABC, Generic[ModelClass, DtoClass]):
   def get_record(self, multiple: bool = False, **kwargs) -> DtoClass | list[DtoClass] | None:
     """
     Get one or more records that match the provided filters
-    
+
     :param kwargs: key/val pairs where the key is the field name, and the value is what we want to filter on.
     :param all: Whether to retreive every record matching the provided filters, or just the first.
     :return: None, or one or more records matching the provided filters.
@@ -142,23 +150,21 @@ class Repository(ABC, Generic[ModelClass, DtoClass]):
     """
     try:
       
-      valid_filters = {}
+      if not kwargs:
+        raise ValueError("Must provide at least one filter parameter")
+
       for key, value in kwargs.items():
-        if hasattr(self.model_class, key):
-          valid_filters[key] = value
-          
+        if not hasattr(self.model_class, key):
+          raise ValueError(f"{self.model_class} must define '{value}'")
+
       with yield_session(DB_URL) as session:
         if multiple:
-          records = session.query(self.model_class).filter_by(**valid_filters).all()
-          if records:
-            return [r.map_to_dto() for r in records]
+          records = session.query(self.model_class).filter_by(**kwargs).all()
+          return [r.map_to_dto() for r in records] if records else None
         else:
-          rec = session.query(self.model_class).filter_by(**valid_filters).first()
-          if rec:
-            return rec.map_to_dto()
-      
-      return []
-              
+          rec = session.query(self.model_class).filter_by(**kwargs).first()
+          return rec.map_to_dto() if rec else None
+
     except Exception as e:
       print(f"ERROR GETTING RECORD: {e}")
       

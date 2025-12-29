@@ -1,19 +1,13 @@
-import { useReducer, useState } from "react";
+import { useState } from "react";
 
 import { Dashboard } from "./Dashboard";
 
-import { EventsContext, EventsDispatchContext } from '../contexts/EventsContext.tsx';
-import { EventsReducer } from '../reducers/EventsReducer';
-import TestEvents from '../utils/TestEvents';
 import { Sidebar } from "../components/Sidebar.tsx";
 import type { SidebarLink } from "../components/Sidebar.tsx";
 import { CollapseButton } from "../components/CollapseButton.tsx";
 
 // users homepage
-const Home: React.FC = () => {
-  
-  // events reducer
-  const [events, eventsDispatch] = useReducer(EventsReducer, TestEvents)
+const Home: React.FC = () => {  
   
   // Track sidebar visibility. Default to closed if on phone view
   const isPhone = window.matchMedia('(min-width: 768px)').matches;
@@ -46,11 +40,7 @@ const Home: React.FC = () => {
 
         {/* Main content */}
         <div className="overflow-auto">
-          <EventsContext value={events}>
-            <EventsDispatchContext value={eventsDispatch}>
-              <Dashboard />
-            </EventsDispatchContext>
-          </EventsContext>
+          <Dashboard />
         </div>
       </div>
 

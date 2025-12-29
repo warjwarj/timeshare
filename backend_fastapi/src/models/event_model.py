@@ -1,10 +1,7 @@
 from sqlalchemy import String, Index
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import String, Index
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy import String, DateTime
-from sqlalchemy.orm import Mapped, mapped_column
 from datetime import datetime
 
 from src.models.mixins import TimestampMixin, UUIDMixin
@@ -25,7 +22,7 @@ class EventModel(Base, TimestampMixin, UUIDMixin):
   name: Mapped[str] = mapped_column(String(255), index=True, nullable=False)
   colour: Mapped[str] = mapped_column(String(16), index=True, nullable=True)
   created_by_user_uuid: Mapped[str] = mapped_column(String(36), index=True, nullable=False)
-  
+
   # example index - come back to this
   __table_args__: tuple[Index] = (
     Index('idx_name_start', 'name', 'start'),

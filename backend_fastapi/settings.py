@@ -71,7 +71,6 @@ def get_settings(env: str = "dev") -> Settings:
       return ContainerDevSettings()
   if env.lower() in ["test", "t", "testing"]:
       return ContainerTestSettings()
-  print(env)
   raise ValueError("Invalid environment. Must be 'dev' or 'test' ,'local'.")
 
 _env = os.environ.get("ENV", "dev")

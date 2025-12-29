@@ -1,14 +1,8 @@
 // fake enum
-import { TimeSpan } from "../types/TimeSpan";
+import { TimeSpan } from "../types/dateTypes";
 
 import type { EventProps, EventStyle } from "../components/Event";
 import type { EventDTO } from "../types/EventDTO";
-
-/*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  Api request helper to include token
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-*/
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -81,10 +75,7 @@ function setEventPositions(
   // Constants
   const numOfRows = Math.ceil(cellCount / colCount);
   const rows: EventProps[][] = Array.from({ length: numOfRows }, () => []);
-  const cellWidth = gridRowWidth / colCount;
-
-  // Sort events so earliest events are always rendered on top of later ones
-  evDtos.sort((a, b) => a.start.getTime() - b.start.getTime());
+  const cellWidth = gridRowWidth / colCount;  
 
   // Iterate through events
   evDtos.forEach((ev) => {

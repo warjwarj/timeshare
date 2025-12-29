@@ -1,15 +1,7 @@
-import { useContext, useEffect } from 'react'
-
-// components
 import { Grid } from '../components/Grid';
-
-// types
-import { TimeSpan } from '../types/TimeSpan';
 import type { GridStyle } from '../components/Grid';
+import { TimeSpan } from '../types/dateTypes'
 
-// utils
-import { EventsDispatchContext } from "../contexts/EventsContext";
-import { apiClient } from "../utils/apiClient";
 
 // eventgrid style
 const gridStyle: GridStyle = {
@@ -26,29 +18,10 @@ const gridStyle: GridStyle = {
     heightStyle: "150px",
   },
   colCount: 7,
-  cellCount: 62
+  cellCount: 35
 }
 
 const Dashboard: React.FC = () => {
-
-  // retrieve events on page load
-  const eventsDispatch = useContext(EventsDispatchContext)
-
-  useEffect(() => {
-    const controller = new AbortController();
-    apiClient.get("/events/all", { signal: controller.signal })
-      .then(res => {
-        if (!res) { return; }
-        eventsDispatch({
-          type: "SET_ALL_EVENTS",
-          payload: { evs: res.data }
-        })
-      })
-    return () => {
-      controller.abort();
-    };
-  }, [eventsDispatch]);
-
   return (
     <div id="Dashboard" className="flex">
       <Grid

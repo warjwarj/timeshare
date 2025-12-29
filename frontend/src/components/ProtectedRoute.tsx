@@ -1,19 +1,18 @@
 import { Navigate } from "react-router-dom";
-
-import { AuthContext } from "../contexts/AuthContext";
-import { useContext } from "react";
 import type { ReactNode } from 'react'
 
-interface ProtectedRouteProps {
+import { ourUseSelector } from '../store/hooks';
+import { selectToken } from "../store/slices/authSlice";
+
+type ProtectedRouteProps = {
   children: ReactNode;
 }
 
-function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { token } = useContext(AuthContext);
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
+  const token = ourUseSelector(selectToken)
   if (!token) {
     return <Navigate to="/login" replace />;
   }
   return <>{children}</>;
 }
-
 export { ProtectedRoute };

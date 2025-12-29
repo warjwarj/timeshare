@@ -55,7 +55,7 @@ const RegisterForm: React.FC = () => {
           <div className="p-6 space-y-4 md:space-y-6 sm:p-8">
             <div className="flex items-end justify-between mb-6 w-full">
               <h1 className="text-xl font-semibold text-light-primary-text md:text-2xl dark:text-dark-primary-text">
-                Sign in to your account
+                Register an account
               </h1>
               <a
                 href="/Login"
@@ -100,14 +100,28 @@ const RegisterForm: React.FC = () => {
                   required
                 />
               </div>
-              <div className="flex items-center justify-between">
+
+              {errorMessage && <div className="flex items-center justify-between">
                 <p className="text-sm font-medium text-red-600 hover:underline dark:text-red-500">
                   {errorMessage}
                 </p>
-              </div>
+              </div>}
+
               <button
                 type="submit"
-                className="w-full text-white bg-light-accent hover:bg-light-secondary-text focus:ring-4 focus:outline-none focus:ring-light-accent font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-dark-accent dark:hover:bg-dark-secondary-text dark:focus:ring-dark-accent">
+                className="w-full
+                font-medium 
+                rounded-lg 
+                text-sm px-5 py-2.5 text-center 
+                border border-light-border dark:border-dark-border
+                bg-light-background
+                text-light-text
+                dark:bg-dark-background
+                dark:text-dark-text
+                hover:bg-dark-background
+                hover:text-dark-primary-text
+                dark:hover:bg-light-background
+                dark:hover:text-light-primary-text">
                 Register
               </button>
             </form>

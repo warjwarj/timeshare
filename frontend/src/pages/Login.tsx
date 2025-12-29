@@ -1,15 +1,13 @@
-import { useContext, useState } from "react";
 import type { FormEvent } from 'react';
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-
-import { AuthContext } from "../contexts/AuthContext";
-import { apiClient } from "../utils/apiClient";
 import "../../index.css";
+import { ourUseDispatch } from '../store/hooks';
+import { login } from '../store/slices/authSlice';
+import { apiClient } from "../utils/apiClient";
 
 const LoginForm: React.FC = () => {
-
-  const { login } = useContext(AuthContext)
-
+  const dispatch = ourUseDispatch();
   const navigate = useNavigate();
 
   // states
@@ -24,7 +22,6 @@ const LoginForm: React.FC = () => {
       setErrorMessage("Please fill in the usenname and password fields.");
       return;
     }
-
     try {
       const res = await apiClient.post("/auth/login", {
         name: "TEST_NAME_CHANGE_THIS_OR_REMOVE",
@@ -35,10 +32,15 @@ const LoginForm: React.FC = () => {
         validateStatus: status => status < 500
       })
       if (res.status === 200) {
-        login(res.data["access_token"])
-        navigate("/home")
+        const tk = res.data["access_token"];
+        if (tk === null) {
+          setErrorMessage("Invalid response from server, it didn't send an authentication token.");
+          return;
+        }
+        dispatch(login({ token: tk, email: email }));
+        navigate("/home");
       } else {
-        setErrorMessage("Invalid login details: " + res.data["detail"])
+        setErrorMessage("Invalid login details: " + res.data["detail"]);
       }
     } catch (err) {
       setErrorMessage(`SERVER ERROR: Login failed ` + err);
@@ -100,21 +102,33 @@ const LoginForm: React.FC = () => {
                 />
               </div>
               
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-medium text-red-600 hover:underline dark:text-red-500">
+              {errorMessage && <div className="flex items-center justify-between">
+                <p className="text-sm font-medium text-red-600 dark:text-red-500">
                   {errorMessage}
                 </p>
-              </div>
+              </div>}
               
               <div className="flex items-center justify-between">
-                <a href="#" className="text-sm font-medium text-light-accent hover:underline dark:text-dark-accent">
+                <a href="#" className="text-sm pb-1 font-medium text-light-accent hover:text-light-secondary-text hover:underline dark:text-dark-accent">
                   Forgot password?
                 </a>
               </div>
               
               <button
                 onClick={submit}
-                className="w-full text-white bg-light-accent hover:bg-light-secondary-text focus:ring-4 focus:outline-none focus:ring-light-accent font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-dark-accent dark:hover:bg-dark-secondary-text dark:focus:ring-dark-accent"
+                className="w-full
+                font-medium 
+                rounded-lg 
+                text-sm px-5 py-2.5 text-center 
+                border border-light-border dark:border-dark-border
+                bg-light-background
+                text-light-text
+                dark:bg-dark-background
+                dark:text-dark-text
+                hover:bg-dark-background
+                hover:text-dark-primary-text
+                dark:hover:bg-light-background
+                dark:hover:text-light-primary-text"
               >
                 Login
               </button>
@@ -128,4 +142,4 @@ const LoginForm: React.FC = () => {
   );
 }
 
-export { LoginForm }
+export { LoginForm };

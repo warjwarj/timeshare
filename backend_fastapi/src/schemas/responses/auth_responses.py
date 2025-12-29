@@ -2,10 +2,10 @@ from pydantic import BaseModel
 from typing import Annotated
 from typing import Optional
 from pydantic import StringConstraints
+from pydantic import BaseModel
 from dataclasses import dataclass
 
-@dataclass
-class LoginResponse():
+class LoginResponse(BaseModel):
   """
   Dataclass for responding to a login request
   """
@@ -13,8 +13,7 @@ class LoginResponse():
   access_token: str
   token_type: str
   
-@dataclass
-class RegisterResponse():
+class RegisterResponse(BaseModel):
   """
   Pydantic class for responding to a register request.
   """
