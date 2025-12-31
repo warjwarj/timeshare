@@ -157,10 +157,39 @@ def get_current_user_data(jwt_payload: JwtPayload) -> UserDTO:
   """
   given an auth token, retreive the information of the user represented by this token
   """
-  
+
   users_repo = UserRepository()
-  
+
   return users_repo.get_record(
     multiple=True,
     uuid=jwt_payload["user_uuid"]
   )
+
+def update_user_account(user_uuid: str, name: Optional[str] = None, email: Optional[str] = None) -> UserDTO:
+  """
+  Update user account information (name and/or email)
+  """
+
+  users_repo = UserRepository()
+
+  # Check if email is being changed and if it's already in use by another user
+  if email:
+    existing_user = users_repo.get_record(email=email)
+    if existing_user and existing_user.uuid != user_uuid:
+      raise HTTPException(
+        status_code=HTTPStatus.UNAUTHORIZED,
+        detail="Email already in use."
+      )
+
+  # Prepare update data
+  update_data = {}
+  if name is not None:
+    update_data['name'] = name
+  if email is not None:
+    update_data['email'] = email
+
+  # Always update the updated_at timestamp
+  update_data['updated_at'] = getUtcDatetimeNow()
+
+  # Update the record
+  return users_repo.update_record(user_uuid, **update_data)

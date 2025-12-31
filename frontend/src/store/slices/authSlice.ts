@@ -36,9 +36,27 @@ const register = createAsyncThunk(
         email,
         password,
         role
-      }); 
+      });
       return res.data;
-    } catch (error: unknown) {      
+    } catch (error: unknown) {
+      return rejectWithValue(getStrErrorMessage(error));
+    }
+  }
+);
+
+const updateAccount = createAsyncThunk(
+  'auth/updateAccount',
+  async (
+    { name, email }: { name?: string, email?: string },
+    { rejectWithValue }
+  ) => {
+    try {
+      const res = await apiClient.put("/auth/account", {
+        name,
+        email
+      });
+      return res.data;
+    } catch (error: unknown) {
       return rejectWithValue(getStrErrorMessage(error));
     }
   }
@@ -74,14 +92,25 @@ export const authSlice = createSlice({
       state.email = email
       localStorage.setItem("auth_state", JSON.stringify({...state}))
     })
+    .addCase(updateAccount.fulfilled, (state, action) => {
+      const { success, name, email } = action.payload;
+      if (!success) {
+        toastService.showError("Couldn't update account", action.payload.detail as string)
+        return;
+      }
+      state.name = name
+      state.email = email
+      localStorage.setItem("auth_state", JSON.stringify({...state}))
+      toastService.showSuccess("Account updated successfully")
+    })
   }
 })
 
 export const { logout } = authSlice.actions;
-export { login, register }
+export { login, register, updateAccount }
 
 export const selectToken = (state: { auth: Auth }) => state.auth.token;
 export const selectEmail = (state: { auth: Auth }) => state.auth.email;
-export const selectName = (state: { auth: Auth }) => state.auth.email;
+export const selectName = (state: { auth: Auth }) => state.auth.name;
 
 export default authSlice.reducer;

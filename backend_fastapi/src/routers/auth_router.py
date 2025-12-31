@@ -2,9 +2,9 @@ import logging
 from http import HTTPStatus
 from fastapi import APIRouter
 
-from src.services.auth_service import register_user, create_token, encode_token, login_user, get_current_user_data
-from src.schemas.requests.auth_requests import LoginRequest, RegisterRequest
-from src.schemas.responses.auth_responses import LoginResponse, RegisterResponse
+from src.services.auth_service import register_user, create_token, encode_token, login_user, get_current_user_data, update_user_account
+from src.schemas.requests.auth_requests import LoginRequest, RegisterRequest, UpdateAccountRequest
+from src.schemas.responses.auth_responses import LoginResponse, RegisterResponse, UpdateAccountResponse
 from src.schemas.dtos.user_dto import UserDTO
 from src.dependancies.auth_deps import IsAuthedDep
 
@@ -80,6 +80,27 @@ async def login(
     jwt_payload: IsAuthedDep,
   ):
   """
-  Protected route, get current user information  
+  Protected route, get current user information
   """
   return get_current_user_data(jwt_payload)
+
+@auth_router.put("/account", response_model=UpdateAccountResponse, status_code=HTTPStatus.OK)
+async def update_account(
+    request: UpdateAccountRequest,
+    jwt_payload: IsAuthedDep,
+  ):
+  """
+  Protected route, update current user account information (name and/or email)
+  """
+  user = update_user_account(
+    user_uuid=jwt_payload["user_uuid"],
+    name=request.name,
+    email=request.email
+  )
+
+  return UpdateAccountResponse(
+    success=True,
+    name=user.name,
+    email=user.email,
+    updated_at=str(user.updated_at)
+  )

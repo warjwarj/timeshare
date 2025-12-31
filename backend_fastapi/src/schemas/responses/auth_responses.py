@@ -22,3 +22,12 @@ class RegisterResponse(BaseModel):
   success: bool
   name: str
   email: str
+
+class UpdateAccountResponse(BaseModel):
+  """
+  Pydantic class for responding to an account update request.
+  """
+  success: bool
+  name: str
+  email: str
+  updated_at: str

@@ -19,3 +19,10 @@ class RegisterRequest(BaseModel):
   email: Annotated[str, StringConstraints(max_length=255)]
   password: Optional[Annotated[str, StringConstraints(max_length=255)]]
   role: Optional[Annotated[str, StringConstraints(max_length=255)]]
+
+class UpdateAccountRequest(BaseModel):
+  """
+  Pydantic class for validating an account update request.
+  """
+  name: Optional[Annotated[str, StringConstraints(max_length=255)]] = None
+  email: Optional[Annotated[str, StringConstraints(max_length=255)]] = None
