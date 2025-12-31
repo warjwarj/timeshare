@@ -49,9 +49,7 @@ async def register(
     
   
 @auth_router.post("/login", response_model=LoginResponse, status_code=HTTPStatus.OK)
-async def login(
-    request: LoginRequest,
-  ):
+async def login(request: LoginRequest):
   """  
   Route for logging in a user.  
   """
@@ -73,6 +71,8 @@ async def login(
     success=True,
     access_token=encoded_token,
     token_type="bearer",
+    name=u.name,
+    email=u.email
   )
 
 @auth_router.post("/whoami")

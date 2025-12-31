@@ -3,14 +3,14 @@ import { useState } from 'react';
 import { createPortal } from 'react-dom';
 
 // components
-import { Modal } from './Modal';
+import { Modal } from '../Modal';
 import { EventInfoModalContent } from './EventInfoModalContent';
 
 // types
-import { type EventDTO } from '../types/EventDTO';
+import { type EventDTO } from '../../types/EventDTO';
 
 // css
-import '../../index.css';
+import '../../../index.css';
 
 /*
 
@@ -48,30 +48,32 @@ const Event: React.FC<{
           key={`event-${eventProps.eventDTO.uuid}`}
           className={
             `${eventProps.evStyle.defaultEventStyle}
-              ${eventProps.evStyle.extraClasses}`
+              ${eventProps.evStyle.extraClasses}
+              cursor-pointer transition-all duration-200 hover:scale-[1.02]
+              hover:z-10 active:scale-[0.98] overflow-hidden`
           }
           style={{
             height: `${eventProps.evStyle.eventHeightStyle}px`,
             left: `${eventProps.evStyle.left}px`,
             width: `${eventProps.evStyle.width}px`,
             top: `calc(${eventProps.evStyle.lane + 1} * ${eventProps.evStyle.eventHeightStyle})`,
-            backgroundColor: eventProps.evStyle.colour
+            backgroundColor: eventProps.evStyle.colour,
           }}
         >
-          <span className="block max-w-full">
+          <span className="block max-w-full truncate px-2 font-medium">
             {eventProps.eventDTO.name}
           </span>
         </span>
         {showModal && createPortal(
           <Modal
-            label={ `${eventProps.eventDTO.name}` }
+            label={`${eventProps.eventDTO.name}`}
             isOpen={showModal}
-            onClose={ () => setShowModal(false) }
+            onClose={() => setShowModal(false)}
           >
             <EventInfoModalContent
-              event={ eventProps }
-              updateEvent={ updateEvent }
-              closePopup={ () => setShowModal(false) }
+              event={eventProps}
+              updateEvent={updateEvent}
+              closePopup={() => setShowModal(false)}
             />
           </Modal>,
           document.body

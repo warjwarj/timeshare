@@ -1,13 +1,19 @@
-import { useState } from "react";
-
+import { useEffect, useState } from "react";
+import { ourUseSelector, ourUseDispatch } from '../store/hooks';
 import { Dashboard } from "./Dashboard";
-
+import { getCurrentDate, selectCurrentDatetime } from "../store/slices/appSlice.ts";
 import { Sidebar } from "../components/Sidebar.tsx";
 import type { SidebarLink } from "../components/Sidebar.tsx";
 import { CollapseButton } from "../components/CollapseButton.tsx";
 
 // users homepage
-const Home: React.FC = () => {  
+const Home: React.FC = () => {
+  const currentDatetime = ourUseSelector(selectCurrentDatetime)
+  const dispatch = ourUseDispatch()
+
+  useEffect(() => {
+    dispatch(getCurrentDate())
+  }, [dispatch])
   
   // Track sidebar visibility. Default to closed if on phone view
   const isPhone = window.matchMedia('(min-width: 768px)').matches;
@@ -40,7 +46,7 @@ const Home: React.FC = () => {
 
         {/* Main content */}
         <div className="overflow-auto">
-          <Dashboard />
+          <Dashboard currentDatetime={currentDatetime} />
         </div>
       </div>
 

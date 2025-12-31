@@ -1,8 +1,35 @@
 // fake enum
-import { TimeSpan } from "../types/dateTypes";
+import { TimeSpanEnum, type TimeSpan} from "../types/dateTypes";
+import axios from 'axios'
 
-import type { EventProps, EventStyle } from "../components/Event";
+import type { EventProps, EventStyle } from "../components/calendar/Event";
 import type { EventDTO } from "../types/EventDTO";
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  Generic utils
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+// to make sure the error is of type string
+function getStrErrorMessage(error: unknown): string {
+  if (axios.isAxiosError(error)) {
+    return error.response?.data?.message 
+      || error.response?.data?.detail
+      || error.message 
+      || 'Request failed';
+  }
+  
+  if (error instanceof Error) {
+    return error.message;
+  }
+  
+  if (typeof error === 'string') {
+    return error;
+  }
+  
+  return 'An unexpected error occurred';
+}
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -29,8 +56,8 @@ function getCalendarDaysInMonth(year: number, month: number) {
 // get cell index from the date. Could also return a lane index.
 function getCellIndexFromDate(cellStep: TimeSpan, gridStart: Date, dt: Date): number {
   switch (cellStep) {
-    case TimeSpan.Day:
-      return Math.floor((dt.getTime() - gridStart.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+    case TimeSpanEnum.Day:
+      return Math.floor((dt.getTime() - gridStart.getTime()) / (1000 * 60 * 60 * 24));
   }
   return 0;
 }
@@ -39,7 +66,7 @@ function getCellIndexFromDate(cellStep: TimeSpan, gridStart: Date, dt: Date): nu
 function getDateFromCellIndex(cellStep: TimeSpan, gridStart: Date, cellIndex: number): Date {
   const ret = new Date(gridStart)
   switch (cellStep) {
-    case TimeSpan.Day:
+    case TimeSpanEnum.Day:
       ret.setDate(gridStart.getDate() + cellIndex - 1)
       return ret
   }
@@ -66,22 +93,40 @@ function setEventPositions(
   defaultEventStyle: EventStyle
 ): EventProps[][] {
 
-  // init the lane event cell map thing
-  cellLaneEvents.clear()
-  for (let i = 0; i <= cellCount; i++) {
-    cellLaneEvents.set(i, new Map<number, string>())
+  // 1. Init the lane event cell map
+  cellLaneEvents.clear();
+  for (let i = 0; i < cellCount; i++) {
+    cellLaneEvents.set(i, new Map<number, string>());
   }
 
   // Constants
   const numOfRows = Math.ceil(cellCount / colCount);
   const rows: EventProps[][] = Array.from({ length: numOfRows }, () => []);
-  const cellWidth = gridRowWidth / colCount;  
+  const cellWidth = gridRowWidth / colCount;
 
-  // Iterate through events
-  evDtos.forEach((ev) => {
+  // 2. Sort events by start time (Essential for correct lane stacking)
+  const sortedEvents = [...evDtos].sort((a, b) => a.start.getTime() - b.start.getTime());
 
-    const cellStartIndex = getCellIndexFromDate(cellStep, start, ev.start);
-    const cellEndIndex = getCellIndexFromDate(cellStep, start, ev.end);
+  // Iterate through sorted events
+  sortedEvents.forEach((ev) => {
+
+    let cellStartIndex = getCellIndexFromDate(cellStep, start, ev.start);
+    let cellEndIndex = getCellIndexFromDate(cellStep, start, ev.end);
+
+    // --- FIX START ---
+    // If the event spans time (start < end), we must treat the end index as exclusive.
+    // Example: 9:00-10:00. Start=0, End=1.
+    // We want to occupy ONLY cell 0. So we decrement End to 0.
+    // Width becomes (0 - 0 + 1) = 1 cell.
+    if (cellEndIndex > cellStartIndex) {
+      cellEndIndex = cellEndIndex - 1;
+    }
+    // --- FIX END ---
+
+    // Safety checks for grid boundaries
+    if (cellStartIndex < 0) cellStartIndex = 0;
+    if (cellEndIndex >= cellCount) cellEndIndex = cellCount - 1;
+    if (cellStartIndex > cellEndIndex && cellStartIndex !== cellEndIndex) return;
 
     // Find the highest available lane across ALL cells this event spans
     let lane = 0;
@@ -91,7 +136,8 @@ function setEventPositions(
       let laneAvailable = true;
       for (let cellIndex = cellStartIndex; cellIndex <= cellEndIndex; cellIndex++) {
         const laneMap = cellLaneEvents.get(cellIndex);
-        if (laneMap?.has(lane) && laneMap.get(lane) != ev.uuid) {
+        // We check if the lane is taken by a DIFFERENT event
+        if (laneMap?.has(lane) && laneMap.get(lane) !== ev.uuid) {
           laneAvailable = false;
           break;
         }
@@ -107,40 +153,39 @@ function setEventPositions(
     }
 
     // Distribute the event across rows
-    // Calculate which rows this event appears in
-    const firstRow = Math.floor((cellStartIndex - 1) / colCount);
-    const lastRow = Math.floor((cellEndIndex - 1) / colCount);
+    // Use Math.floor to strictly determine which row the cell belongs to
+    const firstRow = Math.floor(cellStartIndex / colCount);
+    const lastRow = Math.floor(cellEndIndex / colCount);
 
     for (let r = firstRow; r <= lastRow && r < numOfRows; r++) {
-      const rowStart = r * colCount + 1;
-      const rowEnd = Math.min(rowStart + colCount - 1, cellCount);
+      if (!rows[r]) continue;
+
+      const rowStart = r * colCount; // 0-based row start
+      const rowEnd = Math.min(rowStart + colCount - 1, cellCount - 1);
 
       // Calculate event boundaries within this row
       const eventStartInRow = Math.max(cellStartIndex, rowStart);
       const eventEndInRow = Math.min(cellEndIndex, rowEnd);
+      
+      // Span calculation (Inclusive math: End - Start + 1)
       const span = eventEndInRow - eventStartInRow + 1;
 
       // Calculate positioning
       const left = (eventStartInRow - rowStart) * cellWidth;
       const width = span * cellWidth;
 
-      // unique identifier for event segment
-      const key = `${ev.uuid}-${r}-${eventStartInRow}`
+      // Unique identifier for event segment
+      const key = `${ev.uuid}-${r}-${eventStartInRow}`;
 
-      // add rounded corners where needed
+      // Add rounded corners where needed
       let classes = "";
       if (eventStartInRow === cellStartIndex) {
         classes += " rounded-l-4xl";
-      } else {
-        classes = classes.replace(" rounded-l-4xl", "")
       }
       if (eventEndInRow === cellEndIndex) {
         classes += " rounded-r-4xl";
-      } else {
-        classes = classes.replace(" rounded-r-4xl", "")
       }
 
-      // create style
       const evStyle: EventStyle = {
         eventHeightStyle: defaultEventStyle.eventHeightStyle,
         defaultEventStyle: defaultEventStyle.defaultEventStyle,
@@ -149,21 +194,21 @@ function setEventPositions(
         left: left,
         width: width,
         lane: lane,
-      }
+      };
 
-      // create eventProps object and push it to the row
       rows[r].push({
         key: key,
         evStyle: evStyle,
         eventDTO: ev
-      })
+      });
     }
   });
+  
   return rows;
 }
 
-
 export {
+  getStrErrorMessage,
   getCalendarDaysInMonth,
   getCellIndexFromDate,
   getDateFromCellIndex,

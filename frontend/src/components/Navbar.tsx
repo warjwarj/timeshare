@@ -1,5 +1,10 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from "react-router-dom";
+import { Settings, LogOut } from 'lucide-react';
+
+import { selectName } from '../store/slices/authSlice';
+import { ourUseDispatch, ourUseSelector } from '../store/hooks';
+import { logout } from '../store/slices/authSlice';
 
 type NavLink = {
   name: string;
@@ -7,18 +12,49 @@ type NavLink = {
 };
 
 type NavbarProps = {
-  leftlinks: NavLink[];
-  rightlinks: NavLink[];
+  links: NavLink[];
+  userInitial?: string;
 };
 
-const Navbar: React.FC<NavbarProps> = ({ leftlinks, rightlinks }) => {
+type MenuItem = {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  action: () => void;
+};
+
+const Navbar: React.FC<NavbarProps> = ({ links }) => {
+  const name: string = ourUseSelector(selectName)
+  const dispatch = ourUseDispatch()
+  const navigator = useNavigate()
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const profileIconMenuItems: MenuItem[] = [
+    { icon: Settings, label: 'Settings', action: () => navigator('/settings') },
+    { icon: LogOut, label: 'Log out', action: () => { dispatch(logout()); navigator('/login') } },
+  ];
+
   return (
     <nav className="border-b-1 pb-1 border-light-border bg-light-background text-2xl h-20 dark:bg-dark-background dark:border-dark-border flex items-center justify-between px-4">
+
+      {/* Left links */}
       <ul className="flex space-x-4">
-        {leftlinks.map((link, index) => (
+        {links.map((link, index) => (
           <li key={index}>
-            <Link
-              to={link.path}
+            <a
+              href={link.path}
               className="
                 p-2
                 rounded-lg
@@ -31,32 +67,41 @@ const Navbar: React.FC<NavbarProps> = ({ leftlinks, rightlinks }) => {
               "
             >
               {link.name}
-            </Link>
+            </a>
           </li>
         ))}
       </ul>
+
       <div className="flex items-center space-x-4">
-        <ul className="flex space-x-4">
-          {rightlinks.map((link, index) => (
-            <li key={index}>
-              <Link
-                to={link.path}
-                className="
-                  px-3 py-1
-                  rounded-md
-                  text-light-primary-text dark:text-dark-primary-text
-                  font-medium
-                  transition
-                  duration-200
-                  hover:bg-v-light-accent 
-                  hover:dark:bg-v-dark-accent
-                "
-              >
-                {link.name}
-              </Link>
-            </li>
-          ))}
-        </ul>
+
+        {/* Profile Icon */}
+        <div className="relative" ref={dropdownRef}>
+          <button
+            onClick={() => setIsOpen(!isOpen)}
+            className="grid place-items-center w-10 h-10 rounded-full bg-blue-600 text-white font-semibold hover:bg-blue-700 text-lg"
+          >
+            {name[0]?.toLocaleUpperCase()}
+          </button>
+
+          {/* Dropdown */}
+          {isOpen && (
+            <div className="absolute right-0 mt-2 w-56 bg-light-background dark:bg-dark-background rounded-lg shadow-lg border border-light-border dark:border-dark-border py-1 z-50">
+              {profileIconMenuItems.map((item, index) => (
+                <button
+                  key={index}
+                  onClick={() => {
+                    item.action();
+                    setIsOpen(false);
+                  }}
+                  className="w-full flex items-center px-4 py-2.5 text-sm text-light-primary-text dark:text-dark-primary-text hover:bg-v-light-accent hover:dark:bg-v-dark-accent transition-colors"
+                >
+                  <item.icon className="w-4 h-4 mr-3" />
+                  {item.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </nav>
   );

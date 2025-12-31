@@ -3,10 +3,11 @@ import { createSlice, createAsyncThunk, createSelector } from '@reduxjs/toolkit'
 import type { EventDTO } from '../../types/EventDTO';
 import { apiClient } from "../../utils/apiClient";
 import { HttpStatusCode } from 'axios';
+import { toastService } from '../../toastService';
 
 const getEvents = createAsyncThunk(
   'events/all',
-  async ({ start, end }: { start: Date, end: Date }, { rejectWithValue }) => {
+  async ({ start, end }: { start: Date, end: Date }) => {
     try {
       const res = await apiClient.get("/events/all", {
         params: {
@@ -15,26 +16,28 @@ const getEvents = createAsyncThunk(
         }
       })
       if (res.status != HttpStatusCode.Ok) {
-        return rejectWithValue(`Failed to update event, received response other than ok: ${res.status}`);
+        toastService.showError("Couldn't get events", "response status indicates failure")
       }
       return res.data as EventDTO[];
     } catch (error) {
-      return rejectWithValue(error instanceof Error ? error.message : 'Unknown error');
+      const err = error instanceof Error ? error.message : 'Unknown error'
+      toastService.showError("Couldn't get events", err.toString())
     }
   }
 );
 
 const updateEvent = createAsyncThunk(
   'events/update',
-  async (moddedev: EventDTO, { rejectWithValue }) => {
+  async (moddedev: EventDTO) => {
     try {
       const res = await apiClient.post("/events/update", moddedev)
       if (res.status != HttpStatusCode.Ok) {
-        rejectWithValue(`Failed to retreive events, received response other than ok: ${res.status}`);
+        toastService.showError("Couldn't update event", res.data)
       }
       return res.data as EventDTO;
     } catch (error) {
-      return rejectWithValue(error instanceof Error ? error.message : 'Unknown error');
+      const err = error instanceof Error ? error.message : 'Unknown error'
+      toastService.showError("Couldn't update event", err.toString())
     }
   }
 );
@@ -54,19 +57,18 @@ const eventsSlice = createSlice({
     pending: false,
     error: null
   } as EventsState,
-  reducers: { 
-    // here we would have optimistic state updates - where we in the frontend update our state immidiately
-    // instead of sending the action off to the backend and updating our state after receiving the response.
-    // have none currently but may want to add
-  },
+  reducers: {},
   extraReducers: (builder) => {
     builder
       // get events
       .addCase(getEvents.pending, (state) => {
-        state.error = null;
         state.pending = true;
+        state.error = null;
       })
       .addCase(getEvents.fulfilled, (state, action) => {
+        if (!action.payload) {
+          return;
+        }
         state.pending = false
         state.events = action.payload
       })
@@ -76,22 +78,25 @@ const eventsSlice = createSlice({
       })
       // update events
       .addCase(updateEvent.pending, (state) => {
-        state.error = null;
         state.pending = true;
+        state.error = null;
       })
       .addCase(updateEvent.fulfilled, (state, action) => {
-        state.pending = false
-        state.events.find((ev) => ev.uuid === action.payload.uuid)
-        const index = state.events.findIndex(ev => ev.uuid === action.payload.uuid);
+        state.pending = false;
+        const payload = action.payload;
+        if (!payload) return;
+        const index = state.events.findIndex(
+          ev => ev.uuid === payload.uuid
+        );
         if (index !== -1) {
-          state.events[index] = action.payload;
+          state.events[index] = payload;
         }
       })
       .addCase(updateEvent.rejected, (state, action) => {
         state.pending = false;
         state.error = action.payload as string;
       });
-    }
+}
 });
 
 

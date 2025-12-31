@@ -1,13 +1,16 @@
 import logging
 from dataclasses import asdict
 from uuid import uuid4
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 
 from src.repositories.events_repository import EventsRepository
+from src.repositories.users_repository import UserRepository
 from src.schemas.dtos.event_dto import EventDTO
 from src.models.event_model import EventModel
 from src.schemas.requests.event_requests import CreateEventRequest, UpdateEventRequest, CreateMultipleEventsRequest
 from src.schemas.responses.events_responses import SafeEventDTO
+
+from settings import settings
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Module vars
@@ -88,5 +91,30 @@ def get_all_events(user_uuid: str, start: datetime, end: datetime) -> list[SafeE
   """  
   events_repo = EventsRepository()
   
-  evs = events_repo.get_events_by_datetimes(user_uuid, start, end)
+  
+  
+  if settings.ENV == "dev":
+    evs = events_repo.get_record(multiple=True, created_by_user_uuid=user_uuid)
+    evs = adjust_events_to_current_date(evs)
+  else:
+    evs = events_repo.get_events_by_datetimes(user_uuid=user_uuid, start=start, end=end)
+      
   return sanitiseEvents(evs)
+
+def adjust_events_to_current_date(events: list[EventDTO]):
+    """
+    Adjusts all events so the earliest event starts at the current datetime.
+    """
+    if not events:
+      return events
+    
+    earliest_start = min(event.start for event in events)
+    
+    current_datetime = datetime.now(timezone.utc)
+    days_difference = (current_datetime - earliest_start).days
+    
+    for event in events:
+      event.start = event.start + timedelta(days=days_difference)
+      event.end = event.end + timedelta(days=days_difference)
+    
+    return events

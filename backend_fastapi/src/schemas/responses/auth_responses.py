@@ -12,6 +12,8 @@ class LoginResponse(BaseModel):
   success: bool
   access_token: str
   token_type: str
+  name: str
+  email: str
   
 class RegisterResponse(BaseModel):
   """

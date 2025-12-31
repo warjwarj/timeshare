@@ -1,7 +1,6 @@
-import { Grid } from '../components/Grid';
-import type { GridStyle } from '../components/Grid';
-import { TimeSpan } from '../types/dateTypes'
-
+import { Grid } from '../components/calendar/Grid';
+import type { GridStyle } from '../components/calendar/Grid';
+import { TimeSpanEnum } from "../types/dateTypes";
 
 // eventgrid style
 const gridStyle: GridStyle = {
@@ -21,13 +20,18 @@ const gridStyle: GridStyle = {
   cellCount: 35
 }
 
-const Dashboard: React.FC = () => {
+type DashboardProps = {
+  currentDatetime: string
+}
+
+const Dashboard: React.FC<DashboardProps> = ({ currentDatetime }) => {
+
   return (
     <div id="Dashboard" className="flex">
       <Grid
         egStyle={gridStyle}
-        start={new Date(2024, 11, 30)}
-        cellStep={TimeSpan.Day}
+        start={new Date(currentDatetime)}
+        cellStep={TimeSpanEnum.Day}
       />
     </div>
   );

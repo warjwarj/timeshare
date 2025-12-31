@@ -1,8 +1,8 @@
 // types
-import type { EventProps } from '../components/Event';
+import type { EventProps } from './Event';
 
 // css
-import '../../index.css';
+import '../../../index.css';
 
 /*
 

@@ -25,10 +25,10 @@ export const MonthEnum = {
 } as const;
 export type Month = typeof MonthEnum[keyof typeof MonthEnum]
 
-export const TimeSpan = {
+export const TimeSpanEnum = {
   Hour: 'Hour',
   Day: 'Day',
   Week: 'Week',
   Month: 'Month',
 }
-export type TimeSpan = typeof TimeSpan[keyof typeof TimeSpan];
+export type TimeSpan = typeof TimeSpanEnum[keyof typeof TimeSpanEnum];

@@ -1,33 +1,37 @@
-import { createSlice } from '@reduxjs/toolkit';
-import type { PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import type { PayloadAction } from '@reduxjs/toolkit'
 
-import type { OurRootState } from '../store';
 import { apiClient } from "../../utils/apiClient";
 import type { Month } from '../../types/dateTypes';
+import { HttpStatusCode } from 'axios';
+import { toastService } from '../../toastService';
 
 const getCurrentDate = createAsyncThunk(
-  'events/all',
+  'common/current-datetime',
   async (_, { rejectWithValue }) => {
     try {
-      const res = await apiClient.get("/events/all", {
-        params: {
-          start: start.toISOString(),
-          end: end.toISOString()
+      const res = await apiClient.get("/common/current-datetime", {
+          headers: {
+            "X-Timezone": "UTC"
+          }
         }
-      })
+      )
       if (res.status != HttpStatusCode.Ok) {
-        throw new Error(`Failed to update event, received response other than created: ${res.status}`);
+        const err = "Error reaching server"
+        toastService.showError(err, res.data)
+        return rejectWithValue(`${err}: ${res.data}`);
       }
-      const data = await res.data
-      return data as EventDTO[];
+      return res.data
     } catch (error) {
-      return rejectWithValue(error instanceof Error ? error.message : 'Unknown error');
+      const err = error instanceof Error ? error.message : 'Unknown error'
+      toastService.showError("Couldn't reach server", err)
+      return rejectWithValue("Couldn't reach server" + err);
     }
   }
 );
 
 interface AppState {
-  currentDate: Date
+  currentDatetime: string
   selectedMonth: Month
 }
 
@@ -37,17 +41,20 @@ export const authSlice = createSlice({
     
   } as AppState,
   reducers: {
-    setCurrentDate: (state, action: PayloadAction<{ currentDate: string }>) => {
-      state.currentDate = new Date(action.payload.currentDate);
-    },
-    setSelectedMonth: (state) => {
-      state      
+    setSelectedMonth: (state, action: PayloadAction<{ month: Month }>) => {
+      state.selectedMonth = action.payload.month
     }
+  },
+  extraReducers: (builder) => {
+    builder
+    .addCase(getCurrentDate.fulfilled, (state, action: PayloadAction<{ datetime: string, timezone: string }>) => {
+      state.currentDatetime = action.payload.datetime;
+    })
   }
 })
 
-export const { login, logout } = authSlice.actions;
+export const selectCurrentDatetime = (state: { app: AppState }) => state.app.currentDatetime
 
-export const selectToken = (state: OurRootState) => state.auth.token;
+export { getCurrentDate }
 
 export default authSlice.reducer;

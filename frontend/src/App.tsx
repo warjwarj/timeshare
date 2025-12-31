@@ -4,23 +4,19 @@ import { NotFound } from './pages/NotFound'
 import { LoginForm } from './pages/Login';
 import { RegisterForm } from './pages/Register';
 import { Home } from './pages/Home';
+import { Settings } from './pages/Settings';
 
 import { Navbar } from './components/Navbar';
 import { ProtectedRoute } from './components/ProtectedRoute';
 
-const rightlinks = [
-  { name: 'Login', path: '/login' },
-  { name: 'About', path: '/about' },
-];
-
-const leftlinks = [
+const links = [
   { name: 'Timeshare', path: '/home' },
 ];
 
 function App() {
   return (
     <>
-      <Navbar leftlinks={leftlinks} rightlinks={rightlinks} />
+      <Navbar links={links} />
       <Routes>
         <Route path="/" element={<Navigate to="/home"/>} />
         <Route path="/login" element={ <LoginForm /> } />
@@ -30,6 +26,14 @@ function App() {
           element={
             <ProtectedRoute>
               <Home />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <Settings />
             </ProtectedRoute>
           }
         />

@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import "../../index.css";
 import { ourUseDispatch } from '../store/hooks';
 import { login } from '../store/slices/authSlice';
-import { apiClient } from "../utils/apiClient";
+
 
 const LoginForm: React.FC = () => {
   const dispatch = ourUseDispatch();
@@ -15,7 +15,6 @@ const LoginForm: React.FC = () => {
   const [password, setPassword] = useState<string>("");
   const [errorMessage, setErrorMessage] = useState<string>("");
 
-  // login/register submit handler
   const submit = async (e: FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
@@ -23,27 +22,13 @@ const LoginForm: React.FC = () => {
       return;
     }
     try {
-      const res = await apiClient.post("/auth/login", {
-        name: "TEST_NAME_CHANGE_THIS_OR_REMOVE",
-        email: email,
-        password: password,
-        role: "TEST_ROLE_CHANGE_THIS_OR_REMOVE"
-      }, {
-        validateStatus: status => status < 500
-      })
-      if (res.status === 200) {
-        const tk = res.data["access_token"];
-        if (tk === null) {
-          setErrorMessage("Invalid response from server, it didn't send an authentication token.");
-          return;
-        }
-        dispatch(login({ token: tk, email: email }));
-        navigate("/home");
-      } else {
-        setErrorMessage("Invalid login details: " + res.data["detail"]);
-      }
-    } catch (err) {
-      setErrorMessage(`SERVER ERROR: Login failed ` + err);
+      await dispatch(login({ name: "asd", email, password, role: "asd" })).unwrap();
+      navigate('/home');
+    } catch (error: unknown) {
+      const errorMessage = typeof error === 'string'
+        ? error
+        : 'An unexpected error occurred';
+      setErrorMessage(errorMessage)
     }
   }
 
@@ -56,7 +41,7 @@ const LoginForm: React.FC = () => {
             Timeshare
           </a>
         </div>
-        
+
         <div className="w-full bg-light-background rounded-lg border border-light-border md:mt-0 max-w-md dark:bg-dark-background dark:border-dark-border">
           <div className="p-6 space-y-4 md:space-y-6 sm:p-8">
             <div className="flex items-end justify-between mb-6 w-full">
@@ -70,7 +55,7 @@ const LoginForm: React.FC = () => {
                 Register?
               </a>
             </div>
-            
+
             <form className="space-y-4 md:space-y-6">
               <div>
                 <label htmlFor="email" className="block mb-2 font-medium text-light-primary-text dark:text-dark-primary-text">
@@ -85,7 +70,7 @@ const LoginForm: React.FC = () => {
                   required
                 />
               </div>
-              
+
               <div>
                 <label htmlFor="password" className="block mb-2 font-medium text-light-primary-text dark:text-dark-primary-text">
                   Password
@@ -101,19 +86,19 @@ const LoginForm: React.FC = () => {
                   required
                 />
               </div>
-              
+
               {errorMessage && <div className="flex items-center justify-between">
                 <p className="text-sm font-medium text-red-600 dark:text-red-500">
                   {errorMessage}
                 </p>
               </div>}
-              
+
               <div className="flex items-center justify-between">
                 <a href="#" className="text-sm pb-1 font-medium text-light-accent hover:text-light-secondary-text hover:underline dark:text-dark-accent">
                   Forgot password?
                 </a>
               </div>
-              
+
               <button
                 onClick={submit}
                 className="w-full

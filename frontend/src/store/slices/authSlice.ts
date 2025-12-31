@@ -1,34 +1,87 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { getStrErrorMessage } from '../../utils/utils'
 
-import type { PayloadAction } from '@reduxjs/toolkit';
-import type { OurRootState } from '../store';
+import { apiClient } from "../../utils/apiClient";
+import { toastService } from '../../toastService';
+
+const login = createAsyncThunk(
+  'auth/login',
+  async (
+    { name, email, password, role }: { name: string, email: string, password: string, role: string },
+    { rejectWithValue }
+  ) => {
+    try {
+      const res = await apiClient.post("/auth/login", {
+        name,
+        email,
+        password,
+        role
+      }); 
+      return res.data;
+    } catch (error: unknown) {      
+      return rejectWithValue(getStrErrorMessage(error));
+    }
+  }
+);
+
+const register = createAsyncThunk(
+  'auth/register',
+  async (
+    { name, email, password, role }: { name: string, email: string, password: string, role: string },
+    { rejectWithValue }
+  ) => {
+    try {
+      const res = await apiClient.post("/auth/register", {
+        name,
+        email,
+        password,
+        role
+      }); 
+      return res.data;
+    } catch (error: unknown) {      
+      return rejectWithValue(getStrErrorMessage(error));
+    }
+  }
+);
 
 interface Auth {
-  token: string
+  name: string
   email: string
+  token: string
 }
 
 export const authSlice = createSlice({
   name: "auth",
   initialState: {
-    token: localStorage.getItem("token") || "",
-    email: ""
+    ...JSON.parse(localStorage.getItem("auth_state") || '{"name":"","email":"","token":""}')
   } as Auth,
   reducers: {
-    login: (state, action: PayloadAction<{ token: string, email: string }>) => {
-      localStorage.setItem("token", action.payload.token);
-      state.token = action.payload.token;
-      state.email = action.payload.email;
-    },
     logout: (state) => {
-      localStorage.removeItem("token");
-      state.token = "";
+      localStorage.removeItem("auth_state");
+      state.token = state.email = state.name = "";
     }
+  },
+  extraReducers: (builder) => {
+    builder
+    .addCase(login.fulfilled, (state, action) => {
+      const { success, name, email, access_token } = action.payload;
+      if (!success || !name || !email || !access_token) {
+        toastService.showError("Couldn't log in", action.payload.detail as string)
+        return;
+      }
+      state.token = access_token
+      state.name = name
+      state.email = email
+      localStorage.setItem("auth_state", JSON.stringify({...state}))
+    })
   }
 })
 
-export const { login, logout } = authSlice.actions;
+export const { logout } = authSlice.actions;
+export { login, register }
 
-export const selectToken = (state: OurRootState) => state.auth.token;
+export const selectToken = (state: { auth: Auth }) => state.auth.token;
+export const selectEmail = (state: { auth: Auth }) => state.auth.email;
+export const selectName = (state: { auth: Auth }) => state.auth.email;
 
 export default authSlice.reducer;

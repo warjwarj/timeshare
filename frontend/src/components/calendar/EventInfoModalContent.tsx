@@ -5,15 +5,15 @@ import { useState } from 'react';
 import type { ChangeEvent } from 'react'
 
 // types
-import type { EventDTO } from '../types/EventDTO';
-import type { EventProps } from '../components/Event';
+import type { EventDTO } from '../../types/EventDTO';
+import type { EventProps } from './Event';
 
 // utils
-import { isValidDate } from '../utils/utils';
+import { isValidDate } from '../../utils/utils';
 
 // css
-import '../../index.css';
-import { SaveButton } from './SaveButton';
+import '../../../index.css';
+import { SaveButton } from '../SaveButton';
 
 /*
 

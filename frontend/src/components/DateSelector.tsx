@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { ChevronLeft, ChevronRight } from './svgs/Chevrons';
 import { Calendar } from './svgs/Calendar';
 
+import { MonthEnum, type Month, WeekDayEnum, type WeekDay} from '../types/dateTypes'
+
 
 type DateSelectorProps = {
   startDate: Date;
@@ -14,10 +16,8 @@ const DateSelector: React.FC<DateSelectorProps> = ({ startDate, onlyMonthSelecto
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [isOpen, setIsOpen] = useState(false);
 
-  const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'];
-
-  const dayNames = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+  const monthNames = Object.values(MonthEnum) as readonly Month[];
+  const dayNames = Object.values(WeekDayEnum) as readonly WeekDay[];
 
   const getDaysInMonth = (date: Date) => {
     const year = date.getFullYear();
@@ -110,18 +110,6 @@ const DateSelector: React.FC<DateSelectorProps> = ({ startDate, onlyMonthSelecto
         {isOpen && (
           <div className="justify-between border-light-border dark:border-dark-border pr-2 pl-2 bg-light-background dark:bg-dark-background">
 
-            {/* Quick Presets */}
-            <div className="flex justify-evenly mb-4">
-              <button
-                onClick={() => selectPreset(0)}
-                className="text-sm pt-1 pb-1 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700"
-              >Today </button>
-              <button
-                onClick={() => selectPreset(1)}
-                className="text-sm pt-1 pb-1 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700"
-              >Tomorrow </button>
-            </div>
-
             {/* Month Navigation */}
             <div className="flex items-center justify-between">
               <button
@@ -141,39 +129,54 @@ const DateSelector: React.FC<DateSelectorProps> = ({ startDate, onlyMonthSelecto
               </button>
             </div>
 
-            {/* Weekday names */}
-            <div className="grid grid-cols-7 gap-1 mb-2">
-              {dayNames.map(day => (
-                <div key={day} className="text-center text-xs font-semibold py-2 text-light-secondary-text dark:text-dark-secondary-text">
-                  {day}
-                </div>
-              ))}
-            </div>
-
-
-            {/* Calendar Days */}
-            <div className="grid grid-cols-7 gap-1">
-              {days.map((day, idx) => (
+            { !onlyMonthSelector && (
+              <>
+              {/* Quick Presets */}
+              <div className="flex justify-evenly mb-4">
                 <button
-                  key={idx}
-                  onClick={() => {
-                    if (day) {
-                      setSelectedDate(day);
-                    }
-                  }}
-                  disabled={!day}
-                  className={`
-                      aspect-square flex items-center justify-center rounded-lg text-sm transition-all
-                      ${!day ? 'invisible' : ''}                                          
-                      ${isSameDay(day, selectedDate) ? 'bg-light-accent dark:bg-dark-accent text-light-background dark:text-dark-background font-bold font-bold text-xl font-bold text-xl' : ''}
-                      ${day && isToday(day) && !isSameDay(day, selectedDate) ? 'font-bold text-xl' : ''}
-                      ${day && !isSameDay(day, selectedDate) && !isToday(day) ? 'hover:bg-v-light-accent hover:dark:v-dark-accent text-light-primary-text dark:text-dark-primary-text' : ''}
-                    `}
-                >
-                  {day?.getDate()}
-                </button>
-              ))}
-            </div>
+                  onClick={() => selectPreset(0)}
+                  className="text-sm pt-1 pb-1 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700"
+                >Today </button>
+                <button
+                  onClick={() => selectPreset(1)}
+                  className="text-sm pt-1 pb-1 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700"
+                >Tomorrow </button>
+              </div>
+
+              {/* Weekday names */}
+              <div className="grid grid-cols-7 gap-1 mb-2">
+                {dayNames.map(day => (
+                  <div key={day} className="text-center text-xs font-semibold py-2 text-light-secondary-text dark:text-dark-secondary-text">
+                    {day}
+                  </div>
+                ))}
+              </div>
+
+              {/* Calendar Days */}
+              <div className="grid grid-cols-7 gap-1">
+                {days.map((day, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => {
+                      if (day) {
+                        setSelectedDate(day);
+                      }
+                    }}
+                    disabled={!day}
+                    className={`
+                        aspect-square flex items-center justify-center rounded-lg text-sm transition-all
+                        ${!day ? 'invisible' : ''}                                          
+                        ${isSameDay(day, selectedDate) ? 'bg-light-accent dark:bg-dark-accent text-light-background dark:text-dark-background font-bold font-bold text-xl font-bold text-xl' : ''}
+                        ${day && isToday(day) && !isSameDay(day, selectedDate) ? 'font-bold text-xl' : ''}
+                        ${day && !isSameDay(day, selectedDate) && !isToday(day) ? 'hover:bg-v-light-accent hover:dark:v-dark-accent text-light-primary-text dark:text-dark-primary-text' : ''}
+                      `}
+                  >
+                    {day?.getDate()}
+                  </button>
+                ))}
+              </div>
+              </>
+            )}
           </div>
         )}
       </div>

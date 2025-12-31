@@ -3,12 +3,12 @@ import { useState } from 'react';
 import { createPortal } from 'react-dom';
 
 // components
-import { Modal } from './Modal';
+import { Modal } from '../Modal';
 
 import { CellInfoModalContent } from './CellInfoModalContent';
 
 // css
-import '../../index.css';
+import '../../../index.css';
 import type { EventProps } from './Event';
 
 /*
@@ -36,12 +36,14 @@ const Cell: React.FC<CellProps> = ({ label, rowEndIndex, rowStartIndex, cellInde
       <div
         onClick={() => setShowModal(true)}
         key={`row:${rowStartIndex}-${rowEndIndex}, cell:${cellIndex}`}
-        className="border bg-light-background border-light-border dark:border-dark-border flex justify-center text-black dark:bg-dark-background dark:text-white"
+        className="border bg-light-background border-light-border p-1 dark:border-dark-border flex justify-center text-black dark:bg-dark-background dark:text-white overflow-hidden"
         style={{
           height: egcStyle.heightStyle
         }}
       >
-        <span className="top-4">{label}</span>
+        <span>
+          {label}
+        </span>
       </div>
       {showModal && createPortal(
         <Modal label={`${label}`} isOpen={showModal} onClose={() => setShowModal(false)} >

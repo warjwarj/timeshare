@@ -3,10 +3,11 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import "../../index.css";
-import { apiClient } from "../utils/apiClient";
+import { register } from '../store/slices/authSlice';
+import { ourUseDispatch } from '../store/hooks';
 
 const RegisterForm: React.FC = () => {
-
+  const dispatch = ourUseDispatch();
   const navigate = useNavigate();
 
   // states
@@ -15,33 +16,23 @@ const RegisterForm: React.FC = () => {
   const [password, setPassword] = useState<string>("");
   const [errorMessage, setErrorMessage] = useState<string>("");
 
-  // login/register submit handler
   const submit = async (e: FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
       setErrorMessage("Please fill in required fields.");
       return;
     }
-
     try {
-      const res = await apiClient.post("/auth/register", {
-        name: name,
-        email: email,
-        password: password,
-        role: "TEST_ROLE_CHANGE_THIS_OR_REMOVE"
-      }, { 
-        validateStatus: status => status < 500
-      })
-      if (res.status === 201) {
-        navigate("/login")
-      } else {
-        setErrorMessage(res.data["detail"])
-      }
-    } catch (err) {
-      setErrorMessage(`SERVER ERROR: Register failed ` + err);
+      await dispatch(register({ name: name, email, password, role: "asd" })).unwrap();
+      navigate('/login');
+    } catch (error: unknown) {
+      const errorMessage = typeof error === 'string'
+        ? error
+        : 'An unexpected error occurred';
+      setErrorMessage(errorMessage)
     }
-
   }
+
   return (
     <div className="text-xl bg-light-background dark:bg-dark-background">
       <div className="flex flex-col items-center justify-center px-6 py-8 mx-auto h-screen lg:py-0">

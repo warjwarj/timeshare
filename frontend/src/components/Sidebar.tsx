@@ -23,7 +23,7 @@ const Sidebar: React.FC<SidebarProps> = ({ links, isCollapsed }) => {
 
         {/* Date Selector */}
         <div className="min-h-20 border-b border-light-border dark:border-dark-border items-center justify-center">
-          <DateSelector startDate={new Date(2024, 11, 30)} />
+          <DateSelector onlyMonthSelector={false} startDate={new Date(2024, 11, 30)} />
         </div>
 
         {/* Links */}

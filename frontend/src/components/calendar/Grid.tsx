@@ -1,18 +1,19 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import '../../index.css';
-import type { EventDTO } from "../types/EventDTO";
-import type { TimeSpan } from "../types/dateTypes";
-import { getDateFromCellIndex, setEventPositions } from "../utils/utils";
+import type { EventDTO } from "../../types/EventDTO";
+import type { TimeSpan } from "../../types/dateTypes";
+import { getDateFromCellIndex, isValidDate, setEventPositions } from "../../utils/utils";
 import type { CellStyle } from "./Cell";
 import { Cell } from "./Cell";
 import type { EventProps, EventStyle } from "./Event";
 import { Event } from './Event';
 
-import { selectProcessedEvents, getEvents, updateEvent } from '../store/slices/eventsSlice';
-import { ourUseSelector, ourUseDispatch } from '../store/hooks';
+import { ourUseDispatch, ourUseSelector } from '../../store/hooks';
+import { getEvents, selectProcessedEvents, updateEvent } from '../../store/slices/eventsSlice';
+
+import '../../../index.css';
 
 /*
-
+  Calendar grid component
 */
 
 type GridStyle = {
@@ -39,8 +40,11 @@ const Grid: React.FC<GridProps> = ({ egStyle, start, cellStep }) => {
 
   // get events on page load
   useEffect(() => {
+    if (!isValidDate(start)) {
+      return;
+    }
     const endDate = new Date(start);
-    endDate.setMonth(endDate.getMonth() + 1);    
+    endDate.setMonth(endDate.getMonth() + 1);
     const prm = dispatch(getEvents({ start: start, end: endDate }))
     return () => {
       prm.abort()
@@ -49,6 +53,9 @@ const Grid: React.FC<GridProps> = ({ egStyle, start, cellStep }) => {
 
   // update event styles
   useEffect(() => {
+    if (events.length === 0 || !isValidDate(start)) {
+      return;
+    }
     setEventProps(setEventPositions(
       events,
       cellLaneEvents.current,
