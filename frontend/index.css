@@ -26,22 +26,27 @@ body {
 
 @theme {
 
-  --color-dark-background: #121212;
-  --color-light-background: #FAFAFA;
+--color-dark-background: #1e1e1e;   /* slate dark */
 
-  --color-dark-primary-text: #E0E0E0;
-  --color-light-primary-text: #303030;
+--color-light-background: #FAFAFA;
 
-  --color-dark-secondary-text: #B0B0B0;
-  --color-light-secondary-text: #4A4A4A;
+/* TEXT */
+--color-dark-primary-text:   #E2E2E2; /* slightly cooler + clearer */
+--color-light-primary-text:  #303030;
 
-  --color-dark-border: #444444;
-  --color-light-border: #8a8a8a;
+--color-dark-secondary-text: #B5B5B5; /* softer slate contrast */
+--color-light-secondary-text:#4A4A4A;
 
-  --color-v-dark-accent: #4d4d4d;  /* near-black */
-  --color-dark-accent:   #4a4a4a;  /* solid dark gray */
-  --color-light-accent:  #b5b5b5;  /* bright gray */
-  --color-v-light-accent:#f0f0f0;  /* near-white */
+/* BORDERS */
+--color-dark-border:  #505050; /* slate-aligned border */
+--color-light-border: #8a8a8a;
+
+/* ACCENTS (cool slate greys) */
+--color-v-dark-accent:  #2a2a2a; /* near-background slate */
+--color-dark-accent:    #3a3a3a; /* solid slate gray */
+--color-light-accent:   #b5b5b5;
+--color-v-light-accent: #f0f0f0;
+
 
 
   /* Custom font families */

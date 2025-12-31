@@ -14,6 +14,8 @@ const SaveButton: React.FC<ButtonProps> = ({ onClick, children }) => {
           bg-light-background 
           dark:bg-dark-background
           text-light-primary-text
+          border-light-border
+          dark:border-dark-border
           dark:text-dark-primary-text
           hover:bg-dark-background 
           hover:text-dark-primary-text 

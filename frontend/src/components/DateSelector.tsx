@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from './svgs/Chevrons';
 import { Calendar } from './svgs/Calendar';
 
-import { MonthEnum, type Month, WeekDayEnum, type WeekDay} from '../types/dateTypes'
+import { MonthEnum, WeekDayEnum } from '../types/dateTypes'
 
 
 type DateSelectorProps = {
@@ -11,13 +11,26 @@ type DateSelectorProps = {
 }
 
 const DateSelector: React.FC<DateSelectorProps> = ({ startDate, onlyMonthSelector }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const [selectedDate, setSelectedDate] = useState<Date | null>(startDate);
   const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [isOpen, setIsOpen] = useState(false);
 
-  const monthNames = Object.values(MonthEnum) as readonly Month[];
-  const dayNames = Object.values(WeekDayEnum) as readonly WeekDay[];
+  const monthNames = Object.values(MonthEnum).map(m => m.substring(0, 3))
+  const dayNames = Object.values(WeekDayEnum).map(m => m.substring(0, 3))
 
   const getDaysInMonth = (date: Date) => {
     const year = date.getFullYear();
@@ -73,7 +86,7 @@ const DateSelector: React.FC<DateSelectorProps> = ({ startDate, onlyMonthSelecto
 
   return (
     <>
-      <div className="w-full h-auto">
+      <div className="w-full h-auto" ref={dropdownRef}>
 
         {/* calendar icon selected date */}
         <div className="h-full flex items-center justify-end gap-5 p-2">
@@ -108,7 +121,7 @@ const DateSelector: React.FC<DateSelectorProps> = ({ startDate, onlyMonthSelecto
 
         {/*  dropdown calendar */}
         {isOpen && (
-          <div className="justify-between border-light-border dark:border-dark-border pr-2 pl-2 bg-light-background dark:bg-dark-background">
+          <div className="fixed z-10 border rounded-lg justify-between pr-2 pl-2 bg-light-background dark:bg-dark-background">
 
             {/* Month Navigation */}
             <div className="flex items-center justify-between">
@@ -129,52 +142,52 @@ const DateSelector: React.FC<DateSelectorProps> = ({ startDate, onlyMonthSelecto
               </button>
             </div>
 
-            { !onlyMonthSelector && (
+            {!onlyMonthSelector && (
               <>
-              {/* Quick Presets */}
-              <div className="flex justify-evenly mb-4">
-                <button
-                  onClick={() => selectPreset(0)}
-                  className="text-sm pt-1 pb-1 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700"
-                >Today </button>
-                <button
-                  onClick={() => selectPreset(1)}
-                  className="text-sm pt-1 pb-1 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700"
-                >Tomorrow </button>
-              </div>
-
-              {/* Weekday names */}
-              <div className="grid grid-cols-7 gap-1 mb-2">
-                {dayNames.map(day => (
-                  <div key={day} className="text-center text-xs font-semibold py-2 text-light-secondary-text dark:text-dark-secondary-text">
-                    {day}
-                  </div>
-                ))}
-              </div>
-
-              {/* Calendar Days */}
-              <div className="grid grid-cols-7 gap-1">
-                {days.map((day, idx) => (
+                {/* Quick Presets */}
+                <div className="flex justify-evenly mb-4">
                   <button
-                    key={idx}
-                    onClick={() => {
-                      if (day) {
-                        setSelectedDate(day);
-                      }
-                    }}
-                    disabled={!day}
-                    className={`
+                    onClick={() => selectPreset(0)}
+                    className="text-sm pt-1 pb-1 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700"
+                  >Today </button>
+                  <button
+                    onClick={() => selectPreset(1)}
+                    className="text-sm pt-1 pb-1 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700"
+                  >Tomorrow </button>
+                </div>
+
+                {/* Weekday names */}
+                <div className="grid grid-cols-7 gap-1 mb-2">
+                  {dayNames.map(day => (
+                    <div key={day} className="text-center text-xs font-semibold py-2 text-light-secondary-text dark:text-dark-secondary-text">
+                      {day}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Calendar Days */}
+                <div className="grid grid-cols-7 gap-1">
+                  {days.map((day, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => {
+                        if (day) {
+                          setSelectedDate(day);
+                        }
+                      }}
+                      disabled={!day}
+                      className={`
                         aspect-square flex items-center justify-center rounded-lg text-sm transition-all
                         ${!day ? 'invisible' : ''}                                          
                         ${isSameDay(day, selectedDate) ? 'bg-light-accent dark:bg-dark-accent text-light-background dark:text-dark-background font-bold font-bold text-xl font-bold text-xl' : ''}
                         ${day && isToday(day) && !isSameDay(day, selectedDate) ? 'font-bold text-xl' : ''}
                         ${day && !isSameDay(day, selectedDate) && !isToday(day) ? 'hover:bg-v-light-accent hover:dark:v-dark-accent text-light-primary-text dark:text-dark-primary-text' : ''}
                       `}
-                  >
-                    {day?.getDate()}
-                  </button>
-                ))}
-              </div>
+                    >
+                      {day?.getDate()}
+                    </button>
+                  ))}
+                </div>
               </>
             )}
           </div>

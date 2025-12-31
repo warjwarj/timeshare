@@ -21,11 +21,6 @@ const Sidebar: React.FC<SidebarProps> = ({ links, isCollapsed }) => {
           dark:text-dark-primary-text dark:bg-dark-background`}
       >
 
-        {/* Date Selector */}
-        <div className="min-h-20 border-b border-light-border dark:border-dark-border items-center justify-center">
-          <DateSelector onlyMonthSelector={false} startDate={new Date(2024, 11, 30)} />
-        </div>
-
         {/* Links */}
         <div className="border-b border-light-border dark:border-dark-border">
           <nav className="flex-1 p-4 overflow-y-auto">

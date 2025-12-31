@@ -20,11 +20,11 @@ const gridStyle: GridStyle = {
   cellCount: 35
 }
 
-type DashboardProps = {
+type EventsViewProps = {
   currentDatetime: string
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ currentDatetime }) => {
+const EventsView: React.FC<EventsViewProps> = ({ currentDatetime }) => {
 
   return (
     <div id="Dashboard" className="flex">
@@ -37,4 +37,4 @@ const Dashboard: React.FC<DashboardProps> = ({ currentDatetime }) => {
   );
 }
 
-export { Dashboard }
+export { EventsView }

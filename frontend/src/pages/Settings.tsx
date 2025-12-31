@@ -48,7 +48,7 @@ const Settings: React.FC = () => {
       <div className="max-w-2xl mx-auto p-6">
         <h1 className="text-3xl font-bold mb-8 text-light-primary-text dark:text-dark-primary-text">Settings</h1>
 
-        <div className="bg-light-background dark:bg-dark-background border border-light-border dark:border-dark-border rounded-lg p-6">
+        <form className="bg-light-background dark:bg-dark-background border border-light-border dark:border-dark-border rounded-lg p-6">
           <h2 className="text-xl font-semibold mb-6 text-light-primary-text dark:text-dark-primary-text">Account Information</h2>
 
           <div className="space-y-6">
@@ -85,15 +85,9 @@ const Settings: React.FC = () => {
 
           {/* Action Buttons */}
           <div className="flex gap-3 mt-8">
-            {/* <button
-              onClick={handleSave}
-              className="px-6 py-2 bg-light-accent dark:bg-dark-accent text-light-background dark:text-dark-background rounded-lg hover:bg-light-secondary-text dark:hover:bg-dark-secondary-text transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
-            >
-              Save
-            </button> */}
             <SaveButton onClick={handleSave} children={"Save"} />
           </div>
-        </div>
+        </form>
       </div>
     </div>
   );
