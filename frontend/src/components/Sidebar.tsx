@@ -1,5 +1,4 @@
 import { DarkModeToggle } from "./DarkModeToggle";
-import { DateSelector } from "./DateSelector";
 
 type SidebarLink = {
   label: string;

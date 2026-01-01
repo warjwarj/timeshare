@@ -21,7 +21,7 @@ const Home: React.FC = () => {
   const [isCollapsed, setIsCollapsed] = useState(!isPhone)
 
   const sidebarLinks: SidebarLink[] = [
-    { label: 'Dashboard', path: '/' },
+    { label: 'Events', path: '/home' },
     { label: 'Availability', path: '/availability' },
     { label: 'Settings', path: '/settings' },
   ];

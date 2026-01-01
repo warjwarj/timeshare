@@ -27,7 +27,7 @@ type EventsViewProps = {
 const EventsView: React.FC<EventsViewProps> = ({ currentDatetime }) => {
 
   return (
-    <div id="Dashboard" className="flex">
+    <div id="EventsView" className="flex">
       <Grid
         egStyle={gridStyle}
         start={new Date(currentDatetime)}
