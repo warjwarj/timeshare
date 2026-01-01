@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { ChevronLeft, ChevronRight } from './svgs/Chevrons';
 import { Calendar } from './svgs/Calendar';
 
@@ -13,7 +14,19 @@ type DateSelectorProps = {
 const DateSelector: React.FC<DateSelectorProps> = ({ startDate, onlyMonthSelector }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, right: 0 });
 
+  // Update dropdown position when opened
+  useEffect(() => {
+    if (isOpen && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      setDropdownPosition({
+        top: rect.bottom + 4,
+        right: window.innerWidth - rect.right,
+      });
+    }
+  }, [isOpen]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -86,13 +99,13 @@ const DateSelector: React.FC<DateSelectorProps> = ({ startDate, onlyMonthSelecto
 
   return (
     <>
-      <div className="w-full h-auto" ref={dropdownRef}>
+      <div className="w-full h-auto">
 
         {/* calendar icon selected date */}
         <div className="h-full flex items-center justify-end gap-5 p-2">
 
           {/* selected date */}
-          <div className="rounded-lg">
+          <div className="rounded-lg hidden md:block">
             <p className="text-sm font-medium">Selected Date:</p>
             <p className="text-lg font-semibold">
               {formatDate(selectedDate)}
@@ -102,17 +115,18 @@ const DateSelector: React.FC<DateSelectorProps> = ({ startDate, onlyMonthSelecto
           {/* Show/hide drop down */}
           <div className="flex justify-center">
             <button
+              ref={buttonRef}
               onClick={() => setIsOpen(!isOpen)}
               className="flex items-center justify-center"
             >
               <Calendar classes={`w-14 h-14
-                rounded-lg 
+                rounded-lg
                 flex justify-center font-bold
-                bg-light-background 
-                dark:bg-dark-background 
-                text-light-primary-text 
-                dark:text-dark-primary-text 
-                hover:bg-v-light-accent 
+                bg-light-background
+                dark:bg-dark-background
+                text-light-primary-text
+                dark:text-dark-primary-text
+                hover:bg-v-light-accent
                 hover:dark:bg-v-dark-accent`} />
             </button>
           </div>
@@ -120,8 +134,12 @@ const DateSelector: React.FC<DateSelectorProps> = ({ startDate, onlyMonthSelecto
         </div>
 
         {/*  dropdown calendar */}
-        {isOpen && (
-          <div className="fixed z-10 border rounded-lg justify-between pr-2 pl-2 bg-light-background dark:bg-dark-background">
+        {isOpen && createPortal(
+          <div
+            ref={dropdownRef}
+            className="fixed z-50 w-60 border rounded-lg px-2 bg-light-background dark:bg-dark-background shadow-lg"
+            style={{ top: dropdownPosition.top, right: dropdownPosition.right }}
+          >
 
             {/* Month Navigation */}
             <div className="flex items-center justify-between">
@@ -190,7 +208,8 @@ const DateSelector: React.FC<DateSelectorProps> = ({ startDate, onlyMonthSelecto
                 </div>
               </>
             )}
-          </div>
+          </div>,
+          document.body
         )}
       </div>
     </>

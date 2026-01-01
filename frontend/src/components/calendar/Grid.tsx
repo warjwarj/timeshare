@@ -8,7 +8,7 @@ import type { EventProps, EventStyle } from "./Event";
 import { Event } from './Event';
 
 import { ourUseDispatch, ourUseSelector } from '../../store/hooks';
-import { getEvents, selectProcessedEvents, updateEvent } from '../../store/slices/eventsSlice';
+import { getEvents, selectProcessedEvents, updateEvent, addEvent } from '../../store/slices/eventsSlice';
 
 import '../../../index.css';
 
@@ -73,6 +73,11 @@ const Grid: React.FC<GridProps> = ({ egStyle, start, cellStep }) => {
     dispatch(updateEvent(moddedev))
   }, [dispatch])
 
+  // callback add new event
+  const addEventCallback = useCallback((newEvent: Omit<EventDTO, 'key' | 'uuid'>) => {
+    dispatch(addEvent(newEvent))
+  }, [dispatch])
+
   // helper get all events in a specific cell
   const getEventsInCell = (cellIndex: number): EventProps[] => {
     const laneMap = cellLaneEvents.current.get(cellIndex); // gets lanes and the event ids which are in those lanes
@@ -111,15 +116,18 @@ const Grid: React.FC<GridProps> = ({ egStyle, start, cellStep }) => {
               {/* iterate to create cells */}
               {Array.from({ length: rowEnd - rowStart + 1 }).map((_, i) => {
                 const cellIndex = rowStart + i;
+                const cellDate = getDateFromCellIndex(cellStep, start, cellIndex) ?? new Date();
                 return (
                   <Cell
                     key={cellIndex}
-                    label={getDateFromCellIndex(cellStep, start, cellIndex)?.toDateString()}
+                    label={cellDate.toDateString()}
                     rowStartIndex={rowStart}
                     rowEndIndex={rowEnd}
                     cellIndex={cellIndex}
                     egcStyle={{ heightStyle: egStyle.cellStyle.heightStyle }}
+                    cellDate={cellDate}
                     getEvents={getEventsInCell}
+                    onAddEvent={addEventCallback}
                   />
                 );
               })}

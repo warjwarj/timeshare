@@ -4,16 +4,14 @@ import { createPortal } from 'react-dom';
 
 // components
 import { Modal } from '../Modal';
-
 import { CellInfoModalContent } from './CellInfoModalContent';
+
+// types
+import type { EventProps } from './Event';
+import type { EventDTO } from '../../types/EventDTO';
 
 // css
 import '../../../index.css';
-import type { EventProps } from './Event';
-
-/*
-
-*/
 
 type CellStyle = {
   heightStyle: string
@@ -24,9 +22,11 @@ type CellProps = {
   rowStartIndex: number;
   cellIndex: number;
   egcStyle: CellStyle;
+  cellDate: Date;
   getEvents: (cellIndex: number) => EventProps[];
+  onAddEvent: (newEvent: Omit<EventDTO, 'key' | 'uuid'>) => void;
 };
-const Cell: React.FC<CellProps> = ({ label, rowEndIndex, rowStartIndex, cellIndex, egcStyle, getEvents }) => {
+const Cell: React.FC<CellProps> = ({ label, rowEndIndex, rowStartIndex, cellIndex, egcStyle, cellDate, getEvents, onAddEvent }) => {
 
   // track popup visibility
   const [showModal, setShowModal] = useState(false);
@@ -47,7 +47,11 @@ const Cell: React.FC<CellProps> = ({ label, rowEndIndex, rowStartIndex, cellInde
       </div>
       {showModal && createPortal(
         <Modal label={`${label}`} isOpen={showModal} onClose={() => setShowModal(false)} >
-          <CellInfoModalContent eventsInCell={getEvents(cellIndex)} />
+          <CellInfoModalContent
+            eventsInCell={getEvents(cellIndex)}
+            cellDate={cellDate}
+            onAddEvent={onAddEvent}
+          />
         </Modal>,
         document.body
       )}

@@ -42,6 +42,22 @@ const updateEvent = createAsyncThunk(
   }
 );
 
+const addEvent = createAsyncThunk(
+  'events/add',
+  async (newEvent: EventDTO) => {
+    try {
+      const res = await apiClient.post("/events/add", newEvent)
+      if (res.status != HttpStatusCode.Created) {
+        toastService.showError("Couldn't add event", JSON.stringify(res.data))
+      }
+      return res.data as EventDTO;
+    } catch (error) {
+      const err = error instanceof Error ? error.message : 'Unknown error'
+      toastService.showError("Couldn't add event", err.toString())
+    }
+  }
+);
+
 // Events state object
 interface EventsState {
   events: EventDTO[];
@@ -95,6 +111,21 @@ const eventsSlice = createSlice({
       .addCase(updateEvent.rejected, (state, action) => {
         state.pending = false;
         state.error = action.payload as string;
+      })
+      // add event
+      .addCase(addEvent.pending, (state) => {
+        state.pending = true;
+        state.error = null;
+      })
+      .addCase(addEvent.fulfilled, (state, action) => {
+        state.pending = false;
+        const payload = action.payload;
+        if (!payload) return;
+        state.events.push(payload);
+      })
+      .addCase(addEvent.rejected, (state, action) => {
+        state.pending = false;
+        state.error = action.payload as string;
       });
 }
 });
@@ -114,7 +145,7 @@ export const selectProcessedEvents = createSelector(
 )
 
 // api calls
-export { getEvents, updateEvent }
+export { getEvents, updateEvent, addEvent }
 
 // reducer
 export default eventsSlice.reducer;

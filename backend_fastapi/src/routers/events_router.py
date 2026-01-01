@@ -38,6 +38,13 @@ async def create(jwt_payload: IsAuthedDep, event: CreateEventRequest):
   """
   return create_event(jwt_payload["user_uuid"], event)
 
+@events_router.post("/add", status_code=HTTPStatus.CREATED)
+async def add(jwt_payload: IsAuthedDep, event: CreateEventRequest):
+  """
+  Add an event (alias for /create).
+  """
+  return create_event(jwt_payload["user_uuid"], event)
+
 @events_router.post("/update", status_code=HTTPStatus.OK)
 async def update(jwt_payload: IsAuthedDep, event: UpdateEventRequest):
   """

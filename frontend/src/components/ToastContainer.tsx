@@ -53,7 +53,7 @@ function ToastItem({ toast, onClose }: { toast: Toast; onClose: () => void }) {
         <h3 className={`text-sm font-semibold ${style.title} mb-1`}>
           {toast.title}
         </h3>
-        <p >
+        <p>
           {toast.message}
         </p>
       </div>

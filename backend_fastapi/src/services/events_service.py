@@ -90,14 +90,8 @@ def get_all_events(user_uuid: str, start: datetime, end: datetime) -> list[SafeE
   :type user_id: str
   """  
   events_repo = EventsRepository()
-  
-  
-  
-  if settings.ENV == "dev":
-    evs = events_repo.get_record(multiple=True, created_by_user_uuid=user_uuid)
-    evs = adjust_events_to_current_date(evs)
-  else:
-    evs = events_repo.get_events_by_datetimes(user_uuid=user_uuid, start=start, end=end)
+
+  evs = events_repo.get_events_by_datetimes(user_uuid=user_uuid, start=start, end=end)
       
   return sanitiseEvents(evs)
 

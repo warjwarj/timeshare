@@ -53,13 +53,13 @@ function getCalendarDaysInMonth(year: number, month: number) {
   return result;
 }
 
-// get cell index from the date. Could also return a lane index.
+// get cell index from the date (1-based to match Grid cell numbering)
 function getCellIndexFromDate(cellStep: TimeSpan, gridStart: Date, dt: Date): number {
   switch (cellStep) {
     case TimeSpanEnum.Day:
-      return Math.floor((dt.getTime() - gridStart.getTime()) / (1000 * 60 * 60 * 24));
+      return Math.floor((dt.getTime() - gridStart.getTime()) / (1000 * 60 * 60 * 24)) + 1;
   }
-  return 0;
+  return 1;
 }
 
 // get date from cell index. Date will always be rounded down to the nearest timeSpan.
@@ -93,9 +93,9 @@ function setEventPositions(
   defaultEventStyle: EventStyle
 ): EventProps[][] {
 
-  // 1. Init the lane event cell map
+  // 1. Init the lane event cell map (1-based to match Grid cell numbering)
   cellLaneEvents.clear();
-  for (let i = 0; i < cellCount; i++) {
+  for (let i = 1; i <= cellCount; i++) {
     cellLaneEvents.set(i, new Map<number, string>());
   }
 
@@ -110,23 +110,13 @@ function setEventPositions(
   // Iterate through sorted events
   sortedEvents.forEach((ev) => {
 
-    let cellStartIndex = getCellIndexFromDate(cellStep, start, ev.start);
-    let cellEndIndex = getCellIndexFromDate(cellStep, start, ev.end);
+    let cellStartIndex = getCellIndexFromDate(cellStep, start, ev.start) + 1;
+    let cellEndIndex = getCellIndexFromDate(cellStep, start, ev.end) + 1;
 
-    // --- FIX START ---
-    // If the event spans time (start < end), we must treat the end index as exclusive.
-    // Example: 9:00-10:00. Start=0, End=1.
-    // We want to occupy ONLY cell 0. So we decrement End to 0.
-    // Width becomes (0 - 0 + 1) = 1 cell.
-    if (cellEndIndex > cellStartIndex) {
-      cellEndIndex = cellEndIndex - 1;
-    }
-    // --- FIX END ---
-
-    // Safety checks for grid boundaries
-    if (cellStartIndex < 0) cellStartIndex = 0;
-    if (cellEndIndex >= cellCount) cellEndIndex = cellCount - 1;
-    if (cellStartIndex > cellEndIndex && cellStartIndex !== cellEndIndex) return;
+    // Safety checks for grid boundaries (1-based: valid range is 1 to cellCount)
+    if (cellStartIndex < 1) cellStartIndex = 1;
+    if (cellEndIndex > cellCount) cellEndIndex = cellCount;
+    if (cellStartIndex > cellEndIndex) return;
 
     // Find the highest available lane across ALL cells this event spans
     let lane = 0;
@@ -153,15 +143,15 @@ function setEventPositions(
     }
 
     // Distribute the event across rows
-    // Use Math.floor to strictly determine which row the cell belongs to
-    const firstRow = Math.floor(cellStartIndex / colCount);
-    const lastRow = Math.floor(cellEndIndex / colCount);
+    // Use Math.floor to strictly determine which row the cell belongs to (adjusted for 1-based indexing)
+    const firstRow = Math.floor((cellStartIndex - 1) / colCount);
+    const lastRow = Math.floor((cellEndIndex - 1) / colCount);
 
     for (let r = firstRow; r <= lastRow && r < numOfRows; r++) {
       if (!rows[r]) continue;
 
-      const rowStart = r * colCount; // 0-based row start
-      const rowEnd = Math.min(rowStart + colCount - 1, cellCount - 1);
+      const rowStart = r * colCount + 1; // 1-based row start
+      const rowEnd = Math.min(rowStart + colCount - 1, cellCount);
 
       // Calculate event boundaries within this row
       const eventStartInRow = Math.max(cellStartIndex, rowStart);
