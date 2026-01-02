@@ -175,8 +175,8 @@ class Repository(ABC, Generic[ModelClass, DtoClass]):
     """
     try:
     
-      rec = self.get_record_by_uuid(uuid)    
       with yield_session(DB_URL) as session:
+        rec = session.query(self.model_class).filter_by(uuid=uuid).first()
         if rec:
           session.delete(rec)
       return rec

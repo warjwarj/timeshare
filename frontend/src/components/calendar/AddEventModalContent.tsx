@@ -11,7 +11,8 @@ import type { EventDTO } from '../../types/EventDTO';
 import { SaveButton } from '../SaveButton';
 
 // utils
-import { isValidDate } from '../../utils/utils';
+import { isValidDate, isNullOrWhitespace } from '../../utils/utils';
+import { toastService } from '../../toastService';
 
 // css
 import '../../../index.css';
@@ -23,7 +24,7 @@ type AddEventModalContentProps = {
   onClose: () => void;
 };
 const AddEventModalContent: React.FC<AddEventModalContentProps> = ({ start, end, onSave, onClose }) => {
-  const [name, setName] = useState('');
+  const [name, setName] = useState("");
   const [colour, setColour] = useState('#3b82f6');
   const [eventStart, setEventStart] = useState(start);
   const [eventEnd, setEventEnd] = useState(end);
@@ -45,6 +46,14 @@ const AddEventModalContent: React.FC<AddEventModalContentProps> = ({ start, end,
   };
 
   const handleSave = () => {
+    if (eventStart > eventEnd) {
+      toastService.showError("Invalid input", "Event start time must be before end time.")
+      return
+    }
+    if (isNullOrWhitespace(name)) {
+      toastService.showError("Invalid input", "Event name must not be empty.")
+      return
+    }
     if (!name.trim()) return;
     onSave({
       name: name.trim(),

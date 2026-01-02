@@ -31,6 +31,11 @@ function getStrErrorMessage(error: unknown): string {
   return 'An unexpected error occurred';
 }
 
+function isNullOrWhitespace(input: string) {
+  return !input || !input.trim();
+}
+
+
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   Date utils
@@ -203,7 +208,8 @@ export {
   getCellIndexFromDate,
   getDateFromCellIndex,
   isValidDate,
-  setEventPositions
+  setEventPositions,
+  isNullOrWhitespace
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

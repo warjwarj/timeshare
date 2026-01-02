@@ -6,7 +6,7 @@ import os
 from datetime import datetime
 
 from src.dependancies.auth_deps import IsAuthedDep
-from src.services.events_service import get_all_events, create_event, update_event, create_multiple_events
+from src.services.events_service import get_all_events, create_event, update_event, create_multiple_events, delete_event
 from src.schemas.requests.event_requests import CreateEventRequest, UpdateEventRequest, CreateMultipleEventsRequest
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -58,3 +58,10 @@ async def create(jwt_payload: IsAuthedDep, event: CreateMultipleEventsRequest):
   Create multiple events
   """
   return create_multiple_events(jwt_payload["user_uuid"], event)
+
+@events_router.delete("/delete/{uuid}", status_code=HTTPStatus.OK)
+async def delete(uuid: str, jwt_payload: IsAuthedDep):
+  """
+  Delete an event.
+  """
+  return delete_event(uuid)

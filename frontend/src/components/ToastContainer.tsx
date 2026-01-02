@@ -17,28 +17,28 @@ function ToastItem({ toast, onClose }: { toast: Toast; onClose: () => void }) {
       border: 'border-red-200',
       icon: 'text-red-600',
       title: 'text-red-900',
-      message: 'text-red-700',
+      text: 'text-red-700',
     },
     success: {
       bg: 'bg-green-50',
       border: 'border-green-200',
       icon: 'text-green-600',
       title: 'text-green-900',
-      message: 'text-green-700',
+      text: 'text-green-700',
     },
     info: {
       bg: 'bg-blue-50',
       border: 'border-blue-200',
       icon: 'text-blue-600',
       title: 'text-blue-900',
-      message: 'text-blue-700',
+      text: 'text-blue-700',
     },
     warning: {
       bg: 'bg-yellow-50',
       border: 'border-yellow-200',
       icon: 'text-yellow-600',
       title: 'text-yellow-900',
-      message: 'text-yellow-700',
+      text: 'text-yellow-700',
     }
   } as const;
 
@@ -46,14 +46,14 @@ function ToastItem({ toast, onClose }: { toast: Toast; onClose: () => void }) {
 
   return (
     <div
-      className={`${style.bg} border ${style.border} rounded-lg shadow-lg p-4 flex items-start gap-3 mb-3 min-w-[320px] max-w-md cursor-pointer`}
+      className={`${style.bg} border ${style.border} rounded-lg shadow-lg p-4 flex items-start gap-3 mb-3 max-w-md cursor-pointer`}
       onClick={onClose}
     >
       <div className="flex-1">
         <h3 className={`text-sm font-semibold ${style.title} mb-1`}>
           {toast.title}
         </h3>
-        <p>
+        <p className={`${style.text}`}>
           {toast.message}
         </p>
       </div>

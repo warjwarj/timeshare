@@ -13,10 +13,11 @@ const getEvents = createAsyncThunk(
         params: {
           start: start.toISOString(),
           end: end.toISOString()
-        }
+        },
+        validateStatus: status => status <= 500
       })
       if (res.status != HttpStatusCode.Ok) {
-        toastService.showError("Couldn't get events", "response status indicates failure")
+        toastService.showError("Couldn't get events", res.data["detail"][0]["msg"])
       }
       return res.data as EventDTO[];
     } catch (error) {
@@ -30,9 +31,13 @@ const updateEvent = createAsyncThunk(
   'events/update',
   async (moddedev: EventDTO) => {
     try {
-      const res = await apiClient.post("/events/update", moddedev)
+      const res = await apiClient.post(
+        "/events/update",
+        moddedev,
+        { validateStatus: status => status <= 500 }
+      )
       if (res.status != HttpStatusCode.Ok) {
-        toastService.showError("Couldn't update event", res.data)
+        toastService.showError("Couldn't update event", res.data["detail"][0]["msg"])
       }
       return res.data as EventDTO;
     } catch (error) {
@@ -46,14 +51,37 @@ const addEvent = createAsyncThunk(
   'events/add',
   async (newEvent: EventDTO) => {
     try {
-      const res = await apiClient.post("/events/add", newEvent)
+      const res = await apiClient.post(
+        "/events/add",
+        newEvent,
+        { validateStatus: status => status <= 500 }
+      )
       if (res.status != HttpStatusCode.Created) {
-        toastService.showError("Couldn't add event", JSON.stringify(res.data))
+        toastService.showError("Couldn't add event", res.data["detail"][0]["msg"])
       }
       return res.data as EventDTO;
     } catch (error) {
       const err = error instanceof Error ? error.message : 'Unknown error'
       toastService.showError("Couldn't add event", err.toString())
+    }
+  }
+);
+
+const deleteEvent = createAsyncThunk(
+  'events/delete',
+  async (uuid: string) => {
+    try {
+      const res = await apiClient.delete(
+        `/events/delete/${uuid}`,
+        { validateStatus: status => status <= 500 }
+      )
+      if (res.status != HttpStatusCode.Ok) {
+        toastService.showError("Couldn't delete event", res.data["detail"][0]["msg"])
+      }
+      return uuid;
+    } catch (error) {
+      const err = error instanceof Error ? error.message : 'Unknown error'
+      toastService.showError("Couldn't delete event", err.toString())
     }
   }
 );
@@ -126,8 +154,23 @@ const eventsSlice = createSlice({
       .addCase(addEvent.rejected, (state, action) => {
         state.pending = false;
         state.error = action.payload as string;
+      })
+      // delete event
+      .addCase(deleteEvent.pending, (state) => {
+        state.pending = true;
+        state.error = null;
+      })
+      .addCase(deleteEvent.fulfilled, (state, action) => {
+        state.pending = false;
+        const uuid = action.payload;
+        if (!uuid) return;
+        state.events = state.events.filter(ev => ev.uuid !== uuid);
+      })
+      .addCase(deleteEvent.rejected, (state, action) => {
+        state.pending = false;
+        state.error = action.payload as string;
       });
-}
+  }
 });
 
 
@@ -145,7 +188,7 @@ export const selectProcessedEvents = createSelector(
 )
 
 // api calls
-export { getEvents, updateEvent, addEvent }
+export { getEvents, updateEvent, addEvent, deleteEvent }
 
 // reducer
 export default eventsSlice.reducer;

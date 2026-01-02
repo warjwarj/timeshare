@@ -88,12 +88,20 @@ def get_all_events(user_uuid: str, start: datetime, end: datetime) -> list[SafeE
 
   :param user_id: requesters user_id
   :type user_id: str
-  """  
+  """
   events_repo = EventsRepository()
 
   evs = events_repo.get_events_by_datetimes(user_uuid=user_uuid, start=start, end=end)
-      
+
   return sanitiseEvents(evs)
+
+def delete_event(event_uuid: str) -> dict:
+  """
+  Delete an event
+  """
+  events_repo = EventsRepository()
+  events_repo.delete_record(event_uuid)
+  return {"success": True}
 
 def adjust_events_to_current_date(events: list[EventDTO]):
     """

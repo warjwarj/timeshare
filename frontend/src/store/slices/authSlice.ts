@@ -3,6 +3,7 @@ import { getStrErrorMessage } from '../../utils/utils'
 
 import { apiClient } from "../../utils/apiClient";
 import { toastService } from '../../toastService';
+import { HttpStatusCode } from 'axios';
 
 const login = createAsyncThunk(
   'auth/login',
@@ -11,14 +12,20 @@ const login = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
-      const res = await apiClient.post("/auth/login", {
+      const res = await apiClient.post(
+        "/auth/login", {
         name,
         email,
         password,
         role
-      }); 
+      },
+        { validateStatus: status => status <= 500 }
+      );
+      if (res.status != HttpStatusCode.Ok) {
+        toastService.showError("Couldn't login", res.data["detail"][0]["msg"])
+      }
       return res.data;
-    } catch (error: unknown) {      
+    } catch (error: unknown) {
       return rejectWithValue(getStrErrorMessage(error));
     }
   }
@@ -36,7 +43,12 @@ const register = createAsyncThunk(
         email,
         password,
         role
-      });
+      },
+        { validateStatus: status => status <= 500 }
+      );
+      if (res.status != HttpStatusCode.Ok) {
+        toastService.showError("Couldn't register", res.data["detail"][0]["msg"])
+      }
       return res.data;
     } catch (error: unknown) {
       return rejectWithValue(getStrErrorMessage(error));
@@ -54,7 +66,12 @@ const updateAccount = createAsyncThunk(
       const res = await apiClient.put("/auth/account", {
         name,
         email
-      });
+      },
+        { validateStatus: status => status <= 500 }
+      );
+      if (res.status != HttpStatusCode.Ok) {
+        toastService.showError("Couldn't update account", res.data["detail"][0]["msg"])
+      }
       return res.data;
     } catch (error: unknown) {
       return rejectWithValue(getStrErrorMessage(error));
@@ -81,28 +98,28 @@ export const authSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-    .addCase(login.fulfilled, (state, action) => {
-      const { success, name, email, access_token } = action.payload;
-      if (!success || !name || !email || !access_token) {
-        toastService.showError("Couldn't log in", action.payload.detail as string)
-        return;
-      }
-      state.token = access_token
-      state.name = name
-      state.email = email
-      localStorage.setItem("auth_state", JSON.stringify({...state}))
-    })
-    .addCase(updateAccount.fulfilled, (state, action) => {
-      const { success, name, email } = action.payload;
-      if (!success) {
-        toastService.showError("Couldn't update account", action.payload.detail as string)
-        return;
-      }
-      state.name = name
-      state.email = email
-      localStorage.setItem("auth_state", JSON.stringify({...state}))
-      toastService.showSuccess("Account updated successfully")
-    })
+      .addCase(login.fulfilled, (state, action) => {
+        const { success, name, email, access_token } = action.payload;
+        if (!success || !name || !email || !access_token) {
+          toastService.showError("Couldn't log in", action.payload.detail as string)
+          return;
+        }
+        state.token = access_token
+        state.name = name
+        state.email = email
+        localStorage.setItem("auth_state", JSON.stringify({ ...state }))
+      })
+      .addCase(updateAccount.fulfilled, (state, action) => {
+        const { success, name, email } = action.payload;
+        if (!success) {
+          toastService.showError("Couldn't update account", action.payload.detail as string)
+          return;
+        }
+        state.name = name
+        state.email = email
+        localStorage.setItem("auth_state", JSON.stringify({ ...state }))
+        toastService.showSuccess("Account updated successfully")
+      })
   }
 })
 

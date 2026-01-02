@@ -22,13 +22,20 @@ import { SaveButton } from '../SaveButton';
 type EventInfoModalContentProps = {
   event: EventProps;
   updateEvent: (updatedEvent: EventDTO) => void;
+  deleteEvent: (uuid: string) => void;
   closePopup: () => void;
 };
-const EventInfoModalContent: React.FC<EventInfoModalContentProps> = ({ event, updateEvent, closePopup }) => {
+const EventInfoModalContent: React.FC<EventInfoModalContentProps> = ({ event, updateEvent, deleteEvent, closePopup }) => {
 
   // save updated event object
   const handleSave = () => {
     if (updateEvent) updateEvent(updatedEvent);
+    closePopup();
+  }
+
+  // delete event
+  const handleDelete = () => {
+    deleteEvent(event.eventDTO.uuid);
     closePopup();
   }
 
@@ -98,7 +105,15 @@ const EventInfoModalContent: React.FC<EventInfoModalContentProps> = ({ event, up
           className="border rounded p-1"
         />
       </div>
-      <SaveButton onClick={handleSave} children={"Save"} />
+      <div className="flex gap-2 mt-2">
+        <SaveButton onClick={handleSave} children={"Save"} />
+        <button
+          onClick={handleDelete}
+          className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+        >
+          Delete
+        </button>
+      </div>
     </div>
   );
 };

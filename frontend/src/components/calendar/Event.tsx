@@ -33,9 +33,11 @@ type EventProps = {
 const Event: React.FC<{
   eventProps: EventProps,
   updateEvent: (updatedEvent: EventDTO) => void;
+  deleteEvent: (uuid: string) => void;
 }> = ({
   eventProps,
-  updateEvent
+  updateEvent,
+  deleteEvent
 }) => {
 
     // track popup visibility
@@ -73,6 +75,7 @@ const Event: React.FC<{
             <EventInfoModalContent
               event={eventProps}
               updateEvent={updateEvent}
+              deleteEvent={deleteEvent}
               closePopup={() => setShowModal(false)}
             />
           </Modal>,

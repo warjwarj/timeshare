@@ -11,15 +11,13 @@ const getCurrentDate = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const res = await apiClient.get("/common/current-datetime", {
-          headers: {
-            "X-Timezone": "UTC"
-          }
-        }
-      )
+        headers: {
+          "X-Timezone": "UTC"
+        },
+        validateStatus: status => status <= 500
+      })
       if (res.status != HttpStatusCode.Ok) {
-        const err = "Error reaching server"
-        toastService.showError(err, res.data)
-        return rejectWithValue(`${err}: ${res.data}`);
+        toastService.showError("Couldn't get current datetime", res.data["detail"][0]["msg"])
       }
       return res.data
     } catch (error) {
@@ -38,7 +36,7 @@ interface AppState {
 export const authSlice = createSlice({
   name: "auth",
   initialState: {
-    
+
   } as AppState,
   reducers: {
     setSelectedMonth: (state, action: PayloadAction<{ month: Month }>) => {
@@ -47,9 +45,9 @@ export const authSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-    .addCase(getCurrentDate.fulfilled, (state, action: PayloadAction<{ datetime: string, timezone: string }>) => {
-      state.currentDatetime = action.payload.datetime;
-    })
+      .addCase(getCurrentDate.fulfilled, (state, action: PayloadAction<{ datetime: string, timezone: string }>) => {
+        state.currentDatetime = action.payload.datetime;
+      })
   }
 })
 

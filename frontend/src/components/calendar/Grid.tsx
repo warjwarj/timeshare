@@ -8,7 +8,7 @@ import type { EventProps, EventStyle } from "./Event";
 import { Event } from './Event';
 
 import { ourUseDispatch, ourUseSelector } from '../../store/hooks';
-import { getEvents, selectProcessedEvents, updateEvent, addEvent } from '../../store/slices/eventsSlice';
+import { getEvents, selectProcessedEvents, updateEvent, addEvent, deleteEvent } from '../../store/slices/eventsSlice';
 
 import '../../../index.css';
 
@@ -78,6 +78,11 @@ const Grid: React.FC<GridProps> = ({ egStyle, start, cellStep }) => {
     dispatch(addEvent(newEvent))
   }, [dispatch])
 
+  // callback delete event
+  const deleteEventCallback = useCallback((uuid: string) => {
+    dispatch(deleteEvent(uuid))
+  }, [dispatch])
+
   // helper get all events in a specific cell
   const getEventsInCell = (cellIndex: number): EventProps[] => {
     const laneMap = cellLaneEvents.current.get(cellIndex); // gets lanes and the event ids which are in those lanes
@@ -143,6 +148,7 @@ const Grid: React.FC<GridProps> = ({ egStyle, start, cellStep }) => {
                         key={evp.key}
                         eventProps={evp}
                         updateEvent={updateEventCallback}
+                        deleteEvent={deleteEventCallback}
                       />
                   )
                 })}
