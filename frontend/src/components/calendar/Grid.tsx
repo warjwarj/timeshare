@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { EventDTO } from "../../types/EventDTO";
 import type { TimeSpan } from "../../types/dateTypes";
-import { getDateFromCellIndex, isValidDate } from "../../utils/utils";
+import { getDateFromCellIndex, isValidDate, isSameDay } from "../../utils/utils";
 import { setEventPositions } from "../../utils/gridUtils";
 import type { CellStyle } from "./Cell";
 import { Cell } from "./Cell";
@@ -32,7 +32,7 @@ type GridProps = {
   colHeaders: string[];
   gridLabel: string
 };
-const Grid: React.FC<GridProps> = ({ egStyle, start, cellStep, colHeaders, gridLabel }) => {
+const Grid: React.FC<GridProps> = ({ egStyle, start, cellStep, colHeaders, gridLabel, currentDate, selectedDate }) => {
   const dispatch = ourUseDispatch()
 
   // memoised events selector
@@ -154,6 +154,9 @@ const Grid: React.FC<GridProps> = ({ egStyle, start, cellStep, colHeaders, gridL
               {Array.from({ length: rowEnd - rowStart + 1 }).map((_, i) => {
                 const cellIndex = rowStart + i;
                 const cellDate = getDateFromCellIndex(cellStep, start, cellIndex) ?? new Date();
+                const isOutsideMonth = cellDate.getMonth() !== selectedDate.getMonth();
+                const isSelected = isSameDay(cellDate, selectedDate);
+                const isHighlighted = isSameDay(cellDate, currentDate);
                 return (
                   <Cell
                     key={cellIndex}
@@ -165,6 +168,9 @@ const Grid: React.FC<GridProps> = ({ egStyle, start, cellStep, colHeaders, gridL
                     cellDate={cellDate}
                     getEvents={getEventsInCell}
                     onAddEvent={addEventCallback}
+                    isOutsideMonth={isOutsideMonth}
+                    isSelected={isSelected}
+                    isHighlighted={isHighlighted}
                   />
                 );
               })}

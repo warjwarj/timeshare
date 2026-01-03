@@ -102,7 +102,7 @@ const EventsView: React.FC<EventsViewProps> = ({ currentDate, selectedDate, chil
               currentDate={currentDate}
               selectedDate={selectedDate}
               egStyle={gridStyle}
-              start={getPreviousMonday(selectedDate)}
+              start={getPreviousMonday(currentDate)}
               cellStep={TimeSpanEnum.Day}
               colHeaders={weekdayNames.map(x => x.substring(0, 3))}
               gridLabel={monthNames[selectedDate.getMonth()] + " " + selectedDate.getFullYear()}

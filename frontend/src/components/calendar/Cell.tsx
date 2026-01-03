@@ -25,18 +25,30 @@ type CellProps = {
   cellDate: Date;
   getEvents: (cellIndex: number) => EventProps[];
   onAddEvent: (newEvent: Omit<EventDTO, 'key' | 'uuid'>) => void;
+  isOutsideMonth?: boolean;
+  isSelected?: boolean;
+  isHighlighted?: boolean;
 };
-const Cell: React.FC<CellProps> = ({ label, rowEndIndex, rowStartIndex, cellIndex, egcStyle, cellDate, getEvents, onAddEvent }) => {
+const Cell: React.FC<CellProps> = ({ label, rowEndIndex, rowStartIndex, cellIndex, egcStyle, cellDate, getEvents, onAddEvent, isOutsideMonth, isSelected, isHighlighted }) => {
 
   // track popup visibility
   const [showModal, setShowModal] = useState(false);
+
+  const cellClassName = [
+    "border border-light-border dark:border-dark-border p-1 flex justify-center overflow-hidden",
+    isOutsideMonth
+      ? "bg-light-border/30 dark:bg-dark-border/30 text-light-secondary-text dark:text-dark-secondary-text"
+      : "bg-light-background dark:bg-dark-background text-black dark:text-white",
+    isSelected && "ring-2 ring-inset ring-blue-500",
+    isHighlighted && !isSelected && "ring-2 ring-inset ring-amber-400"
+  ].filter(Boolean).join(" ");
 
   return (
     <>
       <div
         onClick={() => setShowModal(true)}
         key={`row:${rowStartIndex}-${rowEndIndex}, cell:${cellIndex}`}
-        className="border bg-light-background border-light-border p-1 dark:border-dark-border flex justify-center text-black dark:bg-dark-background dark:text-white overflow-hidden"
+        className={cellClassName}
         style={{
           height: egcStyle.heightStyle
         }}
