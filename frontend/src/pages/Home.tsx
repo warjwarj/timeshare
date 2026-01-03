@@ -46,7 +46,7 @@ const Home: React.FC = () => {
 
   // render users homepage
   return (
-    <div id="Home" className="flex w-full max-h-[calc(100vh-5rem)] border-box">
+    <div id="Home" className="flex w-full h-[calc(100dvh-5rem)] border-box overflow-x-hidden">
 
       {/* Sidebar*/}
       <div className="h-full">
@@ -54,7 +54,7 @@ const Home: React.FC = () => {
       </div>
 
       {/* Content to right of sidebar */}
-      <div className={`h-full overflow-none ${!isCollapsed ? "w-[calc(100vw-20rem)]" : "w-full"}`}>
+      <div className={`h-full overflow-none ${!isCollapsed ? "w-[calc(100dvw-20rem)]" : "w-full"}`}>
         <div className="">
           <EventsView currentDate={currentDate} selectedDate={selectedDate}>
             {/* Children rendered in the header area */}

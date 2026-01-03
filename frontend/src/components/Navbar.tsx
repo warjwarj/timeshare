@@ -47,7 +47,7 @@ const Navbar: React.FC<NavbarProps> = ({ links }) => {
   ];
 
   return (
-    <nav className="border-b-1 pb-1 border-light-border bg-light-background text-2xl h-20 dark:bg-dark-background dark:border-dark-border flex items-center justify-between px-4">
+    <nav className="overflow-hidden border-b-1 pb-1 border-light-border bg-light-background text-2xl h-20 dark:bg-dark-background dark:border-dark-border flex items-center justify-between px-4">
 
       {/* Left links */}
       <ul className="flex space-x-4">

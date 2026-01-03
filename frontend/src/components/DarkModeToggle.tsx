@@ -47,7 +47,7 @@ const DarkModeToggle: React.FC = () => {
       {/* Moon icon (dark mode) */}
       <svg xmlns="http://www.w3.org/2000/svg" 
         id="theme-toggle-dark-icon"
-        className={`${isDark ? 'hidden' : 'block'} w-full h-full mb-1`}
+        className={`${isDark ? 'hidden' : 'block'} w-10 h-10`}
         width="24" 
         height="24" 
         viewBox="0 0 24 24" 
@@ -62,7 +62,7 @@ const DarkModeToggle: React.FC = () => {
       {/* Sun icon (light mode) */}
       <svg
         id="theme-toggle-light-icon"
-        className={`${isDark ? 'block' : 'hidden'} w-full h-full mb-1`}
+        className={`${isDark ? 'block' : 'hidden'} w-10 h-10`}
         aria-hidden="true"
         xmlns="http://www.w3.org/2000/svg"
         fill="none"

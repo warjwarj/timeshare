@@ -24,17 +24,21 @@ type GridStyle = {
   cellCount: number;
 }
 type GridProps = {
+  currentDate: Date;
+  selectedDate: Date;
   egStyle: GridStyle;
   start: Date;
-  cellStep: TimeSpan
+  cellStep: TimeSpan;
+  colHeaders: string[];
+  gridLabel: string
 };
-const Grid: React.FC<GridProps> = ({ egStyle, start, cellStep }) => {
-  const dispatch = ourUseDispatch() 
+const Grid: React.FC<GridProps> = ({ egStyle, start, cellStep, colHeaders, gridLabel }) => {
+  const dispatch = ourUseDispatch()
 
   // memoised events selector
   const { selectProcessedEvents } = useMemo(
     () => makeEventSelectors(),
-    [start]
+    []
   )
   const events = ourUseSelector(selectProcessedEvents);
 
@@ -46,19 +50,19 @@ const Grid: React.FC<GridProps> = ({ egStyle, start, cellStep }) => {
   // event props state
   const [eventProps, setEventProps] = useState<EventProps[][]>()
 
-    // measure container height on mount and resize
-    useEffect(() => {
-      const container = gridRowWidthRef.current;
-      if (!container) return;
-      const updateWidth = () => {
-        const height = container.getBoundingClientRect().width ?? 0;
-        setGridRowWidth(height);
-      };
-      updateWidth();
-      const resizeObserver = new ResizeObserver(updateWidth);
-      resizeObserver.observe(container);
-      return () => resizeObserver.disconnect();
-    }, []);
+  // measure container height on mount and resize
+  useEffect(() => {
+    const container = gridRowWidthRef.current;
+    if (!container) return;
+    const updateWidth = () => {
+      const height = container.getBoundingClientRect().width ?? 0;
+      setGridRowWidth(height);
+    };
+    updateWidth();
+    const resizeObserver = new ResizeObserver(updateWidth);
+    resizeObserver.observe(container);
+    return () => resizeObserver.disconnect();
+  }, []);
 
   // update event styles
   useEffect(() => {
@@ -111,6 +115,25 @@ const Grid: React.FC<GridProps> = ({ egStyle, start, cellStep }) => {
       id="calendar-grid-container"
       className="w-full h-full flex flex-col gap-4 p-4 w-full box-border"
     >
+      <h1 className="text-2xl font-bold">{gridLabel}</h1>
+
+      {/* Column headers */}
+      <div
+        className="grid gap-0"
+        style={{
+          gridTemplateColumns: `repeat(${egStyle.colCount}, minmax(0, 1fr))`,
+        }}
+      >
+        {colHeaders.map((header, i) => (
+          <div
+            key={i}
+            className="text-center py-2 border border-light-border dark:border-dark-border text-light-primary-text dark:text-dark-primary-text"
+          >
+            {header}
+          </div>
+        ))}
+      </div>
+
       {/* iterate to create rows */}
       {Array.from({ length: Math.ceil(egStyle.cellCount / egStyle.colCount) }).map((_, rowIndex) => {
         const rowStart = rowIndex * egStyle.colCount + 1;
@@ -134,7 +157,7 @@ const Grid: React.FC<GridProps> = ({ egStyle, start, cellStep }) => {
                 return (
                   <Cell
                     key={cellIndex}
-                    label={cellDate.toDateString()}
+                    label={cellDate.getDate().toString()}
                     rowStartIndex={rowStart}
                     rowEndIndex={rowEnd}
                     cellIndex={cellIndex}

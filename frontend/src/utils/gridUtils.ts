@@ -1,9 +1,31 @@
 
 import type { EventProps, EventStyle } from "../components/calendar/Event";
+import { TimeSpanEnum, type TimeSpan } from "../types/dateTypes";
 import type { EventDTO } from "../types/EventDTO";
 
-import { getCellIndexFromDate } from "./utils";
+// get cell index from the date (1-based to match Grid cell numbering)
+function getCellIndexFromDate(cellStep: TimeSpan, gridStart: Date, dt: Date): number {
+  const diffMs = dt.getTime() - gridStart.getTime();
+  const msPerMinute = 60 * 1000;
+  const msPerHour = 60 * msPerMinute;
+  const msPerDay = 24 * msPerHour;
 
+  switch (cellStep) {
+    case TimeSpanEnum.Mins5:
+      return Math.floor(diffMs / (5 * msPerMinute)) + 1;
+    case TimeSpanEnum.Mins10:
+      return Math.floor(diffMs / (10 * msPerMinute)) + 1;
+    case TimeSpanEnum.Mins15:
+      return Math.floor(diffMs / (15 * msPerMinute)) + 1;
+    case TimeSpanEnum.Mins30:
+      return Math.floor(diffMs / (30 * msPerMinute)) + 1;
+    case TimeSpanEnum.Hour:
+      return Math.floor(diffMs / msPerHour) + 1;
+    case TimeSpanEnum.Day:
+      return Math.floor(diffMs / msPerDay) + 1;
+  }
+  return 1;
+}
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

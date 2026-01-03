@@ -2,10 +2,11 @@ import { useState, type ReactNode } from 'react';
 
 import { Grid } from '../components/calendar/Grid';
 import type { GridStyle } from '../components/calendar/Grid';
-import { TimeSpanEnum } from "../types/dateTypes";
+import { MonthEnum, TimeSpanEnum, WeekDayEnum } from "../types/dateTypes";
 import { DayGrid } from '../components/calendar/DayGrid';
 import type { EventStyle } from '../components/calendar/Event';
 import { DateSelector } from "../components/DateSelector.tsx";
+import { getPreviousMonday } from '../utils/utils.ts';
 
 type ViewMode = 'day' | 'month' | 'both';
 
@@ -42,13 +43,16 @@ const EventsView: React.FC<EventsViewProps> = ({ currentDate, selectedDate, chil
   const showMonth = viewMode === 'month' || viewMode === 'both';
   const showDay = viewMode === 'day' || viewMode === 'both';
 
+  const monthNames = Object.values(MonthEnum)
+  const weekdayNames = Object.values(WeekDayEnum)
+
   return (
-    <div id="EventsView" className="flex flex-col h-[calc(100vh-6rem)]">
+    <div id="EventsView" className="flex flex-col h-[calc(100dvh-5rem)]">
       {/* View Mode Selector */}
       <div className="flex h-[5rem] gap-1 p-2 border-b border-light-border dark:border-dark-border">
 
         {/* children rendered on the left of the header area. */}
-        <div className="flex mr-40 justify-start border-light-border dark:border-dark-border">
+        <div className="flex mr-20 justify-start border-light-border dark:border-dark-border">
           {children}
         </div>
 
@@ -93,16 +97,20 @@ const EventsView: React.FC<EventsViewProps> = ({ currentDate, selectedDate, chil
       {/* Events views. */}
       <div className={`flex flex-1 overflow-hidden`}>
         {showMonth && (
-          <div className={`${viewMode === 'both' ? 'flex-1' : 'w-full'} max-h-[calc(100vh-6rem)] overflow-y-auto`}>
+          <div className={`${viewMode === 'both' ? 'flex-1' : 'w-full'} max-h-[calc(100dvh-6rem)] overflow-y-auto`}>
             <Grid
+              currentDate={currentDate}
+              selectedDate={selectedDate}
               egStyle={gridStyle}
-              start={new Date(currentDate)}
+              start={getPreviousMonday(selectedDate)}
               cellStep={TimeSpanEnum.Day}
+              colHeaders={weekdayNames.map(x => x.substring(0, 3))}
+              gridLabel={monthNames[selectedDate.getMonth()] + " " + selectedDate.getFullYear()}
             />
           </div>
         )}
         {showDay && (
-          <div className={`${viewMode === 'both' ? 'flex-1' : 'w-full'} max-h-[calc(100vh-6rem)] overflow-hidden`}>
+          <div className={`${viewMode === 'both' ? 'flex-1' : 'w-full'} max-h-[calc(100dvh-6rem)] overflow-hidden`}>
             <DayGrid
               date={new Date(selectedDate)}
               timeStart={0}

@@ -52,30 +52,6 @@ function getCalendarDaysInMonth(year: number, month: number) {
   return result;
 }
 
-// get cell index from the date (1-based to match Grid cell numbering)
-function getCellIndexFromDate(cellStep: TimeSpan, gridStart: Date, dt: Date): number {
-  const diffMs = dt.getTime() - gridStart.getTime();
-  const msPerMinute = 60 * 1000;
-  const msPerHour = 60 * msPerMinute;
-  const msPerDay = 24 * msPerHour;
-
-  switch (cellStep) {
-    case TimeSpanEnum.Mins5:
-      return Math.floor(diffMs / (5 * msPerMinute)) + 1;
-    case TimeSpanEnum.Mins10:
-      return Math.floor(diffMs / (10 * msPerMinute)) + 1;
-    case TimeSpanEnum.Mins15:
-      return Math.floor(diffMs / (15 * msPerMinute)) + 1;
-    case TimeSpanEnum.Mins30:
-      return Math.floor(diffMs / (30 * msPerMinute)) + 1;
-    case TimeSpanEnum.Hour:
-      return Math.floor(diffMs / msPerHour) + 1;
-    case TimeSpanEnum.Day:
-      return Math.floor(diffMs / msPerDay) + 1;
-  }
-  return 1;
-}
-
 // get date from cell index. Date will always be rounded down to the nearest timeSpan.
 function getDateFromCellIndex(cellStep: TimeSpan, gridStart: Date, cellIndex: number): Date {
   const ret = new Date(gridStart)
@@ -108,15 +84,22 @@ function isToday(date: Date) {
   return isSameDay(date, new Date());
 };
 
+function getPreviousMonday(date: Date): Date {
+  const result = new Date(date);
+  const day = result.getDay();
+  const diff = day === 0 ? 6 : day - 1;
+  result.setDate(result.getDate() - diff);
+  return result;
+}
 
 export {
   getStrErrorMessage,
   getCalendarDaysInMonth,
-  getCellIndexFromDate,
   getDateFromCellIndex,
   isValidDate,
   isNullOrWhitespace,
   formatDate,
   isToday,
-  isSameDay
+  isSameDay,
+  getPreviousMonday
 }
