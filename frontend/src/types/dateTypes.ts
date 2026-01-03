@@ -26,6 +26,10 @@ export const MonthEnum = {
 export type Month = typeof MonthEnum[keyof typeof MonthEnum]
 
 export const TimeSpanEnum = {
+  Mins5: 'Mins5',
+  Mins10: 'Mins10',
+  Mins15: 'Mins15',
+  Mins30: 'Mins30',
   Hour: 'Hour',
   Day: 'Day',
   Week: 'Week',

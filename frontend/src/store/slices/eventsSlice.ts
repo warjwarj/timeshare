@@ -49,7 +49,7 @@ const updateEvent = createAsyncThunk(
 
 const addEvent = createAsyncThunk(
   'events/add',
-  async (newEvent: EventDTO) => {
+  async (newEvent: Omit<EventDTO, 'key' | 'uuid'>) => {
     try {
       const res = await apiClient.post(
         "/events/add",
