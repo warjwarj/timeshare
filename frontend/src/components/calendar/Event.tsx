@@ -24,6 +24,7 @@ type EventStyle = {
   left: number;
   width: number;
   lane: number;
+  top?: number; // Optional: direct top position in pixels (used by DayGrid)
 }
 type EventProps = {
   readonly eventDTO: EventDTO
@@ -58,7 +59,9 @@ const Event: React.FC<{
             height: `${eventProps.evStyle.eventHeightStyle}px`,
             left: `${eventProps.evStyle.left}px`,
             width: `${eventProps.evStyle.width}px`,
-            top: `calc(${eventProps.evStyle.lane + 1} * ${eventProps.evStyle.eventHeightStyle})`,
+            top: eventProps.evStyle.top !== undefined
+              ? `${eventProps.evStyle.top}px`
+              : `calc(${eventProps.evStyle.lane + 1} * ${eventProps.evStyle.eventHeightStyle})`,
             backgroundColor: eventProps.evStyle.colour,
           }}
         >

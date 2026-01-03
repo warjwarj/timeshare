@@ -42,10 +42,10 @@ const LoginForm: React.FC = () => {
           </a>
         </div>
 
-        <div className="w-full bg-light-background rounded-lg border border-light-border md:mt-0 max-w-md dark:bg-dark-background dark:border-dark-border">
-          <div className="p-6 space-y-4 md:space-y-6 sm:p-8">
+        <div className="w-full bg-light-background rounded-lg border border-light-border sm:mt-0 max-w-md dark:bg-dark-background dark:border-dark-border">
+          <div className="p-6 space-y-4 sm:space-y-6 sm:p-8">
             <div className="flex items-end justify-between mb-6 w-full">
-              <h1 className="text-xl font-semibold text-light-primary-text md:text-2xl dark:text-dark-primary-text">
+              <h1 className="text-xl font-semibold text-light-primary-text sm:text-2xl dark:text-dark-primary-text">
                 Sign in to your account
               </h1>
               <a
@@ -56,7 +56,7 @@ const LoginForm: React.FC = () => {
               </a>
             </div>
 
-            <form className="space-y-4 md:space-y-6">
+            <form className="space-y-4 sm:space-y-6">
               <div>
                 <label htmlFor="email" className="block mb-2 font-medium text-light-primary-text dark:text-dark-primary-text">
                   Email

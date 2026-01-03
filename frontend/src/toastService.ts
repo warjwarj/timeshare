@@ -37,7 +37,7 @@ class ToastService {
     }, 5000);
   }
 
-  showSuccess(title: string, message: string) {
+  showSuccess(title: string, message: string = "") {
     const id = Math.random().toString(36).substr(2, 9);
     this.toasts.push({ id, type: 'success', title, message });
     this.notify();

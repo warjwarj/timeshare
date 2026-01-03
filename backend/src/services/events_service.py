@@ -62,7 +62,6 @@ def update_event(user_uuid: str, event: UpdateEventRequest) -> SafeEventDTO:
     name=event.name,
     colour=event.colour,
   )
-  print(rec)
   if rec is not None:
     return sanitiseEvent(rec)
 
@@ -102,21 +101,3 @@ def delete_event(event_uuid: str) -> dict:
   events_repo = EventsRepository()
   events_repo.delete_record(event_uuid)
   return {"success": True}
-
-def adjust_events_to_current_date(events: list[EventDTO]):
-    """
-    Adjusts all events so the earliest event starts at the current datetime.
-    """
-    if not events:
-      return events
-    
-    earliest_start = min(event.start for event in events)
-    
-    current_datetime = datetime.now(timezone.utc)
-    days_difference = (current_datetime - earliest_start).days
-    
-    for event in events:
-      event.start = event.start + timedelta(days=days_difference)
-      event.end = event.end + timedelta(days=days_difference)
-    
-    return events

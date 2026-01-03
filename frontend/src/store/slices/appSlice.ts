@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, createSelector } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit'
 
 import { apiClient } from "../../utils/apiClient";
@@ -30,29 +30,61 @@ const getCurrentDate = createAsyncThunk(
 
 interface AppState {
   currentDatetime: string
+  selectedDate: string
   selectedMonth: Month
 }
 
-export const authSlice = createSlice({
-  name: "auth",
-  initialState: {
-
-  } as AppState,
+export const appSlice = createSlice({
+  name: "app",
+  initialState: {} as AppState,
   reducers: {
     setSelectedMonth: (state, action: PayloadAction<{ month: Month }>) => {
       state.selectedMonth = action.payload.month
+    },
+    setSelectedDate: (state, action: PayloadAction<{ dateISOStr: string }>) => {
+      state.selectedDate = action.payload.dateISOStr
     }
   },
   extraReducers: (builder) => {
     builder
       .addCase(getCurrentDate.fulfilled, (state, action: PayloadAction<{ datetime: string, timezone: string }>) => {
         state.currentDatetime = action.payload.datetime;
+        if (!state.selectedDate) {
+          state.selectedDate = action.payload.datetime
+        }
       })
   }
 })
 
+// selectors
 export const selectCurrentDatetime = (state: { app: AppState }) => state.app.currentDatetime
+export const selectSelectedDate = (state: { app: AppState }) => state.app.selectedDate
+export const selectSelectedMonth = (state: { app: AppState }) => state.app.selectedMonth
 
-export { getCurrentDate }
+// selector factory function
+export const makeAppSelectors = () => {
 
-export default authSlice.reducer;
+  // Date object selectors (converted from strings)
+  const selectCurrentDatetimeAsDate = createSelector(
+    [selectCurrentDatetime],
+    (currentDatetime) => new Date(currentDatetime)
+  );
+
+  const selectSelectedDateAsDate = createSelector(
+    [selectSelectedDate],
+    (selectedDate) => new Date(selectedDate)
+  );
+
+  return {
+    selectCurrentDatetimeAsDate,
+    selectSelectedDateAsDate,
+  };
+};
+
+// reducers
+export const { setSelectedDate, setSelectedMonth } = appSlice.actions;
+
+// thunks
+export { getCurrentDate };
+
+export default appSlice.reducer;

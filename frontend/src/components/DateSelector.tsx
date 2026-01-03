@@ -4,6 +4,9 @@ import { ChevronLeft, ChevronRight } from './svgs/Chevrons';
 import { Calendar } from './svgs/Calendar';
 
 import { MonthEnum, WeekDayEnum } from '../types/dateTypes'
+import { formatDate, isSameDay } from '../utils/utils';
+import { ourUseDispatch, ourUseSelector } from '../store/hooks';
+import { makeAppSelectors, setSelectedDate } from '../store/slices/appSlice';
 
 
 type DateSelectorProps = {
@@ -11,11 +14,22 @@ type DateSelectorProps = {
   onlyMonthSelector: boolean;
 }
 
-const DateSelector: React.FC<DateSelectorProps> = ({ startDate, onlyMonthSelector }) => {
+const DateSelector: React.FC<DateSelectorProps> = ({ onlyMonthSelector }) => {
+  const dispatch = ourUseDispatch()
+
+  const monthNames = Object.values(MonthEnum).map(m => m.substring(0, 3))
+  const dayNames = Object.values(WeekDayEnum).map(m => m.substring(0, 3))
+
+  // selectors
+  const { selectCurrentDatetimeAsDate, selectSelectedDateAsDate } = makeAppSelectors()
+  const currentDate = ourUseSelector(selectCurrentDatetimeAsDate);
+  const selectedDate = ourUseSelector(selectSelectedDateAsDate);
+
+  // helper states and refs
   const [isOpen, setIsOpen] = useState(false);
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, right: 0 });
   const dropdownRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
-  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, right: 0 });
 
   // Update dropdown position when opened
   useEffect(() => {
@@ -39,11 +53,9 @@ const DateSelector: React.FC<DateSelectorProps> = ({ startDate, onlyMonthSelecto
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const [selectedDate, setSelectedDate] = useState<Date | null>(startDate);
-  const [currentMonth, setCurrentMonth] = useState(new Date());
-
-  const monthNames = Object.values(MonthEnum).map(m => m.substring(0, 3))
-  const dayNames = Object.values(WeekDayEnum).map(m => m.substring(0, 3))
+  const handleDateSelection = (d: Date) => {
+    dispatch(setSelectedDate({ dateISOStr: d.toISOString() }))
+  }
 
   const getDaysInMonth = (date: Date) => {
     const year = date.getFullYear();
@@ -63,39 +75,20 @@ const DateSelector: React.FC<DateSelectorProps> = ({ startDate, onlyMonthSelecto
     return days;
   };
 
-  const formatDate = (date: Date | null) => {
-    if (!date) return 'Select a date';
-    return date.toLocaleDateString('en-US', {
-      weekday: 'short',
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
-  };
-
-  const isSameDay = (date1: Date | null, date2: Date | null) => {
-    if (!date1 || !date2) return false;
-    return date1.getDate() === date2.getDate() &&
-      date1.getMonth() === date2.getMonth() &&
-      date1.getFullYear() === date2.getFullYear();
-  };
-
-  const isToday = (date: Date) => {
-    return isSameDay(date, new Date());
-  };
-
+  const [visibleMonth, setVisibleMonth] = useState(new Date());
   const navigateMonth = (direction: number) => {
-    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + direction, 1));
+    const m = new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() + direction, 1)
+    setVisibleMonth(m);
   };
 
   const selectPreset = (days: number) => {
     const date = new Date();
     date.setDate(date.getDate() + days);
-    setSelectedDate(date);
-    setCurrentMonth(date);
+    handleDateSelection(date);
+    setVisibleMonth(date);
   };
 
-  const days = getDaysInMonth(currentMonth);
+  const days = getDaysInMonth(visibleMonth);
 
   return (
     <>
@@ -105,7 +98,7 @@ const DateSelector: React.FC<DateSelectorProps> = ({ startDate, onlyMonthSelecto
         <div className="h-full flex items-center justify-end gap-5 p-2">
 
           {/* selected date */}
-          <div className="rounded-lg hidden md:block">
+          <div className="rounded-lg hidden sm:block">
             <p className="text-sm font-medium">Selected Date:</p>
             <p className="text-lg font-semibold">
               {formatDate(selectedDate)}
@@ -150,7 +143,7 @@ const DateSelector: React.FC<DateSelectorProps> = ({ startDate, onlyMonthSelecto
                 <ChevronLeft classes={"w-5 h-5 text-light-primary-text dark:text-dark-primary-text"} />
               </button>
               <span className="font-semibold text-light-primary-text dark:text-dark-primary-text">
-                {monthNames[currentMonth.getMonth()]} {currentMonth.getFullYear()}
+                {monthNames[visibleMonth.getMonth()]} {visibleMonth.getFullYear()}
               </span>
               <button
                 onClick={() => navigateMonth(1)}
@@ -190,7 +183,7 @@ const DateSelector: React.FC<DateSelectorProps> = ({ startDate, onlyMonthSelecto
                       key={idx}
                       onClick={() => {
                         if (day) {
-                          setSelectedDate(day);
+                          handleDateSelection(day);
                         }
                       }}
                       disabled={!day}
@@ -198,8 +191,8 @@ const DateSelector: React.FC<DateSelectorProps> = ({ startDate, onlyMonthSelecto
                         aspect-square flex items-center justify-center rounded-lg text-sm transition-all
                         ${!day ? 'invisible' : ''}                                          
                         ${isSameDay(day, selectedDate) ? 'bg-light-accent dark:bg-dark-accent text-light-background dark:text-dark-background font-bold font-bold text-xl font-bold text-xl' : ''}
-                        ${day && isToday(day) && !isSameDay(day, selectedDate) ? 'font-bold text-xl' : ''}
-                        ${day && !isSameDay(day, selectedDate) && !isToday(day) ? 'hover:bg-v-light-accent hover:dark:v-dark-accent text-light-primary-text dark:text-dark-primary-text' : ''}
+                        ${day && isSameDay(day, currentDate) && !isSameDay(day, selectedDate) ? 'font-bold text-xl' : ''}
+                        ${day && !isSameDay(day, selectedDate) && !isSameDay(day, currentDate) ? 'hover:bg-v-light-accent hover:dark:v-dark-accent text-light-primary-text dark:text-dark-primary-text' : ''}
                       `}
                     >
                       {day?.getDate()}

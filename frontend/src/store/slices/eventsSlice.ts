@@ -176,16 +176,58 @@ const eventsSlice = createSlice({
 
 // selectors
 export const selectEvents = (state: { events: EventsState }) => state.events.events
-export const selectProcessedEvents = createSelector(
-  [selectEvents],
-  (events) => [...events]
-    .map(ev => ({
-      ...ev,
-      start: new Date(ev.start),
-      end: new Date(ev.end)
-    }))
-    .sort((a, b) => a.start.getTime() - b.start.getTime())
-)
+
+// factory function to create a selector that returns processed events
+export const makeSelectProcessedEvents = () =>
+  createSelector(
+    [selectEvents],
+    (events) =>
+      [...events]
+        .map(ev => ({
+          ...ev,
+          start: new Date(ev.start),
+          end: new Date(ev.end),
+        }))
+        .sort((a, b) => a.start.getTime() - b.start.getTime())
+  );
+
+// function which returns event selectors
+export const makeEventSelectors = () => {
+
+  // select all events, processing dates from strings into date objects
+  const selectProcessedEvents = createSelector(
+    [selectEvents],
+    (events): EventDTO[] =>
+      [...events]
+        .map(ev => ({
+          ...ev,
+          start: new Date(ev.start),
+          end: new Date(ev.end),
+        }))
+        .sort((a, b) => a.start.getTime() - b.start.getTime())
+  );
+
+  // select all events which partially overlap with a given date
+  const selectEventsSpanningDate = createSelector(
+    [
+      selectProcessedEvents,
+      (_: unknown, date: Date) => date,
+    ],
+    (events, date): EventDTO[] => {
+      const dayStart = new Date(date);
+      dayStart.setHours(0, 0, 0, 0);
+      const dayEnd = new Date(date);
+      dayEnd.setHours(23, 59, 59, 999);
+
+      return events.filter(e => e.start < dayEnd && e.end > dayStart)
+    }
+  );
+
+  return {
+    selectProcessedEvents,
+    selectEventsSpanningDate,
+  };
+};
 
 // api calls
 export { getEvents, updateEvent, addEvent, deleteEvent }

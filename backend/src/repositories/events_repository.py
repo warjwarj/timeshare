@@ -32,8 +32,8 @@ class EventsRepository(Repository[EventModel, EventDTO]):
         records = session.query(self.model_class).filter_by(
             created_by_user_uuid=user_uuid
           ).filter(
-            self.model_class.start >= start,
-            self.model_class.end <= end
+            self.model_class.start <= end,
+            self.model_class.end >= start
           ).all()
         if records:
           return [r.map_to_dto() for r in records]

@@ -1,14 +1,15 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { EventDTO } from "../../types/EventDTO";
 import type { TimeSpan } from "../../types/dateTypes";
-import { getDateFromCellIndex, isValidDate, setEventPositions } from "../../utils/utils";
+import { getDateFromCellIndex, isValidDate } from "../../utils/utils";
+import { setEventPositions } from "../../utils/gridUtils";
 import type { CellStyle } from "./Cell";
 import { Cell } from "./Cell";
 import type { EventProps, EventStyle } from "./Event";
 import { Event } from './Event';
 
 import { ourUseDispatch, ourUseSelector } from '../../store/hooks';
-import { getEvents, selectProcessedEvents, updateEvent, addEvent, deleteEvent } from '../../store/slices/eventsSlice';
+import { updateEvent, addEvent, deleteEvent, makeEventSelectors } from '../../store/slices/eventsSlice';
 
 import '../../../index.css';
 
@@ -28,28 +29,36 @@ type GridProps = {
   cellStep: TimeSpan
 };
 const Grid: React.FC<GridProps> = ({ egStyle, start, cellStep }) => {
-  const events = ourUseSelector(selectProcessedEvents)
-  const dispatch = ourUseDispatch()
+  const dispatch = ourUseDispatch() 
+
+  // memoised events selector
+  const { selectProcessedEvents } = useMemo(
+    () => makeEventSelectors(),
+    [start]
+  )
+  const events = ourUseSelector(selectProcessedEvents);
 
   // refs
   const cellLaneEvents = useRef(new Map<number, Map<number, string>>()) // Map<cellIndex, Map<lane, eventId>> SURELY we don't need to use a ref for this? Just save it in the event?
   const gridRowWidthRef = useRef<HTMLDivElement>(null);
+  const [gridRowWidth, setGridRowWidth] = useState(0)
 
   // event props state
   const [eventProps, setEventProps] = useState<EventProps[][]>()
 
-  // get events on page load
-  useEffect(() => {
-    if (!isValidDate(start)) {
-      return;
-    }
-    const endDate = new Date(start);
-    endDate.setMonth(endDate.getMonth() + 1);
-    const prm = dispatch(getEvents({ start: start, end: endDate }))
-    return () => {
-      prm.abort()
-    };
-  }, [dispatch, start]);
+    // measure container height on mount and resize
+    useEffect(() => {
+      const container = gridRowWidthRef.current;
+      if (!container) return;
+      const updateWidth = () => {
+        const height = container.getBoundingClientRect().width ?? 0;
+        setGridRowWidth(height);
+      };
+      updateWidth();
+      const resizeObserver = new ResizeObserver(updateWidth);
+      resizeObserver.observe(container);
+      return () => resizeObserver.disconnect();
+    }, []);
 
   // update event styles
   useEffect(() => {
@@ -59,14 +68,14 @@ const Grid: React.FC<GridProps> = ({ egStyle, start, cellStep }) => {
     setEventProps(setEventPositions(
       events,
       cellLaneEvents.current,
-      gridRowWidthRef.current?.getBoundingClientRect().width ?? 0,
+      gridRowWidth,
       start,
       egStyle.cellCount,
       cellStep,
       egStyle.colCount,
       egStyle.eventStyle
     ))
-  }, [events, start, egStyle.cellCount, cellStep, egStyle.colCount, egStyle.eventStyle])
+  }, [events, start, gridRowWidth, egStyle.cellCount, cellStep, egStyle.colCount, egStyle.eventStyle])
 
   // callback update single event
   const updateEventCallback = useCallback((moddedev: EventDTO) => {
