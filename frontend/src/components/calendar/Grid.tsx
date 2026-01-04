@@ -127,7 +127,7 @@ const Grid: React.FC<GridProps> = ({ egStyle, start, cellStep, colHeaders, gridL
         {colHeaders.map((header, i) => (
           <div
             key={i}
-            className="text-center py-2 border border-light-border dark:border-dark-border text-light-primary-text dark:text-dark-primary-text"
+            className="text-center text-xl py-2 border border-light-border dark:border-dark-border text-light-primary-text dark:text-dark-primary-text"
           >
             {header}
           </div>

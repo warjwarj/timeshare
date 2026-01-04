@@ -1,6 +1,7 @@
 // react
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
+import { CalendarFold } from "lucide-react";
 
 // components
 import { Modal } from '../Modal';
@@ -12,6 +13,10 @@ import type { EventDTO } from '../../types/EventDTO';
 
 // css
 import '../../../index.css';
+import { setSelectedDate } from '../../store/slices/appSlice';
+
+// utils
+import { ourUseDispatch } from '../../store/hooks';
 
 type CellStyle = {
   heightStyle: string
@@ -30,32 +35,41 @@ type CellProps = {
   isHighlighted?: boolean;
 };
 const Cell: React.FC<CellProps> = ({ label, rowEndIndex, rowStartIndex, cellIndex, egcStyle, cellDate, getEvents, onAddEvent, isOutsideMonth, isSelected, isHighlighted }) => {
+  const dispatch = ourUseDispatch()
 
   // track popup visibility
   const [showModal, setShowModal] = useState(false);
 
   const cellClassName = [
-    "border border-light-border dark:border-dark-border p-1 flex justify-center overflow-hidden",
+    "border border-light-border dark:border-dark-border flex justify-center overflow-hidden",
     isOutsideMonth
       ? "bg-light-border/30 dark:bg-dark-border/30 text-light-secondary-text dark:text-dark-secondary-text"
       : "bg-light-background dark:bg-dark-background text-black dark:text-white",
     isSelected && "ring-2 ring-inset ring-blue-500",
-    isHighlighted && !isSelected && "ring-2 ring-inset ring-amber-400"
+    isHighlighted && !isSelected && "text-4xl font-bold",
+    isHighlighted && isSelected && "text-4xl font-bold ring-2 ring-inset ring-blue-500"
   ].filter(Boolean).join(" ");
+
+  const cellClicked = () => {
+    dispatch(setSelectedDate({ dateISOStr: cellDate.toISOString() }))
+    setShowModal(true)
+  }
 
   return (
     <>
       <div
-        onClick={() => setShowModal(true)}
+        onClick={() => cellClicked()}
         key={`row:${rowStartIndex}-${rowEndIndex}, cell:${cellIndex}`}
         className={cellClassName}
         style={{
           height: egcStyle.heightStyle
         }}
       >
-        <span>
-          {label}
-        </span>
+        <div >
+          <span>
+            {label}
+          </span>
+        </div>
       </div>
       {showModal && createPortal(
         <Modal label={cellDate.toDateString()} isOpen={showModal} onClose={() => setShowModal(false)} >

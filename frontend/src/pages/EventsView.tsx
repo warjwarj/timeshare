@@ -11,7 +11,7 @@ import { getPreviousMonday } from '../utils/utils.ts';
 type ViewMode = 'day' | 'month' | 'both';
 
 // event style
-const eventStyle: EventStyle = {
+const gridEventStyle: EventStyle = {
   eventHeightStyle: "1.6em",
   defaultEventStyle: "absolute pb-0.5 pl-2 text-white text-center text-sm items-center justify-left text-nowrap",
   extraClasses: "",
@@ -20,10 +20,21 @@ const eventStyle: EventStyle = {
   left: 0,
   width: 0
 };
+ 
+// event style
+const dayGridEventStyle: EventStyle = {
+  eventHeightStyle: "",
+  defaultEventStyle: "text-white text-center w-fit",
+  extraClasses: "",
+  colour: "",
+  lane: 0,
+  left: 0,
+  width: 0
+};
 
-// eventgrid style
+// grid style
 const gridStyle: GridStyle = {
-  eventStyle: eventStyle,
+  eventStyle: gridEventStyle,
   cellStyle: {
     heightStyle: "150px",
   },
@@ -118,7 +129,7 @@ const EventsView: React.FC<EventsViewProps> = ({ currentDate, selectedDate, chil
               timeStep={TimeSpanEnum.Mins30}
               snapToStep={true}
               style={{
-                eventStyle: eventStyle,
+                eventStyle: dayGridEventStyle,
               }}
             />
           </div>

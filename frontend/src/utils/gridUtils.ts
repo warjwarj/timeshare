@@ -64,8 +64,8 @@ export function setEventPositions(
   // Iterate through sorted events
   sortedEvents.forEach((ev) => {
 
-    let cellStartIndex = getCellIndexFromDate(cellStep, start, ev.start) + 1;
-    let cellEndIndex = getCellIndexFromDate(cellStep, start, ev.end) + 1;
+    let cellStartIndex = getCellIndexFromDate(cellStep, start, ev.start);
+    let cellEndIndex = getCellIndexFromDate(cellStep, start, ev.end);
 
     // Safety checks for grid boundaries (1-based: valid range is 1 to cellCount)
     if (cellStartIndex < 1) cellStartIndex = 1;

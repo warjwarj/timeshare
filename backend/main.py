@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+import uvicorn
 
 from src.routers.auth_router import auth_router
 from src.routers.events_router import events_router
