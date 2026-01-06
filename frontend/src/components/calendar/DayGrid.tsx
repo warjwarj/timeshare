@@ -134,17 +134,17 @@ const DayGrid: React.FC<DayGridProps> = ({
   const weekdayNames = Object.values(WeekDayEnum);
   const monthNames = Object.values(MonthEnum);
   const dayLabel = isValidDate(date)
-    ? `${weekdayNames[date.getDay() === 0 ? 6 : date.getDay() - 1]}, ${monthNames[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`
+    ? `${weekdayNames[date.getDay() === 0 ? 6 : date.getDay() - 1]}, ${monthNames[date.getMonth()].substring(0, 3)} ${date.getDate()}, ${date.getFullYear()}`
     : '';
 
   // generate time labels
   const timeLabels = generateTimeLabels(timeStart, timeEnd, timeStep);
 
   return (
-    <div className="w-full h-[94%]">
-      {/* Month navigation */}
-      <div className="flex items-center justify-between w-full mt-3">
-        <div className="flex-1 flex justify-start ml-6">
+    <div className="w-full h-[calc(95%-2.5rem)]">
+      {/* Day navigation */}
+      <div className="flex items-center justify-between w-full h-10 mt-3">
+        <div className="flex-1 flex justify-end">
           <button
             onClick={goToPrevDay}
             className="p-2 rounded-full hover:bg-light-accent dark:hover:bg-dark-accent transition-colors"
@@ -156,7 +156,7 @@ const DayGrid: React.FC<DayGridProps> = ({
         <div className="px-4 py-1 text-center text-2xl font-bold text-light-primary-text dark:text-dark-primary-text rounded transition-colors">
           {dayLabel}
         </div>
-        <div className="flex-1 flex justify-end mr-6">
+        <div className="flex-1 flex justify-start">
           <button
             onClick={goToNextDay}
             className="p-2 rounded-full hover:bg-light-accent dark:hover:bg-dark-accent transition-colors"
