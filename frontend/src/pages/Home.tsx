@@ -5,8 +5,6 @@ import { makeAppSelectors, getCurrentDate } from "../store/slices/appSlice.ts";
 import { Sidebar } from "../components/Sidebar.tsx";
 import type { SidebarLink } from "../components/Sidebar.tsx";
 import { CollapseButton } from "../components/CollapseButton.tsx";
-import { isValidDate } from "../utils/utils.ts";
-import { getEvents } from '../store/slices/eventsSlice.ts';
 
 // users homepage
 const Home: React.FC = () => {
@@ -20,19 +18,6 @@ const Home: React.FC = () => {
   useEffect(() => {
     dispatch(getCurrentDate())
   }, [dispatch])
-
-  // get events on page load
-  useEffect(() => {
-    if (!isValidDate(currentDate)) {
-      return;
-    }
-    const endDate = new Date(currentDate);
-    endDate.setMonth(endDate.getMonth() + 1);
-    const prm = dispatch(getEvents({ start: currentDate, end: endDate }))
-    return () => {
-      prm.abort()
-    };
-  }, [dispatch, currentDate]);
 
   // Track sidebar visibility. Default to closed if on phone view
   const isPhone = window.matchMedia('(min-width: 768px)').matches;

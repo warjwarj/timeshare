@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { EventDTO } from "../../types/EventDTO";
-import { TimeSpanEnum, type TimeSpan } from "../../types/dateTypes";
+import { TimeSpanEnum, type TimeSpan, WeekDayEnum, MonthEnum } from "../../types/dateTypes";
 import { isValidDate } from "../../utils/utils";
 import {
   setDayEventPositions,
@@ -10,9 +10,11 @@ import {
 } from "../../utils/dayGridUtils";
 import type { EventProps, EventStyle } from "./Event";
 import { Event } from './Event';
+import { ChevronLeft, ChevronRight } from '../svgs/Chevrons';
 
 import { ourUseDispatch, ourUseSelector } from '../../store/hooks';
 import { updateEvent, deleteEvent, makeEventSelectors } from '../../store/slices/eventsSlice';
+import { setSelectedDate } from '../../store/slices/appSlice';
 
 import '../../../index.css';
 
@@ -42,15 +44,6 @@ const DayGrid: React.FC<DayGridProps> = ({
   snapToStep = false
 }) => {
 
-  const { selectEventsSpanningDate } = useMemo(
-    () => makeEventSelectors(),
-    []
-  );
-
-  const events = ourUseSelector(state =>
-    selectEventsSpanningDate(state, date)
-  );
-
   const dispatch = ourUseDispatch();
   const containerRef = useRef<HTMLDivElement>(null);
   const gridRef = useRef<HTMLDivElement>(null);
@@ -61,6 +54,15 @@ const DayGrid: React.FC<DayGridProps> = ({
   const totalSlots = calculateTotalSlots(timeStart, timeEnd, timeStep);
   const slotHeight = containerHeight > 0 ? containerHeight / totalSlots : 0;
   const gridHeight = containerHeight;
+
+  const { selectEventsSpanningDate } = useMemo(
+    () => makeEventSelectors(),
+    []
+  );
+
+  const events = ourUseSelector(state =>
+    selectEventsSpanningDate(state, date)
+  );
 
   // measure container height on mount and resize
   useEffect(() => {
@@ -78,7 +80,6 @@ const DayGrid: React.FC<DayGridProps> = ({
 
   // update event positions
   useEffect(() => {
-    console.log(events)
     if (!events) {
       return;
     }
@@ -115,57 +116,105 @@ const DayGrid: React.FC<DayGridProps> = ({
     dispatch(deleteEvent(uuid));
   }, [dispatch]);
 
+  // Navigate to previous day
+  const goToPrevDay = useCallback(() => {
+    const newDate = new Date(date);
+    newDate.setDate(newDate.getDate() - 1);
+    dispatch(setSelectedDate({ dateISOStr: newDate.toISOString() }));
+  }, [dispatch, date]);
+
+  // Navigate to next day
+  const goToNextDay = useCallback(() => {
+    const newDate = new Date(date);
+    newDate.setDate(newDate.getDate() + 1);
+    dispatch(setSelectedDate({ dateISOStr: newDate.toISOString() }));
+  }, [dispatch, date]);
+
+  // Format date label
+  const weekdayNames = Object.values(WeekDayEnum);
+  const monthNames = Object.values(MonthEnum);
+  const dayLabel = isValidDate(date)
+    ? `${weekdayNames[date.getDay() === 0 ? 6 : date.getDay() - 1]}, ${monthNames[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`
+    : '';
+
   // generate time labels
   const timeLabels = generateTimeLabels(timeStart, timeEnd, timeStep);
 
   return (
-    <div
-      ref={containerRef}
-      id="day-grid-container"
-      className="w-full h-full flex p-4 box-border"
-    >
-      {/* Time labels column */}
-      <div
-        className="flex flex-col flex-shrink-0 whitespace-nowrap w-fit"
-      >
-        {timeLabels.map((label, index) => (
-          <div
-            key={`label-${index}`}
-            className="text-sm text-light-secondary-text dark:text-dark-secondary-text text-right pr-2 flex items-start justify-end"
-            style={{ height: slotHeight }}
+    <div className="w-full h-[94%]">
+      {/* Month navigation */}
+      <div className="flex items-center justify-between w-full mt-3">
+        <div className="flex-1 flex justify-start ml-6">
+          <button
+            onClick={goToPrevDay}
+            className="p-2 rounded-full hover:bg-light-accent dark:hover:bg-dark-accent transition-colors"
+            aria-label="Previous day"
           >
-            {label}
-          </div>
-        ))}
+            <ChevronLeft classes="w-6 h-6 text-light-primary-text dark:text-dark-primary-text" />
+          </button>
+        </div>
+        <div className="px-4 py-1 text-center text-2xl font-bold text-light-primary-text dark:text-dark-primary-text rounded transition-colors">
+          {dayLabel}
+        </div>
+        <div className="flex-1 flex justify-end mr-6">
+          <button
+            onClick={goToNextDay}
+            className="p-2 rounded-full hover:bg-light-accent dark:hover:bg-dark-accent transition-colors"
+            aria-label="Next day"
+          >
+            <ChevronRight classes="w-6 h-6 text-light-primary-text dark:text-dark-primary-text" />
+          </button>
+        </div>
       </div>
 
-      {/* Events grid */}
-      <div className="flex-1 relative" style={{ height: gridHeight }}>
-        {/* Background slot lines */}
-        <div className="absolute inset-0">
-          {Array.from({ length: totalSlots }).map((_, index) => (
+      <div
+        ref={containerRef}
+        id="day-grid-container"
+        className="w-full h-full flex p-4 box-border"
+      >
+        {/* Time labels column */}
+        <div
+          className="flex flex-col flex-shrink-0 whitespace-nowrap w-fit"
+        >
+          {timeLabels.map((label, index) => (
             <div
-              key={`slot-${index}`}
-              className="border-b border-light-border dark:border-dark-border h-auto"
+              key={`label-${index}`}
+              className="text-sm text-light-secondary-text dark:text-dark-secondary-text text-right pr-2 flex items-start justify-end"
               style={{ height: slotHeight }}
-              />
+            >
+              {label}
+            </div>
           ))}
         </div>
 
-        {/* Events layer */}
-        <div
-          ref={gridRef}
-          className="absolute inset-0"
-          style={{ height: gridHeight }}
-        >
-          {eventProps.map((evp: EventProps) => (
-            <Event
-              key={evp.key}
-              eventProps={evp}
-              updateEvent={updateEventCallback}
-              deleteEvent={deleteEventCallback}
-            />
-          ))}
+        {/* Events grid */}
+        <div className="flex-1 relative" style={{ height: gridHeight }}>
+          {/* Background slot lines */}
+          <div className="absolute inset-0">
+            {Array.from({ length: totalSlots }).map((_, index) => (
+              <div
+                key={`slot-${index}`}
+                className="border-b border-light-border dark:border-dark-border h-auto"
+                style={{ height: slotHeight }}
+              />
+            ))}
+          </div>
+
+          {/* Events layer */}
+          <div
+            ref={gridRef}
+            className="absolute inset-0 ml-2 mr-2 mb-2"
+            style={{ height: gridHeight }}
+          >
+            {eventProps.map((evp: EventProps) => (
+              <Event
+                key={evp.key}
+                eventProps={evp}
+                updateEvent={updateEventCallback}
+                deleteEvent={deleteEventCallback}
+              />
+            ))}
+          </div>
         </div>
       </div>
     </div>

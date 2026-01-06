@@ -7,14 +7,15 @@ import { toastService } from '../../toastService';
 
 const getEvents = createAsyncThunk(
   'events/all',
-  async ({ start, end }: { start: Date, end: Date }) => {
+  async ({ start, end }: { start: string, end: string }, { signal }) => {
     try {
       const res = await apiClient.get("/events/all", {
         params: {
-          start: start.toISOString(),
-          end: end.toISOString()
+          start: start,
+          end: end
         },
-        validateStatus: status => status <= 500
+        signal,
+        validateStatus: status => status <= 500,
       })
       if (res.status != HttpStatusCode.Ok) {
         toastService.showError("Couldn't get events", res.data["detail"][0]["msg"])
@@ -177,20 +178,6 @@ const eventsSlice = createSlice({
 // selectors
 export const selectEvents = (state: { events: EventsState }) => state.events.events
 
-// factory function to create a selector that returns processed events
-export const makeSelectProcessedEvents = () =>
-  createSelector(
-    [selectEvents],
-    (events) =>
-      [...events]
-        .map(ev => ({
-          ...ev,
-          start: new Date(ev.start),
-          end: new Date(ev.end),
-        }))
-        .sort((a, b) => a.start.getTime() - b.start.getTime())
-  );
-
 // function which returns event selectors
 export const makeEventSelectors = () => {
 
@@ -214,18 +201,38 @@ export const makeEventSelectors = () => {
       (_: unknown, date: Date) => date,
     ],
     (events, date): EventDTO[] => {
+
       const dayStart = new Date(date);
       dayStart.setHours(0, 0, 0, 0);
       const dayEnd = new Date(date);
       dayEnd.setHours(23, 59, 59, 999);
 
-      return events.filter(e => e.start < dayEnd && e.end > dayStart)
+      return events.filter(e => e.start <= dayEnd && e.end >= dayStart)
+    }
+  );
+
+  // select all events which exist between two dates
+  // (includes events that start, end, or span entirely across the range)
+  const selectEventsBetweenDates = createSelector(
+    [
+      selectProcessedEvents,
+      (_: unknown, start: Date, end: Date) => ({ start, end }),
+    ],
+    (events, { start, end }): EventDTO[] => {
+
+      const rangeStart = new Date(start);
+      rangeStart.setHours(0, 0, 0, 0);
+      const rangeEnd = new Date(end);
+      rangeEnd.setHours(23, 59, 59, 999);
+
+      return events.filter(e => e.start <= rangeEnd && e.end >= rangeStart)
     }
   );
 
   return {
     selectProcessedEvents,
     selectEventsSpanningDate,
+    selectEventsBetweenDates
   };
 };
 

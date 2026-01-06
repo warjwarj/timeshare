@@ -1,7 +1,8 @@
 
 import type { EventProps, EventStyle } from "../components/calendar/Event";
-import { TimeSpanEnum, type TimeSpan } from "../types/dateTypes";
+import { MonthEnum, TimeSpanEnum, type TimeSpan } from "../types/dateTypes";
 import type { EventDTO } from "../types/EventDTO";
+import { getPreviousMonday } from "./utils";
 
 // get cell index from the date (1-based to match Grid cell numbering)
 function getCellIndexFromDate(cellStep: TimeSpan, gridStart: Date, dt: Date): number {
@@ -42,7 +43,6 @@ export function setEventPositions(
   gridRowWidth: number,
   start: Date,
   cellCount: number,
-  cellStep: string,
   colCount: number,
   defaultEventStyle: EventStyle
 ): EventProps[][] {
@@ -64,8 +64,8 @@ export function setEventPositions(
   // Iterate through sorted events
   sortedEvents.forEach((ev) => {
 
-    let cellStartIndex = getCellIndexFromDate(cellStep, start, ev.start);
-    let cellEndIndex = getCellIndexFromDate(cellStep, start, ev.end);
+    let cellStartIndex = getCellIndexFromDate(TimeSpanEnum.Day, start, ev.start);
+    let cellEndIndex = getCellIndexFromDate(TimeSpanEnum.Day, start, ev.end);
 
     // Safety checks for grid boundaries (1-based: valid range is 1 to cellCount)
     if (cellStartIndex < 1) cellStartIndex = 1;
@@ -149,6 +149,52 @@ export function setEventPositions(
   });
 
   return rows;
+}
+
+export type MonthGridConfig = {
+  startDate: Date;
+  endDate: Date;
+  cellCount: number;
+  gridLabel: string;
+};
+
+const monthNames = Object.values(MonthEnum)
+
+/**
+ * Generates grid configuration for displaying a calendar month.
+ * The grid starts on the Monday before (or on) the 1st of the month
+ * and ends on the Sunday after (or on) the last day of the month.
+ */
+export function getMonthGridConfig(date: Date): MonthGridConfig {
+  const year = date.getFullYear();
+  const month = date.getMonth();
+
+  // First day of the month
+  const firstOfMonth = new Date(year, month, 1);
+  // Last day of the month
+  const lastOfMonth = new Date(year, month + 1, 0);
+
+  // Grid starts on Monday before (or on) the 1st
+  const startDate = getPreviousMonday(firstOfMonth);
+
+  // Grid ends on Sunday after (or on) the last day
+  const lastDayOfWeek = lastOfMonth.getDay();
+  const daysUntilSunday = lastDayOfWeek === 0 ? 0 : 7 - lastDayOfWeek;
+  const endDate = new Date(lastOfMonth);
+  endDate.setDate(lastOfMonth.getDate() + daysUntilSunday);
+
+  // Calculate cell count (number of days between start and end, inclusive)
+  const msPerDay = 24 * 60 * 60 * 1000;
+  const cellCount = Math.round((endDate.getTime() - startDate.getTime()) / msPerDay) + 1;
+
+  const gridLabel = `${monthNames[month]} ${year}`;
+
+  return {
+    startDate,
+    endDate,
+    cellCount,
+    gridLabel
+  };
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

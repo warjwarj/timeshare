@@ -92,6 +92,23 @@ function getPreviousMonday(date: Date): Date {
   return result;
 }
 
+function getLastDayOfMonth(d: Date) {
+  return new Date(
+    d.getFullYear(),
+    d.getMonth() + 1,
+    0
+  );
+}
+
+function getFirstDayOfMonth(d: Date) {
+  return new Date(
+    d.getFullYear(),
+    d.getMonth(),
+    1
+  );
+}
+
+
 export {
   getStrErrorMessage,
   getCalendarDaysInMonth,
@@ -101,5 +118,7 @@ export {
   formatDate,
   isToday,
   isSameDay,
-  getPreviousMonday
+  getPreviousMonday,
+  getLastDayOfMonth,
+  getFirstDayOfMonth
 }

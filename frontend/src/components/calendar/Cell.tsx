@@ -46,8 +46,8 @@ const Cell: React.FC<CellProps> = ({ label, rowEndIndex, rowStartIndex, cellInde
       ? "bg-light-border/30 dark:bg-dark-border/30 text-light-secondary-text dark:text-dark-secondary-text"
       : "bg-light-background dark:bg-dark-background text-black dark:text-white",
     isSelected && "ring-2 ring-inset ring-blue-500",
-    isHighlighted && !isSelected && "text-4xl font-bold",
-    isHighlighted && isSelected && "text-4xl font-bold ring-2 ring-inset ring-blue-500"
+    isHighlighted && !isSelected && "text-2xl font-bold",
+    isHighlighted && isSelected && "text-2xl font-bold ring-2 ring-inset ring-blue-500"
   ].filter(Boolean).join(" ");
 
   const cellClicked = () => {

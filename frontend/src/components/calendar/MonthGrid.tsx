@@ -1,0 +1,197 @@
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { getDateFromCellIndex, isValidDate, isSameDay } from "../../utils/utils";
+import type { MonthGridConfig } from "../../utils/monthGridUtils";
+import { setEventPositions } from "../../utils/monthGridUtils";
+import type { CellStyle } from "./Cell";
+import { Cell } from "./Cell";
+import type { EventProps, EventStyle } from "./Event";
+import { Event } from './Event';
+import { ChevronLeft, ChevronRight } from '../svgs/Chevrons';
+
+import { ourUseDispatch, ourUseSelector } from '../../store/hooks';
+import { updateEvent, addEvent, deleteEvent, makeEventSelectors, getEvents } from '../../store/slices/eventsSlice';
+import { setSelectedDate } from '../../store/slices/appSlice';
+
+import '../../../index.css';
+import { TimeSpanEnum } from "../../types/dateTypes";
+
+type GridStyle = {
+  eventStyle: EventStyle;
+  cellStyle: CellStyle;
+  colCount: number;
+}
+
+type GridProps = {
+  currentDate: Date;
+  selectedDate: Date;
+  gridStyle: GridStyle;
+  gridConfig: MonthGridConfig;
+  colHeaders: string[];
+};
+
+const MonthGrid: React.FC<GridProps> = ({ gridStyle, gridConfig, colHeaders, currentDate, selectedDate }) => {
+  const { startDate, endDate, cellCount, gridLabel } = gridConfig;
+  const { colCount, eventStyle, cellStyle } = gridStyle;
+  const dispatch = ourUseDispatch();
+
+  // Memoised events selector
+  const { selectEventsBetweenDates } = useMemo(() => makeEventSelectors(), []);
+  const events = ourUseSelector(state => selectEventsBetweenDates(state, startDate, endDate));
+
+  // Fetch events when date range changes
+  useEffect(() => {
+    const startDateISO = new Date(new Date(startDate).setMonth(startDate.getMonth() - 1)).toISOString();
+    const endDateISO = new Date(new Date(endDate).setMonth(endDate.getMonth() + 1)).toISOString();
+
+    const timeoutId = setTimeout(() => {
+      dispatch(getEvents({ start: startDateISO, end: endDateISO }));
+    }, 300);
+    return () => clearTimeout(timeoutId);
+  }, [dispatch, startDate, endDate]);
+
+  // Refs and state for grid measurement
+  const cellLaneEvents = useRef(new Map<number, Map<number, string>>());
+  const gridRowWidthRef = useRef<HTMLDivElement>(null);
+  const [gridRowWidth, setGridRowWidth] = useState(0);
+  const [eventProps, setEventProps] = useState<EventProps[][]>();
+
+  // Measure container width on mount and resize
+  useEffect(() => {
+    const container = gridRowWidthRef.current;
+    if (!container) return;
+    const updateWidth = () => setGridRowWidth(container.getBoundingClientRect().width);
+    updateWidth();
+    const resizeObserver = new ResizeObserver(updateWidth);
+    resizeObserver.observe(container);
+    return () => resizeObserver.disconnect();
+  }, []);
+
+  // Calculate event positions when events or grid dimensions change
+  useEffect(() => {
+    const currentStartDate = new Date(startDate);
+    if (!isValidDate(currentStartDate) || events.length === 0 || gridRowWidth === 0) {
+      setEventProps([]);
+      return;
+    }
+    setEventProps(setEventPositions(
+      events, cellLaneEvents.current, gridRowWidth, currentStartDate,
+      cellCount, colCount, eventStyle
+    ));
+  }, [events, startDate, gridRowWidth, cellCount, colCount, eventStyle]);
+
+  // Navigation handler
+  const navigateMonth = (delta: number) => {
+    const date = new Date(selectedDate);
+    date.setMonth(date.getMonth() + delta);
+    dispatch(setSelectedDate({ dateISOStr: date.toISOString() }));
+  };
+
+  // Get events for a specific cell
+  const getEventsInCell = (cellIndex: number): EventProps[] => {
+    const laneMap = cellLaneEvents.current.get(cellIndex);
+    if (!laneMap) return [];
+    const allEvents = eventProps?.flat() ?? [];
+    const result: EventProps[] = [];
+    laneMap.forEach((id, lane) => {
+      const evObj = allEvents.find(ev => ev?.eventDTO.uuid === id);
+      if (evObj) {
+        evObj.evStyle.lane = lane;
+        result.push(evObj);
+      }
+    });
+    return result;
+  };
+
+  const numRows = Math.ceil(cellCount / colCount);
+
+  return (
+    <div id="calendar-grid-container" className="w-full h-full flex flex-col gap-4 p-4 box-border">
+      {/* Month navigation */}
+      <div className="flex items-center justify-center gap-2">
+        <button
+          onClick={() => navigateMonth(-1)}
+          className="p-2 rounded-full hover:bg-light-accent dark:hover:bg-dark-accent transition-colors"
+          aria-label="Previous month"
+        >
+          <ChevronLeft classes="w-6 h-6 text-light-primary-text dark:text-dark-primary-text" />
+        </button>
+        <div className="px-4 py-1 min-w-[180px] text-center text-2xl font-bold text-light-primary-text dark:text-dark-primary-text">
+          {gridLabel}
+        </div>
+        <button
+          onClick={() => navigateMonth(1)}
+          className="p-2 rounded-full hover:bg-light-accent dark:hover:bg-dark-accent transition-colors"
+          aria-label="Next month"
+        >
+          <ChevronRight classes="w-6 h-6 text-light-primary-text dark:text-dark-primary-text" />
+        </button>
+      </div>
+
+      {/* Column headers */}
+      <div className="grid gap-0" style={{ gridTemplateColumns: `repeat(${colCount}, minmax(0, 1fr))` }}>
+        {colHeaders.map((header, i) => (
+          <div
+            key={i}
+            className="text-center text-xl py-2 border border-light-border dark:border-dark-border text-light-primary-text dark:text-dark-primary-text"
+          >
+            {header}
+          </div>
+        ))}
+      </div>
+
+      {/* Grid rows */}
+      {Array.from({ length: numRows }, (_, rowIndex) => {
+        const rowStart = rowIndex * colCount + 1;
+        const rowEnd = Math.min(rowStart + colCount - 1, cellCount);
+        const cellsInRow = rowEnd - rowStart + 1;
+
+        return (
+          <div ref={gridRowWidthRef} key={rowIndex} className="relative">
+            <div
+              className="grid gap-0 border-light-border dark:border-dark-border"
+              style={{ gridTemplateColumns: `repeat(${colCount}, minmax(0, 1fr))` }}
+            >
+              {Array.from({ length: cellsInRow }, (_, i) => {
+                const cellIndex = rowStart + i;
+                const cellDate = getDateFromCellIndex(TimeSpanEnum.Day, startDate, cellIndex) ?? new Date();
+                return (
+                  <Cell
+                    key={cellIndex}
+                    label={cellDate.getDate().toString()}
+                    rowStartIndex={rowStart}
+                    rowEndIndex={rowEnd}
+                    cellIndex={cellIndex}
+                    egcStyle={{ heightStyle: cellStyle.heightStyle }}
+                    cellDate={cellDate}
+                    getEvents={getEventsInCell}
+                    onAddEvent={(ev) => dispatch(addEvent(ev))}
+                    isOutsideMonth={cellDate.getMonth() !== selectedDate.getMonth()}
+                    isSelected={isSameDay(cellDate, selectedDate)}
+                    isHighlighted={isSameDay(cellDate, currentDate)}
+                  />
+                );
+              })}
+            </div>
+
+            {/* Events overlay */}
+            {eventProps && gridRowWidth > 0 && (
+              <div className="absolute top-8 left-0 w-full">
+                {eventProps[rowIndex]?.map((evp) => evp && (
+                  <Event
+                    key={evp.key}
+                    eventProps={evp}
+                    updateEvent={(ev) => dispatch(updateEvent(ev))}
+                    deleteEvent={(uuid) => dispatch(deleteEvent(uuid))}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
+export { MonthGrid };
+export type { GridProps, GridStyle };
