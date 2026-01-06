@@ -151,7 +151,7 @@ const EventsView: React.FC<EventsViewProps> = ({ currentDate, selectedDate, chil
               timeStart={0}
               timeEnd={24}
               timeStep={TimeSpanEnum.Mins30}
-              snapToStep={true}
+              snapToStep={false}
               style={{
                 eventStyle: dayGridEventStyle,
               }}

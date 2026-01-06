@@ -174,13 +174,13 @@ const DayGrid: React.FC<DayGridProps> = ({
       >
         {/* Time labels column */}
         <div
-          className="flex flex-col flex-shrink-0 whitespace-nowrap w-fit"
+          className="flex flex-col flex-shrink-0 whitespace-nowrap w-fit overflow-hidden"
+          style={{ height: gridHeight }}
         >
           {timeLabels.map((label, index) => (
             <div
               key={`label-${index}`}
-              className="text-sm text-light-secondary-text dark:text-dark-secondary-text text-right pr-2 flex items-start justify-end"
-              style={{ height: slotHeight }}
+              className="flex-1 text-sm text-light-secondary-text dark:text-dark-secondary-text text-right pr-2 flex items-end justify-end"
             >
               {label}
             </div>
@@ -190,13 +190,14 @@ const DayGrid: React.FC<DayGridProps> = ({
         {/* Events grid */}
         <div className="flex-1 relative" style={{ height: gridHeight }}>
           {/* Background slot lines */}
-          <div className="absolute inset-0">
+          <div className="absolute inset-0 flex flex-col">
             {Array.from({ length: totalSlots }).map((_, index) => (
               <div
                 key={`slot-${index}`}
-                className="border-b border-light-border dark:border-dark-border h-auto"
-                style={{ height: slotHeight }}
-              />
+                className="flex-1 flex items-center"
+              >
+                <hr className="w-full" />
+              </div>
             ))}
           </div>
 

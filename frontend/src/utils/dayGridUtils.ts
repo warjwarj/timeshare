@@ -208,8 +208,13 @@ function setDayEventPositions(
       const eventStartMinutes = getMinutesSinceMidnight(eventStart) - (timeStart * 60);
       const eventDurationMinutes = (eventEnd.getTime() - eventStart.getTime()) / 60000;
 
-      const top = (eventStartMinutes / totalMinutes) * gridHeight;
-      const height = Math.max((eventDurationMinutes / totalMinutes) * gridHeight, 20); // Min height 20px
+      // Calculate slot height and offset to align with labels
+      const stepMinutes = getTimeSpanInMinutes(timeStep);
+      const slotHeight = (stepMinutes / totalMinutes) * gridHeight;
+      const halfSlotHeight = slotHeight / 2;
+
+      const top = (eventStartMinutes / totalMinutes) * gridHeight + halfSlotHeight;
+      const height = (eventDurationMinutes / totalMinutes) * gridHeight;
 
       // Calculate horizontal position (column-based for overlaps)
       const column = group.columnAssignments.get(event.uuid) ?? 0;
@@ -247,17 +252,16 @@ function setDayEventPositions(
 function generateTimeLabels(timeStart: number, timeEnd: number, timeStep: TimeSpan): string[] {
   const labels: string[] = [];
   const stepMinutes = getTimeSpanInMinutes(timeStep);
+  const totalMinutes = (timeEnd - timeStart) * 60;
 
-  for (let hour = timeStart; hour < timeEnd; hour++) {
-    for (let minute = 0; minute < 60; minute += stepMinutes) {
-      if (hour === timeStart && minute === 0) {
-        // First label
-      }
-      const h = hour % 12 || 12;
-      const ampm = hour < 12 ? 'AM' : 'PM';
-      const m = minute.toString().padStart(2, '0');
-      labels.push(`${h}:${m} ${ampm}`);
-    }
+  for (let mins = 0; mins < totalMinutes; mins += stepMinutes) {
+    const totalMins = timeStart * 60 + mins;
+    const hour = Math.floor(totalMins / 60) % 24;
+    const minute = totalMins % 60;
+    const h = hour % 12 || 12;
+    const ampm = hour < 12 ? 'am' : 'pm';
+    const m = minute.toString().padStart(2, '0');
+    labels.push(`${h}:${m}${ampm}`);
   }
 
   return labels;
