@@ -10,11 +10,6 @@ import { CollapseButton } from "../components/CollapseButton.tsx";
 const Home: React.FC = () => {
   const dispatch = ourUseDispatch()
 
-  // memoised selectors
-  const { selectCurrentDatetimeAsDate, selectSelectedDateAsDate } = makeAppSelectors()
-  const currentDate = ourUseSelector(selectCurrentDatetimeAsDate);
-  const selectedDate = ourUseSelector(selectSelectedDateAsDate);
-
   useEffect(() => {
     dispatch(getCurrentDate())
   }, [dispatch])
@@ -41,7 +36,7 @@ const Home: React.FC = () => {
       {/* Content to right of sidebar */}
       <div className={`h-full overflow-none ${!isCollapsed ? "w-[calc(100dvw-20rem)]" : "w-full"}`}>
         <div className="">
-          <EventsView currentDate={currentDate} selectedDate={selectedDate}>
+          <EventsView>
             {/* Children rendered in the header area */}
             <div className="h-16 w-16">
               <CollapseButton collapsed={isCollapsed} setCollapsed={setIsCollapsed} />

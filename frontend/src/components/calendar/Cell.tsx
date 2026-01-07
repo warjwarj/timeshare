@@ -1,5 +1,5 @@
 // react
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { CalendarFold } from "lucide-react";
 
@@ -40,6 +40,13 @@ const Cell: React.FC<CellProps> = ({ label, rowEndIndex, rowStartIndex, cellInde
   // track popup visibility
   const [showModal, setShowModal] = useState(false);
 
+  const cellId = `row:${rowStartIndex}-${rowEndIndex}, cell:${cellIndex}`
+
+  useEffect(() => {
+    document.getElementById(cellId)?.addEventListener("dblclick", () => cellDoubleClicked())
+    document.getElementById(cellId)?.addEventListener("click", () => cellClicked())
+  }, [])
+
   const cellClassName = [
     "border border-light-border dark:border-dark-border flex justify-center overflow-hidden",
     isOutsideMonth
@@ -52,14 +59,17 @@ const Cell: React.FC<CellProps> = ({ label, rowEndIndex, rowStartIndex, cellInde
 
   const cellClicked = () => {
     dispatch(setSelectedDate({ dateISOStr: cellDate.toISOString() }))
+  }
+  
+  const cellDoubleClicked = () => {    
     setShowModal(true)
   }
 
   return (
     <>
       <div
-        onClick={() => cellClicked()}
-        key={`row:${rowStartIndex}-${rowEndIndex}, cell:${cellIndex}`}
+        id={cellId}
+        key={cellId}
         className={cellClassName}
         style={{
           height: egcStyle.heightStyle

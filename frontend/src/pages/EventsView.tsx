@@ -9,8 +9,8 @@ import type { EventStyle } from '../components/calendar/Event';
 import { DateSelector } from "../components/DateSelector.tsx";
 import { isValidDate } from '../utils/utils.ts';
 import { getMonthGridConfig } from '../utils/monthGridUtils.ts';
-import { ourUseDispatch } from '../store/hooks';
-import { setSelectedDate } from '../store/slices/appSlice';
+import { ourUseDispatch, ourUseSelector } from '../store/hooks';
+import { makeAppSelectors, setSelectedDate } from '../store/slices/appSlice';
 
 // event style for 
 const monthGridEventStyle: EventStyle = {
@@ -44,19 +44,21 @@ const gridStyle: GridStyle = {
 }
 
 type EventsViewProps = {
-  currentDate: Date;
-  selectedDate: Date;
   children: ReactNode;
 }
 
-const EventsView: React.FC<EventsViewProps> = ({ currentDate, selectedDate, children }) => {
+const EventsView: React.FC<EventsViewProps> = ({ children }) => {
   const dispatch = ourUseDispatch();
   const weekdayNames = Object.values(WeekDayEnum)
+
+  // memoised selectors
+  const { selectCurrentDatetimeAsDate, selectSelectedDateAsDate } = makeAppSelectors()
+  const currentDate = ourUseSelector(selectCurrentDatetimeAsDate);
+  const selectedDate = ourUseSelector(selectSelectedDateAsDate);
 
   const [dayViewOn, setDayViewOn] = useState<boolean>(false);
   const [monthViewOn, setMonthViewOn] = useState<boolean>(true);
   const [yearViewOn, setYearViewOn] = useState<boolean>(false);
-
 
   // memoize grid config to prevent re-renders
   const dateForGrid = isValidDate(selectedDate) ? selectedDate : currentDate;
@@ -148,8 +150,8 @@ const EventsView: React.FC<EventsViewProps> = ({ currentDate, selectedDate, chil
           <div className="w-full max-h-[calc(100dvh-6rem)] overflow-hidden">
             <DayGrid
               date={selectedDate}
-              timeStart={0}
-              timeEnd={24}
+              timeStart={6}
+              timeEnd={17}
               timeStep={TimeSpanEnum.Mins30}
               snapToStep={false}
               style={{
