@@ -11,7 +11,7 @@ import type { EventProps, EventStyle } from "../components/calendar/Event";
 
 // Configuration for the day grid
 interface DayGridConfig {
-  date: Date;              // The day being displayed
+  selectedDate: Date;              // The day being displayed
   timeStart: number;       // Start hour (e.g., 8 for 8:00 AM)
   timeEnd: number;         // End hour (e.g., 18 for 6:00 PM)
   timeStep: TimeSpan;      // Granularity (Hour, Mins30, etc.)
@@ -168,16 +168,16 @@ function setDayEventPositions(
   events: EventDTO[],
   config: DayGridConfig
 ): EventProps[] {
-  const { date, timeStart, timeEnd, timeStep, snapToStep, gridHeight, gridWidth, defaultEventStyle } = config;
+  const { selectedDate, timeStart, timeEnd, timeStep, snapToStep, gridHeight, gridWidth, defaultEventStyle } = config;
 
   // Filter events for this day
-  const dayEvents = filterEventsForDay(events, date);
+  const dayEvents = filterEventsForDay(events, selectedDate);
   if (dayEvents.length === 0) return [];
 
   // Calculate time boundaries
-  const dayStart = new Date(date);
+  const dayStart = new Date(selectedDate);
   dayStart.setHours(timeStart, 0, 0, 0);
-  const dayEnd = new Date(date);
+  const dayEnd = new Date(selectedDate);
   dayEnd.setHours(timeEnd, 0, 0, 0);
   const totalMinutes = (timeEnd - timeStart) * 60;
 
@@ -235,7 +235,7 @@ function setDayEventPositions(
       };
 
       // Generate unique key
-      const key = `day-${event.uuid}-${date.toISOString().split('T')[0]}`;
+      const key = `day-${event.uuid}-${selectedDate.toISOString().split('T')[0]}`;
 
       eventPropsArray.push({
         key,

@@ -10,7 +10,7 @@ import { ChevronLeft, ChevronRight } from '../svgs/Chevrons';
 
 import { ourUseDispatch, ourUseSelector } from '../../store/hooks';
 import { updateEvent, addEvent, deleteEvent, makeEventSelectors, getEvents } from '../../store/slices/eventsSlice';
-import { setSelectedDate } from '../../store/slices/appSlice';
+import { selectCurrentDatetimeAsDate, selectSelectedDateAsDate, setSelectedDate } from '../../store/slices/appSlice';
 
 import '../../../index.css';
 import { TimeSpanEnum } from "../../types/dateTypes";
@@ -22,14 +22,12 @@ type GridStyle = {
 }
 
 type GridProps = {
-  currentDate: Date;
-  selectedDate: Date;
   gridStyle: GridStyle;
   gridConfig: MonthGridConfig;
   colHeaders: string[];
 };
 
-const MonthGrid: React.FC<GridProps> = ({ gridStyle, gridConfig, colHeaders, currentDate, selectedDate }) => {
+const MonthGrid: React.FC<GridProps> = ({ gridStyle, gridConfig, colHeaders }) => {
   const { startDate, endDate, cellCount, gridLabel } = gridConfig;
   const { colCount, eventStyle, cellStyle } = gridStyle;
   const dispatch = ourUseDispatch();
@@ -37,6 +35,10 @@ const MonthGrid: React.FC<GridProps> = ({ gridStyle, gridConfig, colHeaders, cur
   // Memoised events selector
   const { selectEventsBetweenDates } = useMemo(() => makeEventSelectors(), []);
   const events = ourUseSelector(state => selectEventsBetweenDates(state, startDate, endDate));
+
+    // memoised selectors
+    const currentDate = ourUseSelector(selectCurrentDatetimeAsDate);
+    const selectedDate = ourUseSelector(selectSelectedDateAsDate);
 
   // Fetch events when date range changes
   useEffect(() => {

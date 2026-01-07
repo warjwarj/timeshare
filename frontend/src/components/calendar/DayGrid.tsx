@@ -14,7 +14,7 @@ import { ChevronLeft, ChevronRight } from '../svgs/Chevrons';
 
 import { ourUseDispatch, ourUseSelector } from '../../store/hooks';
 import { updateEvent, deleteEvent, makeEventSelectors } from '../../store/slices/eventsSlice';
-import { setSelectedDate } from '../../store/slices/appSlice';
+import { selectSelectedDateAsDate, setSelectedDate } from '../../store/slices/appSlice';
 
 import '../../../index.css';
 
@@ -28,7 +28,6 @@ type DayGridStyle = {
 
 type DayGridProps = {
   style: DayGridStyle;
-  date: Date;
   timeStart?: number;      // Start hour (default: 0)
   timeEnd?: number;        // End hour (default: 24)
   timeStep?: TimeSpan;     // Step granularity (default: Hour)
@@ -37,7 +36,6 @@ type DayGridProps = {
 
 const DayGrid: React.FC<DayGridProps> = ({
   style,
-  date,
   timeStart = 0,
   timeEnd = 24,
   timeStep = TimeSpanEnum.Hour,
@@ -50,9 +48,11 @@ const DayGrid: React.FC<DayGridProps> = ({
   const [eventProps, setEventProps] = useState<EventProps[]>([]);
   const [containerHeight, setContainerHeight] = useState(0);
 
+  // memoised selectors
+  const selectedDate = ourUseSelector(selectSelectedDateAsDate);
+
   // calculate grid dimensions
   const totalSlots = calculateTotalSlots(timeStart, timeEnd, timeStep);
-  const slotHeight = containerHeight > 0 ? containerHeight / totalSlots : 0;
   const gridHeight = containerHeight;
 
   const { selectEventsSpanningDate } = useMemo(
@@ -61,7 +61,7 @@ const DayGrid: React.FC<DayGridProps> = ({
   );
 
   const events = ourUseSelector(state =>
-    selectEventsSpanningDate(state, date)
+    selectEventsSpanningDate(state, selectedDate)
   );
 
   // measure container height on mount and resize
@@ -83,13 +83,13 @@ const DayGrid: React.FC<DayGridProps> = ({
     if (!events) {
       return;
     }
-    if (events.length === 0 || !isValidDate(date) || !gridRef.current) {
+    if (events.length === 0 || !isValidDate(selectedDate) || !gridRef.current) {
       setEventProps([]);
       return;
     }
     const gridWidth = gridRef.current.getBoundingClientRect().width;
     const config: DayGridConfig = {
-      date,
+      selectedDate,
       timeStart,
       timeEnd,
       timeStep,
@@ -99,7 +99,7 @@ const DayGrid: React.FC<DayGridProps> = ({
       defaultEventStyle: style.eventStyle
     };
     setEventProps(setDayEventPositions(events, config));
-  }, [events, date, timeStart, timeEnd, timeStep, snapToStep, gridHeight, style.eventStyle]);
+  }, [events, selectedDate, timeStart, timeEnd, timeStep, snapToStep, gridHeight, style.eventStyle]);
 
   // callback update single event
   const updateEventCallback = useCallback((moddedev: EventDTO) => {
@@ -118,23 +118,23 @@ const DayGrid: React.FC<DayGridProps> = ({
 
   // Navigate to previous day
   const goToPrevDay = useCallback(() => {
-    const newDate = new Date(date);
+    const newDate = new Date(selectedDate);
     newDate.setDate(newDate.getDate() - 1);
     dispatch(setSelectedDate({ dateISOStr: newDate.toISOString() }));
-  }, [dispatch, date]);
+  }, [dispatch, selectedDate]);
 
   // Navigate to next day
   const goToNextDay = useCallback(() => {
-    const newDate = new Date(date);
+    const newDate = new Date(selectedDate);
     newDate.setDate(newDate.getDate() + 1);
     dispatch(setSelectedDate({ dateISOStr: newDate.toISOString() }));
-  }, [dispatch, date]);
+  }, [dispatch, selectedDate]);
 
   // Format date label
   const weekdayNames = Object.values(WeekDayEnum);
   const monthNames = Object.values(MonthEnum);
-  const dayLabel = isValidDate(date)
-    ? `${weekdayNames[date.getDay() === 0 ? 6 : date.getDay() - 1]}, ${monthNames[date.getMonth()].substring(0, 3)} ${date.getDate()}, ${date.getFullYear()}`
+  const dayLabel = isValidDate(selectedDate)
+    ? `${weekdayNames[selectedDate.getDay() === 0 ? 6 : selectedDate.getDay() - 1]}, ${monthNames[selectedDate.getMonth()].substring(0, 3)} ${selectedDate.getDate()}, ${selectedDate.getFullYear()}`
     : '';
 
   // generate time labels

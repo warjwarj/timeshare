@@ -10,7 +10,7 @@ import { DateSelector } from "../components/DateSelector.tsx";
 import { isValidDate } from '../utils/utils.ts';
 import { getMonthGridConfig } from '../utils/monthGridUtils.ts';
 import { ourUseDispatch, ourUseSelector } from '../store/hooks';
-import { makeAppSelectors, setSelectedDate } from '../store/slices/appSlice';
+import { selectCurrentDatetimeAsDate, selectSelectedDateAsDate, setSelectedDate } from '../store/slices/appSlice';
 
 // event style for 
 const monthGridEventStyle: EventStyle = {
@@ -52,7 +52,6 @@ const EventsView: React.FC<EventsViewProps> = ({ children }) => {
   const weekdayNames = Object.values(WeekDayEnum)
 
   // memoised selectors
-  const { selectCurrentDatetimeAsDate, selectSelectedDateAsDate } = makeAppSelectors()
   const currentDate = ourUseSelector(selectCurrentDatetimeAsDate);
   const selectedDate = ourUseSelector(selectSelectedDateAsDate);
 
@@ -129,8 +128,6 @@ const EventsView: React.FC<EventsViewProps> = ({ children }) => {
         {yearViewOn && (
           <div className="w-full max-h-[calc(100dvh-6rem)] overflow-y-auto">
             <YearGrid
-              currentDate={currentDate}
-              selectedDate={selectedDate}
               onMonthSelect={handleMonthSelect}
             />
           </div>
@@ -138,8 +135,6 @@ const EventsView: React.FC<EventsViewProps> = ({ children }) => {
         {monthViewOn && gridConfig && (
           <div className="w-full max-h-[calc(100dvh-6rem)] overflow-y-auto">
             <MonthGrid
-              currentDate={currentDate}
-              selectedDate={selectedDate}
               gridStyle={gridStyle}
               gridConfig={gridConfig}
               colHeaders={weekdayNames.map(x => x.substring(0, 3))}
@@ -149,7 +144,6 @@ const EventsView: React.FC<EventsViewProps> = ({ children }) => {
         {dayViewOn && (
           <div className="w-full max-h-[calc(100dvh-6rem)] overflow-hidden">
             <DayGrid
-              date={selectedDate}
               timeStart={6}
               timeEnd={17}
               timeStep={TimeSpanEnum.Mins30}

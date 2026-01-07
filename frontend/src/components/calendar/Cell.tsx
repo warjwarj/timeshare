@@ -1,7 +1,6 @@
 // react
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { CalendarFold } from "lucide-react";
 
 // components
 import { Modal } from '../Modal';

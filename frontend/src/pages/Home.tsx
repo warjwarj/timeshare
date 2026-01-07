@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { ourUseSelector, ourUseDispatch } from '../store/hooks';
+import { ourUseDispatch } from '../store/hooks';
 import { EventsView } from "./EventsView.tsx";
-import { makeAppSelectors, getCurrentDate } from "../store/slices/appSlice.ts";
+import { getCurrentDate } from "../store/slices/appSlice.ts";
 import { Sidebar } from "../components/Sidebar.tsx";
 import type { SidebarLink } from "../components/Sidebar.tsx";
 import { CollapseButton } from "../components/CollapseButton.tsx";

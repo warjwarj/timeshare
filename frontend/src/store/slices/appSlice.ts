@@ -61,25 +61,17 @@ export const selectCurrentDatetime = (state: { app: AppState }) => state.app.cur
 export const selectSelectedDate = (state: { app: AppState }) => state.app.selectedDate
 export const selectSelectedMonth = (state: { app: AppState }) => state.app.selectedMonth
 
-// selector factory function
-export const makeAppSelectors = () => {
+// selectors
+export const selectCurrentDatetimeAsDate = createSelector(
+  [selectCurrentDatetime],
+  (currentDatetime) => new Date(currentDatetime)
+)
 
-  // Date object selectors (converted from strings)
-  const selectCurrentDatetimeAsDate = createSelector(
-    [selectCurrentDatetime],
-    (currentDatetime) => new Date(currentDatetime)
-  );
+export const selectSelectedDateAsDate = createSelector(
+  [selectSelectedDate],
+  (selectedDate) => new Date(selectedDate)
+)
 
-  const selectSelectedDateAsDate = createSelector(
-    [selectSelectedDate],
-    (selectedDate) => new Date(selectedDate)
-  );
-
-  return {
-    selectCurrentDatetimeAsDate,
-    selectSelectedDateAsDate,
-  };
-};
 
 // reducers
 export const { setSelectedDate, setSelectedMonth } = appSlice.actions;

@@ -6,7 +6,7 @@ import { Calendar } from './svgs/Calendar';
 import { MonthEnum, WeekDayEnum } from '../types/dateTypes'
 import { formatDate, isSameDay } from '../utils/utils';
 import { ourUseDispatch, ourUseSelector } from '../store/hooks';
-import { makeAppSelectors, setSelectedDate } from '../store/slices/appSlice';
+import { selectCurrentDatetimeAsDate, selectSelectedDateAsDate, setSelectedDate } from '../store/slices/appSlice';
 
 
 type DateSelectorProps = {
@@ -21,7 +21,6 @@ const DateSelector: React.FC<DateSelectorProps> = ({ onlyMonthSelector }) => {
   const dayNames = Object.values(WeekDayEnum).map(m => m.substring(0, 3))
 
   // selectors
-  const { selectCurrentDatetimeAsDate, selectSelectedDateAsDate } = makeAppSelectors()
   const currentDate = ourUseSelector(selectCurrentDatetimeAsDate);
   const selectedDate = ourUseSelector(selectSelectedDateAsDate);
 

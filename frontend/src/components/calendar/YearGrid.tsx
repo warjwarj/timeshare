@@ -5,10 +5,9 @@ import { ourUseSelector } from '../../store/hooks';
 import { makeEventSelectors } from '../../store/slices/eventsSlice';
 
 import '../../../index.css';
+import { selectCurrentDatetimeAsDate, selectSelectedDateAsDate } from "../../store/slices/appSlice";
 
 type YearGridProps = {
-  currentDate: Date;
-  selectedDate: Date;
   onMonthSelect: (month: number) => void;
 };
 
@@ -42,11 +41,14 @@ const getMonthDays = (year: number, month: number): (number | null)[] => {
 const MiniMonth: React.FC<{
   year: number;
   month: number;
-  currentDate: Date;
-  selectedDate: Date;
   eventDates: Set<string>;
   onMonthSelect: (month: number) => void;
-}> = ({ year, month, currentDate, selectedDate, eventDates, onMonthSelect }) => {
+}> = ({ year, month, eventDates, onMonthSelect }) => {
+
+  // memoised selectors
+  const currentDate = ourUseSelector(selectCurrentDatetimeAsDate);
+  const selectedDate = ourUseSelector(selectSelectedDateAsDate);
+
   const days = getMonthDays(year, month);
   const isSelectedMonth = selectedDate.getMonth() === month && selectedDate.getFullYear() === year;
 
@@ -115,7 +117,11 @@ const MiniMonth: React.FC<{
   );
 };
 
-const YearGrid: React.FC<YearGridProps> = ({ currentDate, selectedDate, onMonthSelect }) => {
+const YearGrid: React.FC<YearGridProps> = ({ onMonthSelect }) => {
+
+  // memoised selectors
+  const selectedDate = ourUseSelector(selectSelectedDateAsDate);
+
   const year = selectedDate.getFullYear();
 
   // Get events to show indicators
@@ -156,8 +162,6 @@ const YearGrid: React.FC<YearGridProps> = ({ currentDate, selectedDate, onMonthS
             key={month}
             year={year}
             month={month}
-            currentDate={currentDate}
-            selectedDate={selectedDate}
             eventDates={eventDates}
             onMonthSelect={onMonthSelect}
           />
