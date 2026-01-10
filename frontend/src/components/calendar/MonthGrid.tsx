@@ -1,16 +1,15 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { getDateFromCellIndex, isValidDate, isSameDay } from "../../utils/utils";
+import { ourUseDispatch, ourUseSelector } from '../../store/hooks';
+import { selectCurrentDatetimeAsDate, selectSelectedDateAsDate, selectSelectedMonthAsDate, setSelectedMonth } from '../../store/slices/appSlice';
+import { addEvent, deleteEvent, getEvents, makeEventSelectors, updateEvent } from '../../store/slices/eventsSlice';
 import type { MonthGridConfig } from "../../utils/monthGridUtils";
 import { setEventPositions } from "../../utils/monthGridUtils";
+import { getDateFromCellIndex, isSameDay, isValidDate } from "../../utils/utils";
+import { ChevronLeft, ChevronRight } from '../svgs/Chevrons';
 import type { CellStyle } from "./Cell";
 import { Cell } from "./Cell";
 import type { EventProps, EventStyle } from "./Event";
 import { Event } from './Event';
-import { ChevronLeft, ChevronRight } from '../svgs/Chevrons';
-
-import { ourUseDispatch, ourUseSelector } from '../../store/hooks';
-import { updateEvent, addEvent, deleteEvent, makeEventSelectors, getEvents } from '../../store/slices/eventsSlice';
-import { selectCurrentDatetimeAsDate, selectSelectedDateAsDate, setSelectedDate } from '../../store/slices/appSlice';
 
 import '../../../index.css';
 import { TimeSpanEnum } from "../../types/dateTypes";
@@ -32,32 +31,30 @@ const MonthGrid: React.FC<GridProps> = ({ gridStyle, gridConfig, colHeaders }) =
   const { colCount, eventStyle, cellStyle } = gridStyle;
   const dispatch = ourUseDispatch();
 
-  // Memoised events selector
+  // selectors
   const { selectEventsBetweenDates } = useMemo(() => makeEventSelectors(), []);
   const events = ourUseSelector(state => selectEventsBetweenDates(state, startDate, endDate));
+  const currentDate = ourUseSelector(selectCurrentDatetimeAsDate);
+  const selectedDate = ourUseSelector(selectSelectedDateAsDate);
+  const selectedMonth = ourUseSelector(selectSelectedMonthAsDate);
 
-    // memoised selectors
-    const currentDate = ourUseSelector(selectCurrentDatetimeAsDate);
-    const selectedDate = ourUseSelector(selectSelectedDateAsDate);
-
-  // Fetch events when date range changes
+  // fetch events when date range changes
   useEffect(() => {
     const startDateISO = new Date(new Date(startDate).setMonth(startDate.getMonth() - 1)).toISOString();
     const endDateISO = new Date(new Date(endDate).setMonth(endDate.getMonth() + 1)).toISOString();
-
     const timeoutId = setTimeout(() => {
       dispatch(getEvents({ start: startDateISO, end: endDateISO }));
     }, 300);
     return () => clearTimeout(timeoutId);
   }, [dispatch, startDate, endDate]);
 
-  // Refs and state for grid measurement
+  // refs and state for grid measurement
   const cellLaneEvents = useRef(new Map<number, Map<number, string>>());
   const gridRowWidthRef = useRef<HTMLDivElement>(null);
   const [gridRowWidth, setGridRowWidth] = useState(0);
   const [eventProps, setEventProps] = useState<EventProps[][]>();
 
-  // Measure container width on mount and resize
+  // measure container width on mount and resize
   useEffect(() => {
     const container = gridRowWidthRef.current;
     if (!container) return;
@@ -68,24 +65,26 @@ const MonthGrid: React.FC<GridProps> = ({ gridStyle, gridConfig, colHeaders }) =
     return () => resizeObserver.disconnect();
   }, []);
 
-  // Calculate event positions when events or grid dimensions change
+  // calculate event positions when events or grid dimensions change
   useEffect(() => {
-    const currentStartDate = new Date(startDate);
-    if (!isValidDate(currentStartDate) || events.length === 0 || gridRowWidth === 0) {
+    if (!isValidDate(startDate) || events.length === 0 || gridRowWidth === 0) {
       setEventProps([]);
       return;
     }
     setEventProps(setEventPositions(
-      events, cellLaneEvents.current, gridRowWidth, currentStartDate,
+      events, cellLaneEvents.current, gridRowWidth, startDate,
       cellCount, colCount, eventStyle
     ));
   }, [events, startDate, gridRowWidth, cellCount, colCount, eventStyle]);
 
-  // Navigation handler
+  // month navigation handler
   const navigateMonth = (delta: number) => {
-    const date = new Date(selectedDate);
+    if (!isValidDate(selectedMonth)) {
+      return;
+    }
+    const date = new Date(selectedMonth);
     date.setMonth(date.getMonth() + delta);
-    dispatch(setSelectedDate({ dateISOStr: date.toISOString() }));
+    dispatch(setSelectedMonth({ monthIsoStr: date.toISOString() }));
   };
 
   // Get events for a specific cell
@@ -171,7 +170,7 @@ const MonthGrid: React.FC<GridProps> = ({ gridStyle, gridConfig, colHeaders }) =
                     cellDate={cellDate}
                     getEvents={getEventsInCell}
                     onAddEvent={(ev) => dispatch(addEvent(ev))}
-                    isOutsideMonth={cellDate.getMonth() !== selectedDate.getMonth()}
+                    isOutsideMonth={cellDate.getMonth() !== selectedMonth.getMonth()}
                     isSelected={isSameDay(cellDate, selectedDate)}
                     isHighlighted={isSameDay(cellDate, currentDate)}
                   />
@@ -201,3 +200,4 @@ const MonthGrid: React.FC<GridProps> = ({ gridStyle, gridConfig, colHeaders }) =
 
 export { MonthGrid };
 export type { GridProps, GridStyle };
+

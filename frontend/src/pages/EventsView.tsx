@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, type ReactNode } from 'react';
+import { useState, useCallback, useMemo, type ReactNode, useRef, useEffect } from 'react';
 
 import { MonthGrid } from '../components/calendar/MonthGrid.tsx';
 import type { GridStyle } from '../components/calendar/MonthGrid.tsx';
@@ -8,9 +8,9 @@ import { YearGrid } from '../components/calendar/YearGrid';
 import type { EventStyle } from '../components/calendar/Event';
 import { DateSelector } from "../components/DateSelector.tsx";
 import { isValidDate } from '../utils/utils.ts';
-import { getMonthGridConfig } from '../utils/monthGridUtils.ts';
+import { getMonthGridConfig, type MonthGridConfig } from '../utils/monthGridUtils.ts';
 import { ourUseDispatch, ourUseSelector } from '../store/hooks';
-import { selectCurrentDatetimeAsDate, selectSelectedDateAsDate, setSelectedDate } from '../store/slices/appSlice';
+import { selectCurrentDatetimeAsDate, selectSelectedDateAsDate, selectSelectedMonthAsDate, setSelectedDate, setSelectedMonth } from '../store/slices/appSlice';
 
 // event style for 
 const monthGridEventStyle: EventStyle = {
@@ -53,19 +53,28 @@ const EventsView: React.FC<EventsViewProps> = ({ children }) => {
 
   // memoised selectors
   const currentDate = ourUseSelector(selectCurrentDatetimeAsDate);
-  const selectedDate = ourUseSelector(selectSelectedDateAsDate);
+  const selectedMonth = ourUseSelector(selectSelectedMonthAsDate);
+
+  useEffect(() => {
+    if (!isValidDate(currentDate)) {
+      return;
+    }
+    dispatch(setSelectedMonth({ monthIsoStr: currentDate.toISOString() }))
+  }, [currentDate])
 
   const [dayViewOn, setDayViewOn] = useState<boolean>(false);
   const [monthViewOn, setMonthViewOn] = useState<boolean>(true);
   const [yearViewOn, setYearViewOn] = useState<boolean>(false);
 
-  // memoize grid config to prevent re-renders
-  const dateForGrid = isValidDate(selectedDate) ? selectedDate : currentDate;
-  const gridConfig = useMemo(
-    () => isValidDate(dateForGrid) ? getMonthGridConfig(dateForGrid) : null,
+  // grid config - ref for prev val so can skip recalc if viable
+  const dateForGrid = isValidDate(selectedMonth) ? selectedMonth : currentDate;
+  const gridConfigRef = useRef<MonthGridConfig | null>(null)
+  const gridConfig = useMemo<MonthGridConfig | null>(
+    () => isValidDate(dateForGrid) ? getMonthGridConfig(dateForGrid, gridConfigRef.current) : null,
     [dateForGrid]
   );
-
+  gridConfigRef.current = gridConfig;
+  
   // Handler for when a month is clicked in year view
   const handleMonthSelect = useCallback((month: number) => {
     const date = new Date(
@@ -73,7 +82,7 @@ const EventsView: React.FC<EventsViewProps> = ({ children }) => {
       month,
       1
     );
-    dispatch(setSelectedDate({ dateISOStr: date.toISOString() }));
+    dispatch(setSelectedMonth({ monthIsoStr: date.toISOString() }));
   }, [dispatch, currentDate]);
 
   return (
@@ -124,7 +133,7 @@ const EventsView: React.FC<EventsViewProps> = ({ children }) => {
       </div>
 
       {/* Events views. */}
-      <div className={`flex flex-1 overflow-hidden`}>
+      {currentDate && <div className={`flex flex-1 overflow-hidden`}>
         {yearViewOn && (
           <div className="w-full max-h-[calc(100dvh-6rem)] overflow-y-auto">
             <YearGrid
@@ -144,8 +153,8 @@ const EventsView: React.FC<EventsViewProps> = ({ children }) => {
         {dayViewOn && (
           <div className="w-full max-h-[calc(100dvh-6rem)] overflow-hidden">
             <DayGrid
-              timeStart={6}
-              timeEnd={17}
+              timeStart={0}
+              timeEnd={24}
               timeStep={TimeSpanEnum.Mins30}
               snapToStep={false}
               style={{
@@ -154,7 +163,7 @@ const EventsView: React.FC<EventsViewProps> = ({ children }) => {
             />
           </div>
         )}
-      </div>
+      </div>}
     </div>
   );
 }

@@ -165,7 +165,13 @@ const monthNames = Object.values(MonthEnum)
  * The grid starts on the Monday before (or on) the 1st of the month
  * and ends on the Sunday after (or on) the last day of the month.
  */
-export function getMonthGridConfig(date: Date): MonthGridConfig {
+export function getMonthGridConfig(date: Date, prevCfg: MonthGridConfig | null): MonthGridConfig | null {
+
+  // no need to rerender if the selected date is already within the grid.
+  if (prevCfg != null && date >= prevCfg.startDate && date <= prevCfg.endDate) {
+    return prevCfg;
+  }
+
   const year = date.getFullYear();
   const month = date.getMonth();
 

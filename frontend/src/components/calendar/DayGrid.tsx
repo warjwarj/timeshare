@@ -120,14 +120,14 @@ const DayGrid: React.FC<DayGridProps> = ({
   const goToPrevDay = useCallback(() => {
     const newDate = new Date(selectedDate);
     newDate.setDate(newDate.getDate() - 1);
-    dispatch(setSelectedDate({ dateISOStr: newDate.toISOString() }));
+    dispatch(setSelectedDate({ dateIsoStr: newDate.toISOString() }));
   }, [dispatch, selectedDate]);
 
   // Navigate to next day
   const goToNextDay = useCallback(() => {
     const newDate = new Date(selectedDate);
     newDate.setDate(newDate.getDate() + 1);
-    dispatch(setSelectedDate({ dateISOStr: newDate.toISOString() }));
+    dispatch(setSelectedDate({ dateIsoStr: newDate.toISOString() }));
   }, [dispatch, selectedDate]);
 
   // Format date label

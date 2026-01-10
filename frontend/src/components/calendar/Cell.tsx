@@ -39,12 +39,17 @@ const Cell: React.FC<CellProps> = ({ label, rowEndIndex, rowStartIndex, cellInde
   // track popup visibility
   const [showModal, setShowModal] = useState(false);
 
+  // cell id in grid
   const cellId = `row:${rowStartIndex}-${rowEndIndex}, cell:${cellIndex}`
 
   useEffect(() => {
-    document.getElementById(cellId)?.addEventListener("dblclick", () => cellDoubleClicked())
-    document.getElementById(cellId)?.addEventListener("click", () => cellClicked())
-  }, [])
+    document.getElementById(cellId)?.addEventListener("dblclick", () => {
+      setShowModal(true)
+    })
+    document.getElementById(cellId)?.addEventListener("click", () => {
+      dispatch(setSelectedDate({ dateIsoStr: cellDate.toISOString() })) 
+    })
+  }, [cellDate])
 
   const cellClassName = [
     "border border-light-border dark:border-dark-border flex justify-center overflow-hidden",
@@ -55,14 +60,6 @@ const Cell: React.FC<CellProps> = ({ label, rowEndIndex, rowStartIndex, cellInde
     isHighlighted && !isSelected && "text-2xl font-bold",
     isHighlighted && isSelected && "text-2xl font-bold ring-2 ring-inset ring-blue-500"
   ].filter(Boolean).join(" ");
-
-  const cellClicked = () => {
-    dispatch(setSelectedDate({ dateISOStr: cellDate.toISOString() }))
-  }
-  
-  const cellDoubleClicked = () => {    
-    setShowModal(true)
-  }
 
   return (
     <>

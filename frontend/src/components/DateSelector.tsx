@@ -53,7 +53,7 @@ const DateSelector: React.FC<DateSelectorProps> = ({ onlyMonthSelector }) => {
   }, []);
 
   const handleDateSelection = (d: Date) => {
-    dispatch(setSelectedDate({ dateISOStr: d.toISOString() }))
+    dispatch(setSelectedDate({ dateIsoStr: d.toISOString() }))
   }
 
   const getDaysInMonth = (date: Date) => {

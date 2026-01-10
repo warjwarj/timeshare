@@ -2,7 +2,6 @@ import { createSlice, createAsyncThunk, createSelector } from '@reduxjs/toolkit'
 import type { PayloadAction } from '@reduxjs/toolkit'
 
 import { apiClient } from "../../utils/apiClient";
-import type { Month } from '../../types/dateTypes';
 import { HttpStatusCode } from 'axios';
 import { toastService } from '../../toastService';
 
@@ -31,18 +30,18 @@ const getCurrentDate = createAsyncThunk(
 interface AppState {
   currentDatetime: string
   selectedDate: string
-  selectedMonth: Month
+  selectedMonth: string
 }
 
 export const appSlice = createSlice({
   name: "app",
   initialState: {} as AppState,
   reducers: {
-    setSelectedMonth: (state, action: PayloadAction<{ month: Month }>) => {
-      state.selectedMonth = action.payload.month
+    setSelectedMonth: (state, action: PayloadAction<{ monthIsoStr: string }>) => {
+      state.selectedMonth = action.payload.monthIsoStr
     },
-    setSelectedDate: (state, action: PayloadAction<{ dateISOStr: string }>) => {
-      state.selectedDate = action.payload.dateISOStr
+    setSelectedDate: (state, action: PayloadAction<{ dateIsoStr: string }>) => {
+      state.selectedDate = action.payload.dateIsoStr
     }
   },
   extraReducers: (builder) => {
@@ -72,6 +71,10 @@ export const selectSelectedDateAsDate = createSelector(
   (selectedDate) => new Date(selectedDate)
 )
 
+export const selectSelectedMonthAsDate = createSelector(
+  [selectSelectedMonth],
+  (selectedMonth) => new Date(selectedMonth)
+)
 
 // reducers
 export const { setSelectedDate, setSelectedMonth } = appSlice.actions;
