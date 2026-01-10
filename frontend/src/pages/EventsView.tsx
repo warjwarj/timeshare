@@ -128,7 +128,7 @@ const EventsView: React.FC<EventsViewProps> = ({ children }) => {
             Day
           </button>
           {/* Date Selector */}
-          <DateSelector onlyMonthSelector={false} startDate={new Date(2024, 11, 30)} />
+          <DateSelector onlyMonthSelector={false} startDate={currentDate} />
         </div>
       </div>
 
