@@ -1,15 +1,14 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { getStrErrorMessage } from '../../utils/utils'
 
 import { apiClient } from "../../utils/apiClient";
 import { toastService } from '../../toastService';
-import { HttpStatusCode } from 'axios';
+import axios, { HttpStatusCode } from 'axios';
 
 const login = createAsyncThunk(
   'auth/login',
   async (
     { name, email, password, role }: { name: string, email: string, password: string, role: string },
-    { rejectWithValue }
+    { signal, rejectWithValue }
   ) => {
     try {
       const res = await apiClient.post(
@@ -19,14 +18,21 @@ const login = createAsyncThunk(
         password,
         role
       },
-        { validateStatus: status => status <= 500 }
+        { signal, validateStatus: status => status < 500 }
       );
-      if (res.status != HttpStatusCode.Ok) {
-        toastService.showError("Couldn't login", res.data["detail"][0]["msg"])
+      if (res.status !== HttpStatusCode.Ok) {
+        const errMsg = res.data?.["detail"]?.[0]?.["msg"] || "Unknown error";
+        toastService.showError("Couldn't login", errMsg);
+        return rejectWithValue(errMsg);
       }
       return res.data;
     } catch (error: unknown) {
-      return rejectWithValue(getStrErrorMessage(error));
+      if (axios.isCancel(error)) {
+        return rejectWithValue('Request cancelled');
+      }
+      const err = error instanceof Error ? error.message : 'Unknown error';
+      toastService.showError("Couldn't login", err);
+      return rejectWithValue(err);
     }
   }
 );
@@ -35,7 +41,7 @@ const register = createAsyncThunk(
   'auth/register',
   async (
     { name, email, password, role }: { name: string, email: string, password: string, role: string },
-    { rejectWithValue }
+    { signal, rejectWithValue }
   ) => {
     try {
       const res = await apiClient.post("/auth/register", {
@@ -44,14 +50,21 @@ const register = createAsyncThunk(
         password,
         role
       },
-        { validateStatus: status => status <= 500 }
+        { signal, validateStatus: status => status < 500 }
       );
-      if (res.status != HttpStatusCode.Ok) {
-        toastService.showError("Couldn't register", res.data["detail"][0]["msg"])
+      if (res.status !== HttpStatusCode.Ok) {
+        const errMsg = res.data?.["detail"]?.[0]?.["msg"] || "Unknown error";
+        toastService.showError("Couldn't register", errMsg);
+        return rejectWithValue(errMsg);
       }
       return res.data;
     } catch (error: unknown) {
-      return rejectWithValue(getStrErrorMessage(error));
+      if (axios.isCancel(error)) {
+        return rejectWithValue('Request cancelled');
+      }
+      const err = error instanceof Error ? error.message : 'Unknown error';
+      toastService.showError("Couldn't register", err);
+      return rejectWithValue(err);
     }
   }
 );
@@ -60,21 +73,28 @@ const updateAccount = createAsyncThunk(
   'auth/updateAccount',
   async (
     { name, email }: { name?: string, email?: string },
-    { rejectWithValue }
+    { signal, rejectWithValue }
   ) => {
     try {
       const res = await apiClient.put("/auth/account", {
         name,
         email
       },
-        { validateStatus: status => status <= 500 }
+        { signal, validateStatus: status => status < 500 }
       );
-      if (res.status != HttpStatusCode.Ok) {
-        toastService.showError("Couldn't update account", res.data["detail"][0]["msg"])
+      if (res.status !== HttpStatusCode.Ok) {
+        const errMsg = res.data?.["detail"]?.[0]?.["msg"] || "Unknown error";
+        toastService.showError("Couldn't update account", errMsg);
+        return rejectWithValue(errMsg);
       }
       return res.data;
     } catch (error: unknown) {
-      return rejectWithValue(getStrErrorMessage(error));
+      if (axios.isCancel(error)) {
+        return rejectWithValue('Request cancelled');
+      }
+      const err = error instanceof Error ? error.message : 'Unknown error';
+      toastService.showError("Couldn't update account", err);
+      return rejectWithValue(err);
     }
   }
 );

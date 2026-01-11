@@ -29,19 +29,19 @@ apiClient.interceptors.request.use(
 );
 
 // Response interceptor - extract server errors
-apiClient.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (axios.isAxiosError(error) && error.response) {
-      const serverMessage = error.response.data?.detail 
-        || error.response.data?.message
-        || error.response.data?.error
-        || (typeof error.response.data === 'string' ? error.response.data : null)
-        || `Request failed with status ${error.response.status}`;      
-      throw new Error(serverMessage);
-    }
-    throw new Error(error.message || 'Network error');
-  }
-);
+// apiClient.interceptors.response.use(
+//   (response) => response,
+//   (error) => {
+//     if (axios.isAxiosError(error) && error.response) {
+//       const serverMessage = error.response.data?.detail 
+//         || error.response.data?.message
+//         || error.response.data?.error
+//         || (typeof error.response.data === 'string' ? error.response.data : null)
+//         || `Request failed with status ${error.response.status}`;      
+//       throw new Error(serverMessage);
+//     }
+//     throw new Error(error.message || 'Network error');
+//   }
+// );
 
 export { apiClient };

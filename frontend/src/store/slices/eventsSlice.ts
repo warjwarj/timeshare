@@ -2,87 +2,114 @@ import { createSlice, createAsyncThunk, createSelector } from '@reduxjs/toolkit'
 
 import type { EventDTO } from '../../types/EventDTO';
 import { apiClient } from "../../utils/apiClient";
-import { HttpStatusCode } from 'axios';
+import axios, { HttpStatusCode } from 'axios';
 import { toastService } from '../../toastService';
 
 const getEvents = createAsyncThunk(
-  'events/all',
-  async ({ start, end }: { start: string, end: string }, { signal }) => {
+  'events/getEvents',
+  async ({ start, end }: { start: string, end: string }, { signal, rejectWithValue }) => {
     try {
-      const res = await apiClient.get("/events/all", {
+      const res = await apiClient.get("/events/", {
         params: {
           start: start,
           end: end
         },
         signal,
-        validateStatus: status => status <= 500,
+        validateStatus: status => status < 500,
       })
-      if (res.status != HttpStatusCode.Ok) {
-        toastService.showError("Couldn't get events", res.data["detail"][0]["msg"])
+      
+      if (res.status !== HttpStatusCode.Ok) {
+        const errorMsg = res.data?.["detail"]?.[0]?.["msg"] || "Unknown error";
+        toastService.showError("Couldn't get events", errorMsg);
+        return rejectWithValue(errorMsg);
       }
+      
       return res.data as EventDTO[];
     } catch (error) {
-      const err = error instanceof Error ? error.message : 'Unknown error'
-      toastService.showError("Couldn't get events", err.toString())
+      if (error instanceof Error && error.name === 'AbortError') {
+        return rejectWithValue('Request cancelled');
+      }
+      
+      const err = error instanceof Error ? error.message : 'Unknown error';
+      toastService.showError("Couldn't get events", err);
+      return rejectWithValue(err);
     }
   }
 );
 
 const updateEvent = createAsyncThunk(
   'events/update',
-  async (moddedev: EventDTO) => {
+  async (modifiedEvent: EventDTO, { signal, rejectWithValue }) => {
     try {
       const res = await apiClient.post(
         "/events/update",
-        moddedev,
-        { validateStatus: status => status <= 500 }
+        modifiedEvent,
+        { signal, validateStatus: status => status < 500 }
       )
-      if (res.status != HttpStatusCode.Ok) {
-        toastService.showError("Couldn't update event", res.data["detail"][0]["msg"])
+      if (res.status !== HttpStatusCode.Ok) {
+        const errMsg = res.data?.["detail"]?.[0]?.["msg"] || "Unknown error";
+        toastService.showError("Couldn't update event", errMsg);
+        return rejectWithValue(errMsg);
       }
       return res.data as EventDTO;
     } catch (error) {
-      const err = error instanceof Error ? error.message : 'Unknown error'
-      toastService.showError("Couldn't update event", err.toString())
+      if (axios.isCancel(error)) {
+        return rejectWithValue('Request cancelled');
+      }
+      const err = error instanceof Error ? error.message : 'Unknown error';
+      toastService.showError("Couldn't update event", err);
+      return rejectWithValue(err);
     }
   }
 );
 
 const addEvent = createAsyncThunk(
   'events/add',
-  async (newEvent: Omit<EventDTO, 'key' | 'uuid'>) => {
+  async (newEvent: Omit<EventDTO, 'key' | 'uuid'>, { signal, rejectWithValue }) => {
     try {
       const res = await apiClient.post(
         "/events/add",
         newEvent,
-        { validateStatus: status => status <= 500 }
+        { signal, validateStatus: status => status < 500 }
       )
-      if (res.status != HttpStatusCode.Created) {
-        toastService.showError("Couldn't add event", res.data["detail"][0]["msg"])
+      if (res.status !== HttpStatusCode.Created) {
+        const errMsg = res.data?.["detail"]?.[0]?.["msg"] || "Unknown error";
+        toastService.showError("Couldn't add event", errMsg);
+        return rejectWithValue(errMsg);
       }
       return res.data as EventDTO;
     } catch (error) {
-      const err = error instanceof Error ? error.message : 'Unknown error'
-      toastService.showError("Couldn't add event", err.toString())
+      if (axios.isCancel(error)) {
+        return rejectWithValue('Request cancelled');
+      }
+      const err = error instanceof Error ? error.message : 'Unknown error';
+      toastService.showError("Couldn't add event", err);
+      return rejectWithValue(err);
     }
   }
 );
 
 const deleteEvent = createAsyncThunk(
   'events/delete',
-  async (uuid: string) => {
+  async (uuid: string, { signal, rejectWithValue }) => {
     try {
       const res = await apiClient.delete(
         `/events/delete/${uuid}`,
-        { validateStatus: status => status <= 500 }
+        { signal, validateStatus: status => status < 500 }
       )
-      if (res.status != HttpStatusCode.Ok) {
-        toastService.showError("Couldn't delete event", res.data["detail"][0]["msg"])
+      if (res.status !== HttpStatusCode.Ok) {
+        const errMsg = res.data?.["detail"]?.[0]?.["msg"] || "Unknown error";
+        toastService.showError("Couldn't delete event", errMsg);
+        return rejectWithValue(errMsg);
       }
       return uuid;
     } catch (error) {
-      const err = error instanceof Error ? error.message : 'Unknown error'
-      toastService.showError("Couldn't delete event", err.toString())
+      if (axios.isCancel(error)) {
+        return rejectWithValue('Request cancelled');
+      }
+      const err = error instanceof Error ? error.message : 'Unknown error';
+      toastService.showError("Couldn't delete event", err);
+      return rejectWithValue(err);
     }
   }
 );

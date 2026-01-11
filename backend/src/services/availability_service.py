@@ -45,8 +45,8 @@ def create_availability_rule(user_uuid: str, rule: CreateAvailabilityRuleRequest
     weekdays=rule.weekdays,
     start_time=rule.start_time,
     end_time=rule.end_time,
-    start_date=rule.start_date,
-    end_date=rule.end_date,
+    start_datetime=rule.start_datetime,
+    end_datetime=rule.end_datetime,
     created_by_user_uuid=user_uuid
   )
   if rec is not None:
@@ -65,8 +65,8 @@ def update_availability_rule(user_uuid: str, rule: UpdateAvailabilityRuleRequest
     weekdays=rule.weekdays,
     start_time=rule.start_time,
     end_time=rule.end_time,
-    start_date=rule.start_date,
-    end_date=rule.end_date,
+    start_datetime=rule.start_datetime,
+    end_datetime=rule.end_datetime,
   )
   if rec is not None:
     return sanitise_availability_rule(rec)
@@ -93,6 +93,7 @@ def get_availability_rules(user_uuid: str) -> list[SafeAvailabilityRuleDTO]:
   availability_repo = AvailabilityRepository()
 
   rules = availability_repo.get_record(multiple=True, created_by_user_uuid=user_uuid)
+  print(rules)
 
   if rules:
     return sanitise_availability_rules(rules)

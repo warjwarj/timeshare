@@ -2,27 +2,33 @@ import { createSlice, createAsyncThunk, createSelector } from '@reduxjs/toolkit'
 import type { PayloadAction } from '@reduxjs/toolkit'
 
 import { apiClient } from "../../utils/apiClient";
-import { HttpStatusCode } from 'axios';
+import axios, { HttpStatusCode } from 'axios';
 import { toastService } from '../../toastService';
 
 const getCurrentDate = createAsyncThunk(
   'common/current-datetime',
-  async (_, { rejectWithValue }) => {
+  async (_, { signal, rejectWithValue }) => {
     try {
       const res = await apiClient.get("/common/current-datetime", {
         headers: {
           "X-Timezone": "UTC"
         },
-        validateStatus: status => status <= 500
+        signal,
+        validateStatus: status => status < 500
       })
-      if (res.status != HttpStatusCode.Ok) {
-        toastService.showError("Couldn't get current datetime", res.data["detail"][0]["msg"])
+      if (res.status !== HttpStatusCode.Ok) {
+        const errMsg = res.data?.["detail"]?.[0]?.["msg"] || "Unknown error";
+        toastService.showError("Couldn't get current datetime", errMsg);
+        return rejectWithValue(errMsg);
       }
       return res.data
     } catch (error) {
-      const err = error instanceof Error ? error.message : 'Unknown error'
-      toastService.showError("Couldn't reach server", err)
-      return rejectWithValue("Couldn't reach server" + err);
+      if (axios.isCancel(error)) {
+        return rejectWithValue('Request cancelled');
+      }
+      const err = error instanceof Error ? error.message : 'Unknown error';
+      toastService.showError("Couldn't reach server", err);
+      return rejectWithValue(err);
     }
   }
 );

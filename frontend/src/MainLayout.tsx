@@ -46,7 +46,7 @@ const MainLayout: React.FC = () => {
 
       {/* Sidebar */}
       <div className={`${isPhone ? "fixed top-0 left-0 h-screen z-50" : "h-full"}`}>
-        <Sidebar links={sidebarLinks} isCollapsed={isCollapsed} />
+        <Sidebar links={sidebarLinks} isCollapsed={isCollapsed} setIsCollapsed={handleBackdropClick}/>
       </div>
 
       {/* Content to right of sidebar */}

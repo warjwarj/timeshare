@@ -11,8 +11,8 @@ class CreateAvailabilityRuleRequest(BaseModel):
   weekdays: list[int] | None = Field(default=None)
   start_time: time | None = Field(default=None)
   end_time: time | None = Field(default=None)
-  start_date: datetime | None = Field(default=None)
-  end_date: datetime | None = Field(default=None)
+  start_datetime: datetime | None = Field(default=None)
+  end_datetime: datetime | None = Field(default=None)
 
   @field_validator('weekdays')
   @classmethod
@@ -24,7 +24,7 @@ class CreateAvailabilityRuleRequest(BaseModel):
           raise ValueError('Weekday must be between 0 (Monday) and 6 (Sunday)')
     return v
 
-  @field_validator('start_date', 'end_date')
+  @field_validator('start_datetime', 'end_datetime')
   @classmethod
   def validate_datetime_not_naive(cls, v: datetime | None) -> datetime | None:
     """Ensure datetime has timezone information if provided"""
@@ -42,9 +42,9 @@ class CreateAvailabilityRuleRequest(BaseModel):
 
   @model_validator(mode='after')
   def validate_date_range(self) -> 'CreateAvailabilityRuleRequest':
-    """Ensure end_date is after start_date if both are provided"""
-    if self.start_date is not None and self.end_date is not None:
-      if self.end_date <= self.start_date:
+    """Ensure end_datetime is after start_datetime if both are provided"""
+    if self.start_datetime is not None and self.end_datetime is not None:
+      if self.end_datetime <= self.start_datetime:
         raise ValueError('End date must be after start date')
     return self
 
@@ -59,8 +59,8 @@ class UpdateAvailabilityRuleRequest(BaseModel):
   weekdays: list[int] | None = Field(default=None)
   start_time: time | None = Field(default=None)
   end_time: time | None = Field(default=None)
-  start_date: datetime | None = Field(default=None)
-  end_date: datetime | None = Field(default=None)
+  start_datetime: datetime | None = Field(default=None)
+  end_datetime: datetime | None = Field(default=None)
 
   @field_validator('weekdays')
   @classmethod
@@ -72,7 +72,7 @@ class UpdateAvailabilityRuleRequest(BaseModel):
           raise ValueError('Weekday must be between 0 (Monday) and 6 (Sunday)')
     return v
 
-  @field_validator('start_date', 'end_date')
+  @field_validator('start_datetime', 'end_datetime')
   @classmethod
   def validate_datetime_not_naive(cls, v: datetime | None) -> datetime | None:
     """Ensure datetime has timezone information if provided"""
@@ -90,9 +90,9 @@ class UpdateAvailabilityRuleRequest(BaseModel):
 
   @model_validator(mode='after')
   def validate_date_range(self) -> 'UpdateAvailabilityRuleRequest':
-    """Ensure end_date is after start_date if both are provided"""
-    if self.start_date is not None and self.end_date is not None:
-      if self.end_date <= self.start_date:
+    """Ensure end_datetime is after start_datetime if both are provided"""
+    if self.start_datetimetime is not None and self.end_datetimetime is not None:
+      if self.end_datetimetime <= self.start_datetimetime:
         raise ValueError('End date must be after start date')
     return self
 

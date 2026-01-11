@@ -32,19 +32,12 @@ logger = logging.getLogger(__name__)
 # Routes
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-@availability_router.get("/all", status_code=HTTPStatus.OK)
+@availability_router.get("/", status_code=HTTPStatus.OK)
 async def all(jwt_payload: IsAuthedDep):
   """
   Get all availability rules for the user.
   """
   return get_availability_rules(jwt_payload["user_uuid"])
-
-@availability_router.get("/{uuid}", status_code=HTTPStatus.OK)
-async def get(uuid: str, jwt_payload: IsAuthedDep):
-  """
-  Get a single availability rule by uuid.
-  """
-  return get_availability_rule(uuid)
 
 @availability_router.post("/create", status_code=HTTPStatus.CREATED)
 async def create(jwt_payload: IsAuthedDep, rule: CreateAvailabilityRuleRequest):
@@ -72,4 +65,6 @@ async def delete(uuid: str, jwt_payload: IsAuthedDep):
   """
   Delete an availability rule.
   """
+  print(uuid)
   return delete_availability_rule(uuid)
+

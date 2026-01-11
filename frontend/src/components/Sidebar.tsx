@@ -1,4 +1,5 @@
 import { DarkModeToggle } from "./DarkModeToggle";
+import { XIcon } from "./XIcon";
 
 type SidebarLink = {
   label: string;
@@ -7,18 +8,27 @@ type SidebarLink = {
 
 type SidebarProps = {
   isCollapsed: boolean;
+  setIsCollapsed: React.Dispatch<React.SetStateAction<boolean>>
   links: SidebarLink[];
   userName?: string;
   userEmail?: string;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ links, isCollapsed }) => {
+const Sidebar: React.FC<SidebarProps> = ({ links, isCollapsed, setIsCollapsed }) => {
   return (
     <div className={`h-full ${isCollapsed ? "hidden" : "w-100"}`}>
       <div
         className={`h-full overflow-hidden flex flex-col bg-light-background border-r border-light-border dark:border-dark-border text-light-primary-text
           dark:text-dark-primary-text dark:bg-dark-background`}
       >
+        <div className="block md:hidden flex items-center border-b border-light-border dark:border-dark-border justify-end bg-light-background dark:bg-dark-background">
+          <button
+            onClick={() => setIsCollapsed(true)}
+            aria-label="Close modal"
+          >
+            <XIcon />
+          </button>
+        </div>
 
         {/* Links */}
         <div className="border-b border-light-border dark:border-dark-border">
@@ -46,7 +56,7 @@ const Sidebar: React.FC<SidebarProps> = ({ links, isCollapsed }) => {
 
         {/* Footer */}
         <div className="p-4 mt-auto justify-self-end border-t border-b border-light-border dark:border-dark-border">
-            <DarkModeToggle />
+          <DarkModeToggle />
         </div>
 
       </div>

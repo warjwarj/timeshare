@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 # Routes
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-@events_router.get("/all", status_code=HTTPStatus.OK)
+@events_router.get("/", status_code=HTTPStatus.OK)
 async def all(jwt_payload: IsAuthedDep, start: datetime, end: datetime):
   """
   Get all events visible to user.

@@ -3,12 +3,14 @@ import { configureStore } from '@reduxjs/toolkit'
 import authReducer from './slices/authSlice'
 import eventsReducer from './slices/eventsSlice';
 import appReducer from './slices/appSlice';
+import availabilityReducer from './slices/availabilitySlice';
 
 export const store = configureStore({
   reducer: {
     auth: authReducer,
     events: eventsReducer,
     app: appReducer,
+    availability: availabilityReducer,
   }
 })
 
