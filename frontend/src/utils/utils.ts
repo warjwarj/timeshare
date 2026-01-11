@@ -2,7 +2,7 @@
 import { useOutletContext } from "react-router-dom";
 import { TimeSpanEnum, type TimeSpan } from "../types/dateTypes";
 import axios from 'axios'
-import type { MainLayoutContext } from "../layouts/MainLayout";
+import type { MainLayoutContext } from "../MainLayout";
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

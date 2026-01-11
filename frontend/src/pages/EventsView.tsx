@@ -13,6 +13,7 @@ import { getMonthGridConfig, type MonthGridConfig } from '../utils/monthGridUtil
 import { ourUseDispatch, ourUseSelector } from '../store/hooks';
 import { selectCurrentDatetimeAsDate, selectSelectedMonthAsDate, setSelectedMonth } from '../store/slices/appSlice';
 import { useLayoutContext } from '../utils/utils.ts';
+import { ViewHeader } from '../components/ViewHeader.tsx';
 
 // event style for 
 const monthGridEventStyle: EventStyle = {
@@ -47,7 +48,7 @@ const gridStyle: GridStyle = {
 
 const EventsView: React.FC = () => {
   const dispatch = ourUseDispatch();
-  const { isCollapsed, setIsCollapsed } = useLayoutContext();
+  const { isCollapsed, setIsCollapsed, isPhone } = useLayoutContext();
   const weekdayNames = Object.values(WeekDayEnum)
 
   // memoised selectors
@@ -86,16 +87,8 @@ const EventsView: React.FC = () => {
 
   return (
     <div id="EventsView" className="flex flex-col h-[calc(100dvh-5rem)]">
-      {/* View Mode Selector */}
-      <div className="flex h-[5rem] gap-1 p-2 border-b border-light-border dark:border-dark-border">
 
-        {/* Collapse button on the left of the header area. */}
-        <div className="flex justify-start border-light-border dark:border-dark-border">
-          <div className="h-16 w-16">
-            <CollapseButton collapsed={isCollapsed} setCollapsed={setIsCollapsed} />
-          </div>
-        </div>
-
+      <ViewHeader>
         {/* events view controls. */}
         <div className="flex ml-auto border-light-border dark:border-dark-border">
           <button
@@ -131,7 +124,7 @@ const EventsView: React.FC = () => {
           {/* Date Selector */}
           <DateSelector onlyMonthSelector={false} startDate={currentDate} />
         </div>
-      </div>
+      </ViewHeader>
 
       {/* Events views. */}
       {currentDate && <div className={`flex flex-1 overflow-hidden`}>

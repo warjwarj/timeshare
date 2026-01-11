@@ -8,7 +8,7 @@ import { Settings } from './pages/Settings';
 
 import { Navbar } from './components/Navbar';
 import { ProtectedRoute } from './components/ProtectedRoute';
-import { MainLayout } from './layouts/MainLayout';
+import { MainLayout } from './MainLayout';
 
 const links = [
   { name: 'Timeshare', path: '/home' },
