@@ -1,6 +1,8 @@
 // fake enum
+import { useOutletContext } from "react-router-dom";
 import { TimeSpanEnum, type TimeSpan } from "../types/dateTypes";
 import axios from 'axios'
+import type { MainLayoutContext } from "../layouts/MainLayout";
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -8,8 +10,12 @@ import axios from 'axios'
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
+export function useLayoutContext() {
+  return useOutletContext<MainLayoutContext>();
+}
+
 // to make sure the error is of type string
-function getStrErrorMessage(error: unknown): string {
+export function getStrErrorMessage(error: unknown): string {
   if (axios.isAxiosError(error)) {
     return error.response?.data?.message
       || error.response?.data?.detail
@@ -25,7 +31,7 @@ function getStrErrorMessage(error: unknown): string {
   return 'An unexpected error occurred';
 }
 
-function isNullOrWhitespace(input: string) {
+export function isNullOrWhitespace(input: string) {
   return !input || !input.trim();
 }
 
@@ -36,11 +42,11 @@ function isNullOrWhitespace(input: string) {
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-function isValidDate(d: Date) {
+export function isValidDate(d: Date) {
   return (Object.prototype.toString.call(d) === "[object Date]" && !isNaN(d.getTime()));
 }
 
-function getCalendarDaysInMonth(year: number, month: number) {
+export function getCalendarDaysInMonth(year: number, month: number) {
   const monthIndex = month - 1; // 0..11 instead of 1..12
   const names = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
   const date = new Date(year, monthIndex, 1);
@@ -53,7 +59,7 @@ function getCalendarDaysInMonth(year: number, month: number) {
 }
 
 // get date from cell index. Date will always be rounded down to the nearest timeSpan.
-function getDateFromCellIndex(cellStep: TimeSpan, gridStart: Date, cellIndex: number): Date {
+export function getDateFromCellIndex(cellStep: TimeSpan, gridStart: Date, cellIndex: number): Date {
   const ret = new Date(gridStart)
   switch (cellStep) {
     case TimeSpanEnum.Day:
@@ -63,7 +69,7 @@ function getDateFromCellIndex(cellStep: TimeSpan, gridStart: Date, cellIndex: nu
   return gridStart;
 }
 
-function formatDate(date: Date | null) {
+export function formatDate(date: Date | null) {
   if (!date) return 'Select a date';
   return date.toLocaleDateString('en-US', {
     weekday: 'short',
@@ -73,18 +79,18 @@ function formatDate(date: Date | null) {
   });
 };
 
-function isSameDay(date1: Date | null, date2: Date | null) {
+export function isSameDay(date1: Date | null, date2: Date | null) {
   if (!date1 || !date2) return false;
   return date1.getDate() === date2.getDate() &&
     date1.getMonth() === date2.getMonth() &&
     date1.getFullYear() === date2.getFullYear();
 };
 
-function isToday(date: Date) {
+export function isToday(date: Date) {
   return isSameDay(date, new Date());
 };
 
-function getPreviousMonday(date: Date): Date {
+export function getPreviousMonday(date: Date): Date {
   const result = new Date(date);
   const day = result.getDay();
   const diff = day === 0 ? 6 : day - 1;
@@ -92,7 +98,7 @@ function getPreviousMonday(date: Date): Date {
   return result;
 }
 
-function getLastDayOfMonth(d: Date) {
+export function getLastDayOfMonth(d: Date) {
   return new Date(
     d.getFullYear(),
     d.getMonth() + 1,
@@ -100,25 +106,10 @@ function getLastDayOfMonth(d: Date) {
   );
 }
 
-function getFirstDayOfMonth(d: Date) {
+export function getFirstDayOfMonth(d: Date) {
   return new Date(
     d.getFullYear(),
     d.getMonth(),
     1
   );
-}
-
-
-export {
-  getStrErrorMessage,
-  getCalendarDaysInMonth,
-  getDateFromCellIndex,
-  isValidDate,
-  isNullOrWhitespace,
-  formatDate,
-  isToday,
-  isSameDay,
-  getPreviousMonday,
-  getLastDayOfMonth,
-  getFirstDayOfMonth
 }

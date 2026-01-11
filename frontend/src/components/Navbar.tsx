@@ -85,7 +85,7 @@ const Navbar: React.FC<NavbarProps> = ({ links }) => {
 
           {/* Dropdown */}
           {isOpen && (
-            <div className="absolute right-0 mt-2 w-56 bg-light-background dark:bg-dark-background rounded-lg shadow-lg border border-light-border dark:border-dark-border py-1 z-50">
+            <div className="fixed right-0 mt-2 w-56 bg-light-background dark:bg-dark-background rounded-lg shadow-lg border border-light-border dark:border-dark-border py-1 z-10">
               {profileIconMenuItems.map((item, index) => (
                 <button
                   key={index}
@@ -93,7 +93,7 @@ const Navbar: React.FC<NavbarProps> = ({ links }) => {
                     item.action();
                     setIsOpen(false);
                   }}
-                  className="w-full flex items-center px-4 py-2.5 text-sm text-light-primary-text dark:text-dark-primary-text hover:bg-v-light-accent hover:dark:bg-v-dark-accent transition-colors"
+                  className="w-full flex items-center px-4 py-2.5 text-sm text-light-primary-text dark:text-dark-primary-text hover:bg-v-light-accent hover:dark:bg-v-dark-accent transition-colors z-10"
                 >
                   <item.icon className="w-4 h-4 mr-3" />
                   {item.label}

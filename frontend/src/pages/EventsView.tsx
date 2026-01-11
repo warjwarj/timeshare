@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, type ReactNode, useRef, useEffect } from 'react';
+import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 
 import { MonthGrid } from '../components/calendar/MonthGrid.tsx';
 import type { GridStyle } from '../components/calendar/MonthGrid.tsx';
@@ -7,10 +7,12 @@ import { DayGrid } from '../components/calendar/DayGrid';
 import { YearGrid } from '../components/calendar/YearGrid';
 import type { EventStyle } from '../components/calendar/Event';
 import { DateSelector } from "../components/DateSelector.tsx";
+import { CollapseButton } from "../components/CollapseButton.tsx";
 import { isValidDate } from '../utils/utils.ts';
 import { getMonthGridConfig, type MonthGridConfig } from '../utils/monthGridUtils.ts';
 import { ourUseDispatch, ourUseSelector } from '../store/hooks';
-import { selectCurrentDatetimeAsDate, selectSelectedDateAsDate, selectSelectedMonthAsDate, setSelectedDate, setSelectedMonth } from '../store/slices/appSlice';
+import { selectCurrentDatetimeAsDate, selectSelectedMonthAsDate, setSelectedMonth } from '../store/slices/appSlice';
+import { useLayoutContext } from '../utils/utils.ts';
 
 // event style for 
 const monthGridEventStyle: EventStyle = {
@@ -43,12 +45,9 @@ const gridStyle: GridStyle = {
   colCount: 7
 }
 
-type EventsViewProps = {
-  children: ReactNode;
-}
-
-const EventsView: React.FC<EventsViewProps> = ({ children }) => {
+const EventsView: React.FC = () => {
   const dispatch = ourUseDispatch();
+  const { isCollapsed, setIsCollapsed } = useLayoutContext();
   const weekdayNames = Object.values(WeekDayEnum)
 
   // memoised selectors
@@ -90,9 +89,11 @@ const EventsView: React.FC<EventsViewProps> = ({ children }) => {
       {/* View Mode Selector */}
       <div className="flex h-[5rem] gap-1 p-2 border-b border-light-border dark:border-dark-border">
 
-        {/* children rendered on the left of the header area. */}
+        {/* Collapse button on the left of the header area. */}
         <div className="flex justify-start border-light-border dark:border-dark-border">
-          {children}
+          <div className="h-16 w-16">
+            <CollapseButton collapsed={isCollapsed} setCollapsed={setIsCollapsed} />
+          </div>
         </div>
 
         {/* events view controls. */}
