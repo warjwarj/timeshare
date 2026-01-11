@@ -7,13 +7,12 @@ import { DayGrid } from '../components/calendar/DayGrid';
 import { YearGrid } from '../components/calendar/YearGrid';
 import type { EventStyle } from '../components/calendar/Event';
 import { DateSelector } from "../components/DateSelector.tsx";
-import { CollapseButton } from "../components/CollapseButton.tsx";
 import { isValidDate } from '../utils/utils.ts';
 import { getMonthGridConfig, type MonthGridConfig } from '../utils/monthGridUtils.ts';
 import { ourUseDispatch, ourUseSelector } from '../store/hooks';
 import { selectCurrentDatetimeAsDate, selectSelectedMonthAsDate, setSelectedMonth } from '../store/slices/appSlice';
-import { useLayoutContext } from '../utils/utils.ts';
 import { ViewHeader } from '../components/ViewHeader.tsx';
+import { ViewBody } from '../components/ViewBody.tsx';
 
 // event style for 
 const monthGridEventStyle: EventStyle = {
@@ -48,7 +47,6 @@ const gridStyle: GridStyle = {
 
 const EventsView: React.FC = () => {
   const dispatch = ourUseDispatch();
-  const { isCollapsed, setIsCollapsed, isPhone } = useLayoutContext();
   const weekdayNames = Object.values(WeekDayEnum)
 
   // memoised selectors
@@ -86,8 +84,7 @@ const EventsView: React.FC = () => {
   }, [dispatch, currentDate]);
 
   return (
-    <div id="EventsView" className="flex flex-col h-[calc(100dvh-5rem)]">
-
+    <ViewBody id={"EventsView"}>
       <ViewHeader>
         {/* events view controls. */}
         <div className="flex ml-auto border-light-border dark:border-dark-border">
@@ -158,7 +155,7 @@ const EventsView: React.FC = () => {
           </div>
         )}
       </div>}
-    </div>
+    </ViewBody>
   );
 }
 

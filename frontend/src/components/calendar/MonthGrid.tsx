@@ -14,19 +14,19 @@ import { Event } from './Event';
 import '../../../index.css';
 import { TimeSpanEnum } from "../../types/dateTypes";
 
-type GridStyle = {
+type MonthGridStyle = {
   eventStyle: EventStyle;
   cellStyle: CellStyle;
   colCount: number;
 }
 
-type GridProps = {
-  gridStyle: GridStyle;
+type MonthGridProps = {
+  gridStyle: MonthGridStyle;
   gridConfig: MonthGridConfig;
   colHeaders: string[];
 };
 
-const MonthGrid: React.FC<GridProps> = ({ gridStyle, gridConfig, colHeaders }) => {
+const MonthGrid: React.FC<MonthGridProps> = ({ gridStyle, gridConfig, colHeaders }) => {
   const { startDate, endDate, cellCount, gridLabel } = gridConfig;
   const { colCount, eventStyle, cellStyle } = gridStyle;
   const dispatch = ourUseDispatch();
@@ -199,5 +199,5 @@ const MonthGrid: React.FC<GridProps> = ({ gridStyle, gridConfig, colHeaders }) =
 };
 
 export { MonthGrid };
-export type { GridProps, GridStyle };
+export type { MonthGridProps as GridProps, MonthGridStyle as GridStyle };
 

@@ -9,9 +9,10 @@ import { Settings } from './pages/Settings';
 import { Navbar } from './components/Navbar';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { MainLayout } from './MainLayout';
+import { AvailabilityView } from './pages/AvailabilityView';
 
 const links = [
-  { name: 'Timeshare', path: '/home' },
+  { name: 'Timeshare', path: '/events' },
 ];
 
 function App() {
@@ -23,9 +24,13 @@ function App() {
         <Route path="/login" element={<LoginForm />} />
         <Route path="/register" element={<RegisterForm />} />
 
-        <Route element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
-          <Route path="/home" element={<EventsView />} />
-          <Route path="/availability" element={<div>Availability View (TODO)</div>} />
+        <Route element={
+          <ProtectedRoute>
+            <MainLayout />
+          </ProtectedRoute>
+        }>
+          <Route path="/events" element={<EventsView />} />
+          <Route path="/availability" element={<AvailabilityView />} />
           <Route path="/settings" element={<Settings />} />
         </Route>
 
