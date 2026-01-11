@@ -1,9 +1,4 @@
 from pydantic import BaseModel
-from typing import Annotated
-from typing import Optional
-from pydantic import StringConstraints
-from pydantic import BaseModel
-from dataclasses import dataclass
 
 class LoginResponse(BaseModel):
   """
