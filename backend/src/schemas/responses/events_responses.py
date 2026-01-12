@@ -11,7 +11,7 @@ class SafeEventDTO(BaseModel):
   Omits sensitive data.
 
   """
-  uuid: Optional[str]
+  uuid: str
   start: datetime
   end: datetime
   name: str

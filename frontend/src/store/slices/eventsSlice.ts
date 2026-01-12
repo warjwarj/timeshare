@@ -6,10 +6,10 @@ import axios, { HttpStatusCode } from 'axios';
 import { toastService } from '../../toastService';
 
 const getEvents = createAsyncThunk(
-  'events/getEvents',
+  'getEvents',
   async ({ start, end }: { start: string, end: string }, { signal, rejectWithValue }) => {
     try {
-      const res = await apiClient.get("/events/", {
+      const res = await apiClient.get("/events", {
         params: {
           start: start,
           end: end
@@ -38,11 +38,11 @@ const getEvents = createAsyncThunk(
 );
 
 const updateEvent = createAsyncThunk(
-  'events/update',
+  'updateEvent',
   async (modifiedEvent: EventDTO, { signal, rejectWithValue }) => {
     try {
-      const res = await apiClient.post(
-        "/events/update",
+      const res = await apiClient.put(
+        "/events",
         modifiedEvent,
         { signal, validateStatus: status => status < 500 }
       )
@@ -64,11 +64,11 @@ const updateEvent = createAsyncThunk(
 );
 
 const addEvent = createAsyncThunk(
-  'events/add',
+  'addEvent',
   async (newEvent: Omit<EventDTO, 'key' | 'uuid'>, { signal, rejectWithValue }) => {
     try {
       const res = await apiClient.post(
-        "/events/add",
+        "/events",
         newEvent,
         { signal, validateStatus: status => status < 500 }
       )
@@ -90,11 +90,11 @@ const addEvent = createAsyncThunk(
 );
 
 const deleteEvent = createAsyncThunk(
-  'events/delete',
+  'deleteEvent',
   async (uuid: string, { signal, rejectWithValue }) => {
     try {
       const res = await apiClient.delete(
-        `/events/delete/${uuid}`,
+        `/events/${uuid}`,
         { signal, validateStatus: status => status < 500 }
       )
       if (res.status !== HttpStatusCode.Ok) {

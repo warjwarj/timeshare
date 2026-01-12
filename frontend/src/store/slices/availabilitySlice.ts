@@ -6,10 +6,10 @@ import { toastService } from '../../toastService';
 import type { AvailabilityRuleDTO } from '../../types/AvailabilityRuleDTO';
 
 const getAvailabilityRules = createAsyncThunk(
-  'availability/',
+  'getAvailabilityRules',
   async (_, { signal, rejectWithValue }) => {
     try {
-      const res = await apiClient.get("/availability/", {
+      const res = await apiClient.get("/availability", {
         signal,
         validateStatus: status => status < 500,
       });
@@ -31,7 +31,7 @@ const getAvailabilityRules = createAsyncThunk(
 );
 
 const getAvailabilityRule = createAsyncThunk(
-  'availability/uuid',
+  'getAvailabilityRule',
   async (uuid: string, { signal, rejectWithValue }) => {
     try {
       const res = await apiClient.get(`/availability/${uuid}`, {
@@ -56,10 +56,10 @@ const getAvailabilityRule = createAsyncThunk(
 );
 
 const createAvailabilityRule = createAsyncThunk(
-  'availability/create',
+  'createAvailabilityRule',
   async (rule: AvailabilityRuleDTO, { signal, rejectWithValue }) => {
     try {
-      const res = await apiClient.post("/availability/create", rule, {
+      const res = await apiClient.post("/availability", rule, {
         signal,
         validateStatus: status => status < 500,
       });
@@ -81,10 +81,10 @@ const createAvailabilityRule = createAsyncThunk(
 );
 
 const updateAvailabilityRule = createAsyncThunk(
-  'availability/update',
+  'updateAvailabilityRule',
   async (rule: AvailabilityRuleDTO, { signal, rejectWithValue }) => {
     try {
-      const res = await apiClient.post("/availability/update", rule, {
+      const res = await apiClient.put("/availability", rule, {
         signal,
         validateStatus: status => status < 500,
       });
@@ -105,36 +105,11 @@ const updateAvailabilityRule = createAsyncThunk(
   }
 );
 
-const createMultipleAvailabilityRules = createAsyncThunk(
-  'availability/createMultiple',
-  async (rules: AvailabilityRuleDTO[], { signal, rejectWithValue }) => {
-    try {
-      const res = await apiClient.post("/availability/create-multiple", { rules }, {
-        signal,
-        validateStatus: status => status < 500,
-      });
-      if (res.status !== HttpStatusCode.Created) {
-        const errMsg = res.data?.["detail"]?.[0]?.["msg"] || "Unknown error";
-        toastService.showError("Couldn't create availability rules", errMsg);
-        return rejectWithValue(errMsg);
-      }
-      return res.data as AvailabilityRuleDTO[];
-    } catch (error) {
-      if (axios.isCancel(error)) {
-        return rejectWithValue('Request cancelled');
-      }
-      const err = error instanceof Error ? error.message : 'Unknown error';
-      toastService.showError("Couldn't create availability rules", err);
-      return rejectWithValue(err);
-    }
-  }
-);
-
 const deleteAvailabilityRule = createAsyncThunk(
-  'availability/delete',
+  'deleteAvailabilityRule',
   async (uuid: string, { signal, rejectWithValue }) => {
     try {
-      const res = await apiClient.delete(`/availability/delete/${uuid}`, {
+      const res = await apiClient.delete(`/availability/${uuid}`, {
         signal,
         validateStatus: status => status < 500,
       });
@@ -234,20 +209,6 @@ export const availabilitySlice = createSlice({
         }
       })
       .addCase(updateAvailabilityRule.rejected, (state, action) => {
-        state.pending = false;
-        state.error = action.payload as string;
-      })
-      // create multiple rules
-      .addCase(createMultipleAvailabilityRules.pending, (state) => {
-        state.pending = true;
-        state.error = null;
-      })
-      .addCase(createMultipleAvailabilityRules.fulfilled, (state, action) => {
-        state.pending = false;
-        if (!action.payload) return;
-        state.availabilityRules.push(...action.payload);
-      })
-      .addCase(createMultipleAvailabilityRules.rejected, (state, action) => {
         state.pending = false;
         state.error = action.payload as string;
       })

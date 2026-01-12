@@ -13,10 +13,12 @@ import { ourUseDispatch, ourUseSelector } from '../store/hooks.ts';
 import { Modal } from '../components/Modal.tsx';
 import { SaveButton } from '../components/SaveButton.tsx';
 import type { AvailabilityRuleDTO } from '../types/AvailabilityRuleDTO';
+import { WeekDayEnum } from '../types/dateTypes.ts';
 
-const WEEKDAY_NAMES = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+const WEEKDAY_NAMES = Object.values(WeekDayEnum).map(wd => wd.substring(0, 3));
 
 type AvailabilityRuleFormData = {
+  uuid?: string;
   name: string;
   prevents_booking: boolean;
   weekdays: number[];
@@ -129,11 +131,6 @@ const AvailabilityView: React.FC = () => {
       </ViewHeader>
 
       <div className="flex-1 overflow-y-auto p-4">
-        {pending && rules.length === 0 && (
-          <div className="text-center text-light-secondary-text dark:text-dark-secondary-text py-8">
-            Loading...
-          </div>
-        )}
 
         {!pending && rules.length === 0 && (
           <div className="text-center text-light-secondary-text dark:text-dark-secondary-text py-8">

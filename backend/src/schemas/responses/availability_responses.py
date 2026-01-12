@@ -11,6 +11,7 @@ class SafeAvailabilityRuleDTO:
   Omits sensitive data.
   
   """
+  uuid: str
   name: str
   prevents_booking: bool = None
   weekdays: Optional[list[int]] = None

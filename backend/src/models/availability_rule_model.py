@@ -66,6 +66,7 @@ class AvailabilityRuleModel(Base, TimestampMixin, UUIDMixin):
 
   def map_to_dto(self):
     return AvailabilityRuleDTO(
+      uuid=self.uuid,
       name=self.name,
       created_by_user_uuid=self.created_by_user_uuid,
       prevents_booking=self.prevents_booking,

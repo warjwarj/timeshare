@@ -93,7 +93,6 @@ def get_availability_rules(user_uuid: str) -> list[SafeAvailabilityRuleDTO]:
   availability_repo = AvailabilityRepository()
 
   rules = availability_repo.get_record(multiple=True, created_by_user_uuid=user_uuid)
-  print(rules)
 
   if rules:
     return sanitise_availability_rules(rules)

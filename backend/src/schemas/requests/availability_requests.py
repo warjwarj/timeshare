@@ -1,3 +1,4 @@
+from typing import Optional
 from pydantic import Field, field_validator, model_validator, BaseModel
 from datetime import datetime, time
 
@@ -91,8 +92,8 @@ class UpdateAvailabilityRuleRequest(BaseModel):
   @model_validator(mode='after')
   def validate_date_range(self) -> 'UpdateAvailabilityRuleRequest':
     """Ensure end_datetime is after start_datetime if both are provided"""
-    if self.start_datetimetime is not None and self.end_datetimetime is not None:
-      if self.end_datetimetime <= self.start_datetimetime:
+    if self.start_datetime is not None and self.end_datetime is not None:
+      if self.end_datetime <= self.start_datetime:
         raise ValueError('End date must be after start date')
     return self
 

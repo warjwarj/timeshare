@@ -11,6 +11,7 @@ class AvailabilityRuleDTO:
   DTO for communicating an availability rule.
   
   """
+  uuid: str
   name: str
   created_by_user_uuid: str
   prevents_booking: bool = None

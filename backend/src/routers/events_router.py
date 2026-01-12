@@ -31,26 +31,26 @@ async def all(jwt_payload: IsAuthedDep, start: datetime, end: datetime):
   """
   return get_all_events(jwt_payload["user_uuid"], start, end)
 
-@events_router.post("/create", status_code=HTTPStatus.CREATED)
+@events_router.post("/", status_code=HTTPStatus.CREATED)
 async def create(jwt_payload: IsAuthedDep, event: CreateEventRequest):
   """
   Create an event.
   """
   return create_event(jwt_payload["user_uuid"], event)
 
-@events_router.post("/add", status_code=HTTPStatus.CREATED)
-async def add(jwt_payload: IsAuthedDep, event: CreateEventRequest):
-  """
-  Add an event (alias for /create).
-  """
-  return create_event(jwt_payload["user_uuid"], event)
-
-@events_router.post("/update", status_code=HTTPStatus.OK)
+@events_router.put("/", status_code=HTTPStatus.OK)
 async def update(jwt_payload: IsAuthedDep, event: UpdateEventRequest):
   """
   Update an event.
   """
   return update_event(jwt_payload["user_uuid"], event)
+
+@events_router.delete("/{uuid}", status_code=HTTPStatus.OK)
+async def delete(uuid: str, jwt_payload: IsAuthedDep):
+  """
+  Delete an event.
+  """
+  return delete_event(uuid)
 
 @events_router.post("/create-multiple", status_code=HTTPStatus.CREATED)
 async def create(jwt_payload: IsAuthedDep, event: CreateMultipleEventsRequest):
@@ -58,10 +58,3 @@ async def create(jwt_payload: IsAuthedDep, event: CreateMultipleEventsRequest):
   Create multiple events
   """
   return create_multiple_events(jwt_payload["user_uuid"], event)
-
-@events_router.delete("/delete/{uuid}", status_code=HTTPStatus.OK)
-async def delete(uuid: str, jwt_payload: IsAuthedDep):
-  """
-  Delete an event.
-  """
-  return delete_event(uuid)
