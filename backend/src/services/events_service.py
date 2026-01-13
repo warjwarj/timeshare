@@ -49,14 +49,14 @@ def create_event(user_uuid: str, event: CreateEventRequest) -> SafeEventDTO:
   if rec is not None:
     return sanitiseEvent(rec)
 
-def update_event(user_uuid: str, event: UpdateEventRequest) -> SafeEventDTO:
+def update_event(uuid: str, event: UpdateEventRequest) -> SafeEventDTO:
   """
   Add an event
   """  
   events_repo = EventsRepository()
   
   rec = events_repo.update_record(
-    uuid=event.uuid,
+    uuid=uuid,
     start=event.start,
     end=event.end,
     name=event.name,

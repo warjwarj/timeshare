@@ -1,6 +1,6 @@
 
 from datetime import datetime, time
-from sqlalchemy import ARRAY, DateTime, Integer, String, Index, Text, Time
+from sqlalchemy import ARRAY, Boolean, DateTime, Integer, String, Index, Text, Time
 from sqlalchemy.ext.declarative import declarative_base
 from src.schemas.dtos.availability_rule_dto import AvailabilityRuleDTO
 from src.schemas.dtos.user_dto import UserDTO
@@ -32,7 +32,7 @@ class AvailabilityRuleModel(Base, TimestampMixin, UUIDMixin):
     comment="the uuid of the user that created this rule."
   )
   prevents_booking: Mapped[bool] = mapped_column(
-    String(255),
+    Boolean,
     index=True,
     nullable=False,
     comment="Whether the rule prevents booking. if false, then it allows booking."

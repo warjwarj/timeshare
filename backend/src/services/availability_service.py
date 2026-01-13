@@ -51,15 +51,39 @@ def create_availability_rule(user_uuid: str, rule: CreateAvailabilityRuleRequest
   )
   if rec is not None:
     return sanitise_availability_rule(rec)
+  
+def get_availability_rules(user_uuid: str) -> list[SafeAvailabilityRuleDTO]:
+  """
+  Get all availability rules for a user
+  """
+  availability_repo = AvailabilityRepository()
 
-def update_availability_rule(user_uuid: str, rule: UpdateAvailabilityRuleRequest) -> SafeAvailabilityRuleDTO:
+  rules = availability_repo.get_record(multiple=True, created_by_user_uuid=user_uuid)
+
+  if rules:
+    return sanitise_availability_rules(rules)
+  return []
+
+def get_availability_rule(uuid: str) -> SafeAvailabilityRuleDTO | None:
+  """
+  Get a single availability rule by uuid
+  """
+  availability_repo = AvailabilityRepository()
+
+  rule = availability_repo.get_record(uuid=uuid)
+
+  if rule:
+    return sanitise_availability_rule(rule)
+  return None
+
+def update_availability_rule(uuid: str, rule: UpdateAvailabilityRuleRequest) -> SafeAvailabilityRuleDTO:
   """
   Update an availability rule
   """
   availability_repo = AvailabilityRepository()
 
   rec = availability_repo.update_record(
-    uuid=rule.uuid,
+    uuid=uuid,
     name=rule.name,
     prevents_booking=rule.prevents_booking,
     weekdays=rule.weekdays,
@@ -70,6 +94,16 @@ def update_availability_rule(user_uuid: str, rule: UpdateAvailabilityRuleRequest
   )
   if rec is not None:
     return sanitise_availability_rule(rec)
+
+def delete_availability_rule(uuid: str) -> dict:
+  """
+  Delete an availability rule
+  """
+  availability_repo = AvailabilityRepository()
+  
+  availability_repo.delete_record(uuid)
+  return {"success": True}
+
 
 def create_multiple_availability_rules(user_uuid: str, req: CreateMultipleAvailabilityRulesRequest) -> list[SafeAvailabilityRuleDTO]:
   """
@@ -85,35 +119,3 @@ def create_multiple_availability_rules(user_uuid: str, req: CreateMultipleAvaila
   rules = availability_repo.add_multiple_records(models)
   if rules:
     return sanitise_availability_rules(rules)
-
-def get_availability_rules(user_uuid: str) -> list[SafeAvailabilityRuleDTO]:
-  """
-  Get all availability rules for a user
-  """
-  availability_repo = AvailabilityRepository()
-
-  rules = availability_repo.get_record(multiple=True, created_by_user_uuid=user_uuid)
-
-  if rules:
-    return sanitise_availability_rules(rules)
-  return []
-
-def get_availability_rule(rule_uuid: str) -> SafeAvailabilityRuleDTO | None:
-  """
-  Get a single availability rule by uuid
-  """
-  availability_repo = AvailabilityRepository()
-
-  rule = availability_repo.get_record(uuid=rule_uuid)
-
-  if rule:
-    return sanitise_availability_rule(rule)
-  return None
-
-def delete_availability_rule(rule_uuid: str) -> dict:
-  """
-  Delete an availability rule
-  """
-  availability_repo = AvailabilityRepository()
-  availability_repo.delete_record(rule_uuid)
-  return {"success": True}

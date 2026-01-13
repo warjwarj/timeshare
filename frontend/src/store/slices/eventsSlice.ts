@@ -9,7 +9,7 @@ const getEvents = createAsyncThunk(
   'getEvents',
   async ({ start, end }: { start: string, end: string }, { signal, rejectWithValue }) => {
     try {
-      const res = await apiClient.get("/events", {
+      const res = await apiClient.get("/events/", {
         params: {
           start: start,
           end: end
@@ -42,7 +42,7 @@ const updateEvent = createAsyncThunk(
   async (modifiedEvent: EventDTO, { signal, rejectWithValue }) => {
     try {
       const res = await apiClient.put(
-        "/events",
+        `/events/${modifiedEvent.uuid}`,
         modifiedEvent,
         { signal, validateStatus: status => status < 500 }
       )

@@ -4,7 +4,6 @@ import { ViewHeader } from '../components/ViewHeader.tsx';
 import {
   getAvailabilityRules,
   selectAvailabilityRules,
-  selectAvailabilityPending,
   createAvailabilityRule,
   updateAvailabilityRule,
   deleteAvailabilityRule
@@ -14,6 +13,7 @@ import { Modal } from '../components/Modal.tsx';
 import { SaveButton } from '../components/SaveButton.tsx';
 import type { AvailabilityRuleDTO } from '../types/AvailabilityRuleDTO';
 import { WeekDayEnum } from '../types/dateTypes.ts';
+import { toastService } from '../toastService.ts';
 
 const WEEKDAY_NAMES = Object.values(WeekDayEnum).map(wd => wd.substring(0, 3));
 
@@ -41,7 +41,6 @@ const emptyFormData: AvailabilityRuleFormData = {
 const AvailabilityView: React.FC = () => {
   const dispatch = ourUseDispatch();
   const rules = ourUseSelector(selectAvailabilityRules);
-  const pending = ourUseSelector(selectAvailabilityPending);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingRule, setEditingRule] = useState<AvailabilityRuleDTO | null>(null);
@@ -57,6 +56,10 @@ const AvailabilityView: React.FC = () => {
     setFormData(emptyFormData);
     setIsModalOpen(true);
   };
+
+  useEffect(() => {
+    console.log(formData)
+  }, [formData])
 
   const openEditModal = (rule: AvailabilityRuleDTO) => {
     setEditingRule(rule);
@@ -80,8 +83,11 @@ const AvailabilityView: React.FC = () => {
 
   const handleSave = async () => {
     if (!formData.name.trim()) {
-      return;
+      toastService.showError("Invalid input", "Rule name must not be empty.")
+      return
     }
+
+    console.log(formData)
 
     const ruleData: AvailabilityRuleDTO = {
       name: formData.name,
@@ -120,6 +126,7 @@ const AvailabilityView: React.FC = () => {
   return (
     <ViewBody id={"AvailabilityView"}>
       <ViewHeader>
+        {/* Add button */}
         <div className="flex ml-auto items-center">
           <button
             onClick={openCreateModal}
@@ -132,68 +139,71 @@ const AvailabilityView: React.FC = () => {
 
       <div className="flex-1 overflow-y-auto p-4">
 
-        {!pending && rules.length === 0 && (
+        {rules.length === 0 && (
           <div className="text-center text-light-secondary-text dark:text-dark-secondary-text py-8">
             No availability rules yet. Click "Add Rule" to create one.
           </div>
         )}
 
+        {/* Existing rules. sort by allows/prevents */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {rules.map(rule => (
-            <div
-              key={rule.uuid}
-              className="p-4 bg-light-background dark:bg-dark-background border border-light-border dark:border-dark-border rounded-lg"
-            >
-              <div className="flex justify-between items-start mb-3">
-                <h3 className="font-semibold text-light-primary-text dark:text-dark-primary-text">
-                  {rule.name}
-                </h3>
-                <span className={`px-2 py-1 text-xs rounded-full ${
-                  rule.prevents_booking
-                    ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-                    : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                }`}>
-                  {rule.prevents_booking ? 'Blocks' : 'Allows'}
-                </span>
+          {rules
+            .filter((rule): rule is AvailabilityRuleFormData & { uuid: string } => !!rule.uuid)
+            .sort(rule => rule.prevents_booking ? -1 : 1)
+            .map(rule => (
+              <div
+                key={rule.uuid}
+                className="p-4 bg-light-background dark:bg-dark-background border border-light-border dark:border-dark-border rounded-lg"
+              >
+                <div className="flex justify-between items-start mb-3">
+                  <h3 className="font-semibold text-light-primary-text dark:text-dark-primary-text">
+                    {rule.name}
+                  </h3>
+                  <span className={`px-2 py-1 text-xs rounded-full ${rule.prevents_booking
+                      ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                      : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                    }`}>
+                    {rule.prevents_booking ? 'Prevents' : 'Allows'}
+                  </span>
+                </div>
+
+                {rule.weekdays && rule.weekdays.length > 0 && (
+                  <div className="mb-2 text-sm text-light-secondary-text dark:text-dark-secondary-text">
+                    <span className="font-medium">Days: </span>
+                    {rule.weekdays.map(d => WEEKDAY_NAMES[d]).join(', ')}
+                  </div>
+                )}
+
+                {(rule.start_time || rule.end_time) && (
+                  <div className="mb-2 text-sm text-light-secondary-text dark:text-dark-secondary-text">
+                    <span className="font-medium">Time: </span>
+                    {rule.start_time || '00:00'} - {rule.end_time || '23:59'}
+                  </div>
+                )}
+
+                {(rule.start_date || rule.end_date) && (
+                  <div className="mb-2 text-sm text-light-secondary-text dark:text-dark-secondary-text">
+                    <span className="font-medium">Dates: </span>
+                    {rule.start_date?.split('T')[0] || 'Start'} to {rule.end_date?.split('T')[0] || 'End'}
+                  </div>
+                )}
+
+                <div className="flex gap-2 mt-4">
+                  <button
+                    onClick={() => openEditModal(rule)}
+                    className="px-3 py-1 text-sm bg-light-accent dark:bg-dark-accent text-light-primary-text dark:text-dark-primary-text rounded hover:opacity-80 transition-opacity"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDelete(rule.uuid)}
+                    className="px-3 py-1 text-sm bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+                  >
+                    Delete
+                  </button>
+                </div>
               </div>
-
-              {rule.weekdays && rule.weekdays.length > 0 && (
-                <div className="mb-2 text-sm text-light-secondary-text dark:text-dark-secondary-text">
-                  <span className="font-medium">Days: </span>
-                  {rule.weekdays.map(d => WEEKDAY_NAMES[d]).join(', ')}
-                </div>
-              )}
-
-              {(rule.start_time || rule.end_time) && (
-                <div className="mb-2 text-sm text-light-secondary-text dark:text-dark-secondary-text">
-                  <span className="font-medium">Time: </span>
-                  {rule.start_time || '00:00'} - {rule.end_time || '23:59'}
-                </div>
-              )}
-
-              {(rule.start_date || rule.end_date) && (
-                <div className="mb-2 text-sm text-light-secondary-text dark:text-dark-secondary-text">
-                  <span className="font-medium">Dates: </span>
-                  {rule.start_date?.split('T')[0] || 'Start'} to {rule.end_date?.split('T')[0] || 'End'}
-                </div>
-              )}
-
-              <div className="flex gap-2 mt-4">
-                <button
-                  onClick={() => openEditModal(rule)}
-                  className="px-3 py-1 text-sm bg-light-accent dark:bg-dark-accent text-light-primary-text dark:text-dark-primary-text rounded hover:opacity-80 transition-opacity"
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={() => handleDelete(rule.uuid)}
-                  className="px-3 py-1 text-sm bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
-                >
-                  Delete
-                </button>
-              </div>
-            </div>
-          ))}
+            ))}
         </div>
       </div>
 
@@ -221,32 +231,17 @@ const AvailabilityView: React.FC = () => {
           {/* Prevents Booking Toggle */}
           <div>
             <label className={labelClass}>Rule Type</label>
-            <div className="flex gap-4">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="radio"
-                  name="prevents_booking"
-                  checked={formData.prevents_booking}
-                  onChange={() => setFormData(prev => ({ ...prev, prevents_booking: true }))}
-                  className="w-4 h-4"
-                />
-                <span className="text-sm text-light-primary-text dark:text-dark-primary-text">
-                  Blocks booking
-                </span>
-              </label>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="radio"
-                  name="prevents_booking"
-                  checked={!formData.prevents_booking}
-                  onChange={() => setFormData(prev => ({ ...prev, prevents_booking: false }))}
-                  className="w-4 h-4"
-                />
-                <span className="text-sm text-light-primary-text dark:text-dark-primary-text">
-                  Allows booking
-                </span>
-              </label>
-            </div>
+            <label className="inline-flex items-center cursor-pointer">
+              <span className="select-none me-3 text-sm text-light-secondary-text dark:text-dark-secondary-text">Allows</span>
+              <input
+                type="checkbox"
+                checked={formData.prevents_booking}
+                onChange={(e) => setFormData(prev => ({ ...prev, prevents_booking: e.target.checked }))}
+                className="sr-only peer"
+              />
+              <div className="relative w-11 h-6 bg-green-500 rounded-full peer peer-checked:bg-red-500 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:start-0.5 after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all"></div>
+              <span className="select-none ms-3 text-sm text-light-secondary-text dark:text-dark-secondary-text">Blocks</span>
+            </label>
           </div>
 
           {/* Weekdays */}
@@ -258,11 +253,10 @@ const AvailabilityView: React.FC = () => {
                   key={index}
                   type="button"
                   onClick={() => toggleWeekday(index)}
-                  className={`px-3 py-1 text-sm rounded-full border transition-colors ${
-                    formData.weekdays.includes(index)
+                  className={`px-3 py-1 text-sm rounded-full border transition-colors ${formData.weekdays.includes(index)
                       ? 'bg-blue-600 text-white border-blue-600'
                       : 'bg-transparent text-light-primary-text dark:text-dark-primary-text border-light-border dark:border-dark-border hover:bg-light-accent dark:hover:bg-dark-accent'
-                  }`}
+                    }`}
                 >
                   {name}
                 </button>

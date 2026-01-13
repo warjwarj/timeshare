@@ -54,7 +54,6 @@ class UpdateAvailabilityRuleRequest(BaseModel):
   """
   Request schema for updating an availability rule
   """
-  uuid: str
   name: str = Field(min_length=1, max_length=255)
   prevents_booking: bool
   weekdays: list[int] | None = Field(default=None)

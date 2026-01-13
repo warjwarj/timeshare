@@ -37,7 +37,6 @@ class UpdateEventRequest(BaseModel):
   """
   Request schema for adding an event
   """
-  uuid: str
   start: datetime
   end: datetime
   name: str = Field(min_length=1, max_length=100)

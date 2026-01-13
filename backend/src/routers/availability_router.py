@@ -46,12 +46,12 @@ async def create(jwt_payload: IsAuthedDep, rule: CreateAvailabilityRuleRequest):
   """
   return create_availability_rule(jwt_payload["user_uuid"], rule)
 
-@availability_router.put("/", status_code=HTTPStatus.OK)
-async def update(jwt_payload: IsAuthedDep, rule: UpdateAvailabilityRuleRequest):
+@availability_router.put("/{uuid}", status_code=HTTPStatus.OK)
+async def update(uuid: str, jwt_payload: IsAuthedDep, rule: UpdateAvailabilityRuleRequest):
   """
   Update an availability rule.
   """
-  return update_availability_rule(jwt_payload["user_uuid"], rule)
+  return update_availability_rule(uuid, rule)
 
 @availability_router.delete("/{uuid}", status_code=HTTPStatus.OK)
 async def delete(uuid: str, jwt_payload: IsAuthedDep):

@@ -84,9 +84,11 @@ const updateAvailabilityRule = createAsyncThunk(
   'updateAvailabilityRule',
   async (rule: AvailabilityRuleDTO, { signal, rejectWithValue }) => {
     try {
-      const res = await apiClient.put("/availability", rule, {
-        signal,
-        validateStatus: status => status < 500,
+      const res = await apiClient.put(
+        `/availability/${rule.uuid}`, 
+        rule, {
+          signal,
+          validateStatus: status => status < 500,
       });
       if (res.status !== HttpStatusCode.Ok) {
         const errMsg = res.data?.["detail"]?.[0]?.["msg"] || "Unknown error";
@@ -240,7 +242,6 @@ export {
   getAvailabilityRule,
   createAvailabilityRule,
   updateAvailabilityRule,
-  createMultipleAvailabilityRules,
   deleteAvailabilityRule
 };
 

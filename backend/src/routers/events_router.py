@@ -29,21 +29,23 @@ async def all(jwt_payload: IsAuthedDep, start: datetime, end: datetime):
   """
   Get all events visible to user.
   """
-  return get_all_events(jwt_payload["user_uuid"], start, end)
+  user_uuid = jwt_payload["user_uuid"]
+  return get_all_events(user_uuid, start, end)
 
 @events_router.post("/", status_code=HTTPStatus.CREATED)
 async def create(jwt_payload: IsAuthedDep, event: CreateEventRequest):
   """
   Create an event.
   """
-  return create_event(jwt_payload["user_uuid"], event)
+  user_uuid = jwt_payload["user_uuid"]
+  return create_event(user_uuid, event)
 
-@events_router.put("/", status_code=HTTPStatus.OK)
-async def update(jwt_payload: IsAuthedDep, event: UpdateEventRequest):
+@events_router.put("/{uuid}", status_code=HTTPStatus.OK)
+async def update(uuid: str, jwt_payload: IsAuthedDep, event: UpdateEventRequest):
   """
   Update an event.
   """
-  return update_event(jwt_payload["user_uuid"], event)
+  return update_event(uuid, event)
 
 @events_router.delete("/{uuid}", status_code=HTTPStatus.OK)
 async def delete(uuid: str, jwt_payload: IsAuthedDep):
