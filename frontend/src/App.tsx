@@ -3,16 +3,17 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { NotFound } from './pages/NotFound'
 import { LoginForm } from './pages/Login';
 import { RegisterForm } from './pages/Register';
-import { EventsView } from './pages/EventsView';
+import { CalendarView } from './pages/CalendarView';
 import { Settings } from './pages/Settings';
 
 import { Navbar } from './components/Navbar';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { MainLayout } from './MainLayout';
 import { AvailabilityView } from './pages/AvailabilityView';
+import { EventsView } from './pages/EventsView';
 
 const links = [
-  { name: 'Timeshare', path: '/events' },
+  { name: 'Timeshare', path: '/calendar' },
 ];
 
 function App() {
@@ -20,7 +21,7 @@ function App() {
     <>
       <Navbar links={links} />
       <Routes>
-        <Route path="/" element={<Navigate to="/home"/>} />
+        <Route path="/" element={<Navigate to="/calendar"/>} />
         <Route path="/login" element={<LoginForm />} />
         <Route path="/register" element={<RegisterForm />} />
 
@@ -29,6 +30,7 @@ function App() {
             <MainLayout />
           </ProtectedRoute>
         }>
+          <Route path="/calendar" element={<CalendarView />} />
           <Route path="/events" element={<EventsView />} />
           <Route path="/availability" element={<AvailabilityView />} />
           <Route path="/settings" element={<Settings />} />

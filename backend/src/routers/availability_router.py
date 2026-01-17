@@ -33,37 +33,38 @@ logger = logging.getLogger(__name__)
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 @availability_router.get("/", status_code=HTTPStatus.OK)
-async def all(jwt_payload: IsAuthedDep):
+async def all(jwt: IsAuthedDep):
   """
   Get all availability rules for the user.
   """
-  return get_availability_rules(jwt_payload["user_uuid"])
+  return get_availability_rules(jwt["user_uuid"])
 
 @availability_router.post("/", status_code=HTTPStatus.CREATED)
-async def create(jwt_payload: IsAuthedDep, rule: CreateAvailabilityRuleRequest):
+async def create(jwt: IsAuthedDep, rule: CreateAvailabilityRuleRequest):
   """
   Create an availability rule.
   """
-  return create_availability_rule(jwt_payload["user_uuid"], rule)
+  return create_availability_rule(jwt["user_uuid"], rule)
 
 @availability_router.put("/{uuid}", status_code=HTTPStatus.OK)
-async def update(uuid: str, jwt_payload: IsAuthedDep, rule: UpdateAvailabilityRuleRequest):
+async def update(_: IsAuthedDep, uuid: str, rule: UpdateAvailabilityRuleRequest):
   """
   Update an availability rule.
   """
+  print(rule)
   return update_availability_rule(uuid, rule)
 
 @availability_router.delete("/{uuid}", status_code=HTTPStatus.OK)
-async def delete(uuid: str, jwt_payload: IsAuthedDep):
+async def delete( _: IsAuthedDep, uuid: str):
   """
   Delete an availability rule.
   """
   return delete_availability_rule(uuid)
 
 @availability_router.post("/create-multiple", status_code=HTTPStatus.CREATED)
-async def create_multiple(jwt_payload: IsAuthedDep, rules: CreateMultipleAvailabilityRulesRequest):
+async def create_multiple(jwt: IsAuthedDep, rules: CreateMultipleAvailabilityRulesRequest):
   """
   Create multiple availability rules.
   """
-  return create_multiple_availability_rules(jwt_payload["user_uuid"], rules)
+  return create_multiple_availability_rules(jwt["user_uuid"], rules)
 

@@ -4,10 +4,10 @@ import { createPortal } from 'react-dom';
 
 // components
 import { Modal } from '../Modal';
-import { AddEventModalContent } from './AddEventModalContent';
+import { AddEventModalContent } from '../events/AddEventModalContent';
 
 // types
-import type { EventProps } from './Event';
+import type { EventProps } from '../events/Event';
 import type { EventDTO } from '../../types/EventDTO';
 
 // css

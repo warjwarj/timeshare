@@ -7,7 +7,7 @@ import { Modal } from '../Modal';
 import { CellInfoModalContent } from './CellInfoModalContent';
 
 // types
-import type { EventProps } from './Event';
+import type { EventProps } from '../events/Event';
 import type { EventDTO } from '../../types/EventDTO';
 
 // css

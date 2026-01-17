@@ -12,6 +12,7 @@ type MainLayoutContext = {
 };
 
 const sidebarLinks: SidebarLink[] = [
+  { label: "Calendar", path: "/calendar" },
   { label: "Events", path: "/events" },
   { label: "Availability", path: "/availability" },
   { label: "Settings", path: "/settings" },

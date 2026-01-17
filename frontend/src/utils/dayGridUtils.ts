@@ -1,6 +1,6 @@
 import { TimeSpanEnum, type TimeSpan } from "../types/dateTypes";
 import type { EventDTO } from "../types/EventDTO";
-import type { EventProps, EventStyle } from "../components/calendar/Event";
+import type { EventProps, EventStyle } from "../components/events/Event";
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -8,8 +8,8 @@ import {
   calculateTotalSlots,
   type DayGridConfig
 } from "../../utils/dayGridUtils";
-import type { EventProps, EventStyle } from "./Event";
-import { Event } from './Event';
+import type { EventProps, EventStyle } from "../events/Event";
+import { Event } from '../events/Event';
 import { ChevronLeft, ChevronRight } from '../svgs/Chevrons';
 
 import { ourUseDispatch, ourUseSelector } from '../../store/hooks';

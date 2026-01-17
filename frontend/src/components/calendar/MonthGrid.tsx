@@ -8,8 +8,8 @@ import { getDateFromCellIndex, isSameDay, isValidDate } from "../../utils/utils"
 import { ChevronLeft, ChevronRight } from '../svgs/Chevrons';
 import type { CellStyle } from "./Cell";
 import { Cell } from "./Cell";
-import type { EventProps, EventStyle } from "./Event";
-import { Event } from './Event';
+import type { EventProps, EventStyle } from "../events/Event";
+import { Event } from '../events/Event';
 
 import '../../../index.css';
 import { TimeSpanEnum } from "../../types/dateTypes";
