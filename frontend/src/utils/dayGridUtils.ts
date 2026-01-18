@@ -1,3 +1,4 @@
+import { TZDate } from "@date-fns/tz";
 import { TimeSpanEnum, type TimeSpan } from "../types/dateTypes";
 import type { EventDTO } from "../types/EventDTO";
 import type { EventProps, EventStyle } from "../components/events/Event";
@@ -11,7 +12,7 @@ import type { EventProps, EventStyle } from "../components/events/Event";
 
 // Configuration for the day grid
 interface DayGridConfig {
-  selectedDate: Date;              // The day being displayed
+  selectedDate: TZDate;            // The day being displayed
   timeStart: number;       // Start hour (e.g., 8 for 8:00 AM)
   timeEnd: number;         // End hour (e.g., 18 for 6:00 PM)
   timeStep: TimeSpan;      // Granularity (Hour, Mins30, etc.)
@@ -42,16 +43,15 @@ function getTimeSpanInMinutes(timeSpan: TimeSpan): number {
 }
 
 // Get minutes since midnight for a given date
-function getMinutesSinceMidnight(dt: Date): number {
+function getMinutesSinceMidnight(dt: TZDate): number {
   return dt.getHours() * 60 + dt.getMinutes();
 }
 
 // Filter events that overlap with the given day
-function filterEventsForDay(events: EventDTO[], date: Date): EventDTO[] {
-  const dayStart = new Date(date);
-  dayStart.setHours(0, 0, 0, 0);
-  const dayEnd = new Date(date);
-  dayEnd.setHours(23, 59, 59, 999);
+function filterEventsForDay(events: EventDTO[], date: TZDate): EventDTO[] {
+  const tz = date.timeZone;
+  const dayStart = new TZDate(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0, 0, tz);
+  const dayEnd = new TZDate(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59, 999, tz);
 
   return events.filter(ev => {
     // Event overlaps with day if: event.start < dayEnd AND event.end > dayStart
@@ -60,14 +60,22 @@ function filterEventsForDay(events: EventDTO[], date: Date): EventDTO[] {
 }
 
 // Snap a time to the nearest step
-function snapTimeToStep(time: Date, step: TimeSpan): Date {
+function snapTimeToStep(time: TZDate, step: TimeSpan): TZDate {
+  const tz = time.timeZone;
   const stepMinutes = getTimeSpanInMinutes(step);
   const minutes = getMinutesSinceMidnight(time);
   const snappedMinutes = Math.round(minutes / stepMinutes) * stepMinutes;
 
-  const result = new Date(time);
-  result.setHours(Math.floor(snappedMinutes / 60), snappedMinutes % 60, 0, 0);
-  return result;
+  return new TZDate(
+    time.getFullYear(),
+    time.getMonth(),
+    time.getDate(),
+    Math.floor(snappedMinutes / 60),
+    snappedMinutes % 60,
+    0,
+    0,
+    tz
+  );
 }
 
 // Check if two events overlap in time
@@ -137,7 +145,7 @@ function assignColumns(group: OverlapGroup): void {
   });
 
   // Track which time ranges each column covers
-  const columnEndTimes: Date[] = [];
+  const columnEndTimes: TZDate[] = [];
 
   for (const event of sortedEvents) {
     // Find first column where this event fits (no overlap)
@@ -175,10 +183,9 @@ function setDayEventPositions(
   if (dayEvents.length === 0) return [];
 
   // Calculate time boundaries
-  const dayStart = new Date(selectedDate);
-  dayStart.setHours(timeStart, 0, 0, 0);
-  const dayEnd = new Date(selectedDate);
-  dayEnd.setHours(timeEnd, 0, 0, 0);
+  const tz = selectedDate.timeZone;
+  const dayStart = new TZDate(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate(), timeStart, 0, 0, 0, tz);
+  const dayEnd = new TZDate(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate(), timeEnd, 0, 0, 0, tz);
   const totalMinutes = (timeEnd - timeStart) * 60;
 
   // Find overlap groups

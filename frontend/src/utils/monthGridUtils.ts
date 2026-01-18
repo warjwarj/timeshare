@@ -1,11 +1,11 @@
-
+import { TZDate } from "@date-fns/tz";
 import type { EventProps, EventStyle } from "../components/events/Event";
 import { MonthEnum, TimeSpanEnum, type TimeSpan } from "../types/dateTypes";
 import type { EventDTO } from "../types/EventDTO";
 import { getPreviousMonday } from "./utils";
 
 // get cell index from the date (1-based to match Grid cell numbering)
-function getCellIndexFromDate(cellStep: TimeSpan, gridStart: Date, dt: Date): number {
+function getCellIndexFromDate(cellStep: TimeSpan, gridStart: TZDate, dt: TZDate): number {
   const diffMs = dt.getTime() - gridStart.getTime();
   const msPerMinute = 60 * 1000;
   const msPerHour = 60 * msPerMinute;
@@ -41,7 +41,7 @@ export function setEventPositions(
   evDtos: EventDTO[],
   cellLaneEvents: Map<number, Map<number, string>>,
   gridRowWidth: number,
-  start: Date,
+  start: TZDate,
   cellCount: number,
   colCount: number,
   defaultEventStyle: EventStyle
@@ -152,8 +152,8 @@ export function setEventPositions(
 }
 
 export type MonthGridConfig = {
-  startDate: Date;
-  endDate: Date;
+  startDate: TZDate;
+  endDate: TZDate;
   cellCount: number;
   gridLabel: string;
 };
@@ -165,20 +165,21 @@ const monthNames = Object.values(MonthEnum)
  * The grid starts on the Monday before (or on) the 1st of the month
  * and ends on the Sunday after (or on) the last day of the month.
  */
-export function getMonthGridConfig(date: Date, prevCfg: MonthGridConfig | null): MonthGridConfig | null {
+export function getMonthGridConfig(date: TZDate, prevCfg: MonthGridConfig | null): MonthGridConfig | null {
 
   // no need to rerender if the selected date is already within the grid.
   if (prevCfg != null && date >= prevCfg.startDate && date <= prevCfg.endDate) {
     return prevCfg;
   }
 
+  const tz = date.timeZone;
   const year = date.getFullYear();
   const month = date.getMonth();
 
   // First day of the month
-  const firstOfMonth = new Date(year, month, 1);
+  const firstOfMonth = new TZDate(year, month, 1, tz);
   // Last day of the month
-  const lastOfMonth = new Date(year, month + 1, 0);
+  const lastOfMonth = new TZDate(year, month + 1, 0, tz);
 
   // Grid starts on Monday before (or on) the 1st
   const startDate = getPreviousMonday(firstOfMonth);
@@ -186,8 +187,12 @@ export function getMonthGridConfig(date: Date, prevCfg: MonthGridConfig | null):
   // Grid ends on Sunday after (or on) the last day
   const lastDayOfWeek = lastOfMonth.getDay();
   const daysUntilSunday = lastDayOfWeek === 0 ? 0 : 7 - lastDayOfWeek;
-  const endDate = new Date(lastOfMonth);
-  endDate.setDate(lastOfMonth.getDate() + daysUntilSunday);
+  const endDate = new TZDate(
+    lastOfMonth.getFullYear(),
+    lastOfMonth.getMonth(),
+    lastOfMonth.getDate() + daysUntilSunday,
+    tz
+  );
 
   // Calculate cell count (number of days between start and end, inclusive)
   const msPerDay = 24 * 60 * 60 * 1000;

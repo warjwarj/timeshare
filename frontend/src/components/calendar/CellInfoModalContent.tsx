@@ -9,23 +9,22 @@ import { AddEventModalContent } from '../events/AddEventModalContent';
 // types
 import type { EventProps } from '../events/Event';
 import type { EventDTO } from '../../types/EventDTO';
+import { TZDate } from '@date-fns/tz';
 
 // css
 import '../../../index.css';
 
 type CellInfoModalContentProps = {
   eventsInCell: EventProps[];
-  cellDate: Date;
+  cellDate: TZDate;
   onAddEvent: (newEvent: Omit<EventDTO, 'key' | 'uuid'>) => void;
 };
 const CellInfoModalContent: React.FC<CellInfoModalContentProps> = ({ eventsInCell, cellDate, onAddEvent }) => {
   const [showAddEventModal, setShowAddEventModal] = useState(false);
 
-  const defaultStart = new Date(cellDate);
-  defaultStart.setHours(9, 0, 0, 0);
-
-  const defaultEnd = new Date(cellDate);
-  defaultEnd.setHours(10, 0, 0, 0);
+  const tz = cellDate.timeZone;
+  const defaultStart = new TZDate(cellDate.getFullYear(), cellDate.getMonth(), cellDate.getDate(), 9, 0, 0, 0, tz);
+  const defaultEnd = new TZDate(cellDate.getFullYear(), cellDate.getMonth(), cellDate.getDate(), 10, 0, 0, 0, tz);
 
   return (
     <>

@@ -4,6 +4,7 @@ import type { PayloadAction } from '@reduxjs/toolkit'
 import { apiClient } from "../../utils/apiClient";
 import axios, { HttpStatusCode } from 'axios';
 import { toastService } from '../../toastService';
+import { TZDate } from '@date-fns/tz';
 
 const getCurrentDate = createAsyncThunk(
   'common/current-datetime',
@@ -34,7 +35,7 @@ const getCurrentDate = createAsyncThunk(
 );
 
 interface AppState {
-  IanaTimezone: string
+  ianaTimezone: string
   currentDatetime: string
   selectedDate: string
   selectedMonth: string
@@ -43,7 +44,8 @@ interface AppState {
 export const appSlice = createSlice({
   name: "app",
   initialState: {
-    IanaTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+    ianaTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+    // ianaTimezone: "America/Los_Angeles"
   } as AppState,
   reducers: {
     setSelectedMonth: (state, action: PayloadAction<{ monthIsoStr: string }>) => {
@@ -68,21 +70,22 @@ export const appSlice = createSlice({
 export const selectCurrentDatetime = (state: { app: AppState }) => state.app.currentDatetime
 export const selectSelectedDate = (state: { app: AppState }) => state.app.selectedDate
 export const selectSelectedMonth = (state: { app: AppState }) => state.app.selectedMonth
+export const selectSelectedIanaTimezone = (state: { app: AppState }) => state.app.ianaTimezone
 
 // selectors
-export const selectCurrentDatetimeAsDate = createSelector(
-  [selectCurrentDatetime],
-  (currentDatetime) => new Date(currentDatetime)
+export const selectCurrentDatetimeAsTzDate = createSelector(
+  [selectCurrentDatetime, selectSelectedIanaTimezone],
+  (currentDatetime, ianaTimezone) => new TZDate(currentDatetime, ianaTimezone)
 )
 
-export const selectSelectedDateAsDate = createSelector(
-  [selectSelectedDate],
-  (selectedDate) => new Date(selectedDate)
+export const selectSelectedDateAsTzDate = createSelector(
+  [selectSelectedDate, selectSelectedIanaTimezone],
+  (selectedDate, ianaTimezone) => new TZDate(selectedDate, ianaTimezone)
 )
 
-export const selectSelectedMonthAsDate = createSelector(
-  [selectSelectedMonth],
-  (selectedMonth) => new Date(selectedMonth)
+export const selectSelectedMonthAsTzDate = createSelector(
+  [selectSelectedMonth, selectSelectedIanaTimezone],
+  (selectedMonth, ianaTimezone) => new TZDate(selectedMonth, ianaTimezone)
 )
 
 // reducers
