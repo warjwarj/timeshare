@@ -25,8 +25,8 @@ const AvailabilityRuleModalContent: React.FC<AvailabilityRuleModalContentProps> 
     name: rule.name || "",
     prevents_booking: rule.prevents_booking || false,
     weekdays: rule.weekdays || [],
-    start_datetime: rule.start_datetime?.split('T')[0] || '2000-01-01T00:00',
-    end_datetime: rule.end_datetime?.split('T')[0] || '2999-01-01T23:59',
+    start_datetime: rule.start_datetime?.split('T')[0] || "",
+    end_datetime: rule.end_datetime?.split('T')[0] || "",
     start_time: rule.start_time || '',
     end_time: rule.end_time || '',
   })

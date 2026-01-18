@@ -189,8 +189,8 @@ const DateSelector: React.FC<DateSelectorProps> = ({ onlyMonthSelector }) => {
                       className={`
                         aspect-square flex items-center justify-center rounded-lg text-sm transition-all
                         ${!day ? 'invisible' : ''}                                          
-                        ${isSameDay(day, selectedDate) ? 'bg-light-accent dark:bg-dark-accent text-light-background dark:text-dark-background font-bold font-bold text-xl font-bold text-xl' : ''}
-                        ${day && isSameDay(day, currentDate) && !isSameDay(day, selectedDate) ? 'font-bold text-xl' : ''}
+                        ${isSameDay(day, selectedDate) ? 'bg-light-accent dark:bg-dark-accent text-light-background dark:text-dark-background font-bold font-bold font-bold text-l' : ''}
+                        ${day && isSameDay(day, currentDate) && !isSameDay(day, selectedDate) ? 'font-bold text-l' : ''}
                         ${day && !isSameDay(day, selectedDate) && !isSameDay(day, currentDate) ? 'hover:bg-v-light-accent hover:dark:v-dark-accent text-light-primary-text dark:text-dark-primary-text' : ''}
                       `}
                     >

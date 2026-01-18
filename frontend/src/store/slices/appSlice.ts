@@ -34,6 +34,7 @@ const getCurrentDate = createAsyncThunk(
 );
 
 interface AppState {
+  IanaTimezone: string
   currentDatetime: string
   selectedDate: string
   selectedMonth: string
@@ -41,7 +42,9 @@ interface AppState {
 
 export const appSlice = createSlice({
   name: "app",
-  initialState: {} as AppState,
+  initialState: {
+    IanaTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+  } as AppState,
   reducers: {
     setSelectedMonth: (state, action: PayloadAction<{ monthIsoStr: string }>) => {
       state.selectedMonth = action.payload.monthIsoStr

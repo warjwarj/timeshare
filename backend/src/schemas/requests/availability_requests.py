@@ -2,7 +2,6 @@ from typing import Annotated, Optional
 from pydantic import BeforeValidator, Field, field_serializer, field_validator, model_validator, BaseModel
 from datetime import datetime, time
 
-
 def empty_str_to_none(val):
     if val is None:
         return None
@@ -20,19 +19,10 @@ class CreateAvailabilityRuleRequest(BaseModel):
   name: str = Field(min_length=1, max_length=255)
   prevents_booking: bool
   weekdays: list[int] | None = Field(default=None)
-  start_time: time | None = Field(default=None)
-  end_time: time | None = Field(default=None)
-  start_datetime: datetime | None = Field(default=None)
-  end_datetime: datetime | None = Field(default=None)
-
-  # empty strings = not specified therefore None
-  @field_validator('start_time', 'end_time', 'start_datetime', 'end_datetime', mode='before')
-  @classmethod
-  def emty_str_to_none(cls, val: str):
-    if (val == "" or val.isspace()):
-      return None
-    else:
-      return str
+  start_time: OptionalTime = Field(default=None)
+  end_time: OptionalTime = Field(default=None)
+  start_datetime: OptionalDatetime = Field(default=None)
+  end_datetime: OptionalDatetime = Field(default=None)
 
   @field_validator('weekdays')
   @classmethod

@@ -43,22 +43,22 @@ class AvailabilityRuleModel(Base, TimestampMixin, UUIDMixin):
     comment="If not null, then a list of weekdays that the rule refers to."
   )
   start_time: Mapped[time | None] = mapped_column(
-    Time,
+    Time(timezone=True),
     nullable=True,
     comment="Start time within each day covered by the availability rule that the rule is referencing."
   )
   end_time: Mapped[time | None] = mapped_column(
-    Time,
+    Time(timezone=True),
     nullable=True,
     comment="End time within each day covered by the availability rule that the rule is referencing."
   )
   start_datetime: Mapped[datetime | None] = mapped_column(
-    DateTime,
+    DateTime(timezone=True),
     nullable=True,
     comment="Start datetime of availability window"
   )
   end_datetime: Mapped[datetime | None] = mapped_column(
-    DateTime,
+    DateTime(timezone=True),
     nullable=True,
     comment="End datetime of availability window"
   )
