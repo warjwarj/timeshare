@@ -3,6 +3,10 @@ import '../../../index.css';
 import type { AvailabilityRuleDTO } from '../../types/AvailabilityRuleDTO';
 import { WeekDayEnum } from '../../types/dateTypes';
 import { SaveButton } from '../SaveButton';
+import { selectSelectedIanaTimezone } from "../../store/slices/appSlice";
+import { TZDate } from '@date-fns/tz';
+import { isValid } from "date-fns";
+import { ourUseSelector } from '../../store/hooks';
 
 // consts
 const WEEKDAY_NAMES = Object.values(WeekDayEnum).map(wd => wd.substring(0, 3));
@@ -18,6 +22,7 @@ type AvailabilityRuleModalContentProps = {
 }
 
 const AvailabilityRuleModalContent: React.FC<AvailabilityRuleModalContentProps> = ({ rule, editing, onClose, onSave }) => {
+  const tz = ourUseSelector(selectSelectedIanaTimezone)
 
   // init form data with rule values if they exist
   const [formData, setFormData] = useState({
@@ -122,7 +127,7 @@ const AvailabilityRuleModalContent: React.FC<AvailabilityRuleModalContentProps> 
             type="datetime-local"
             id="start-datetime"
             value={formData.start_datetime}
-            onChange={(e) => setFormData(prev => ({ ...prev, start_datetime: e.target.value }))}
+            onChange={(e) => setFormData(prev => ({ ...prev, start_datetime: new TZDate(e.target.value, tz).toISOString() }))}
             className={inputClass}
             required
           />

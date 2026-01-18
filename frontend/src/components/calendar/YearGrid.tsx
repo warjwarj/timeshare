@@ -3,9 +3,10 @@ import { MonthEnum } from "../../types/dateTypes";
 import { isSameDay } from "../../utils/utils";
 import { ourUseSelector } from '../../store/hooks';
 import { makeEventSelectors } from '../../store/slices/eventsSlice';
+import { TZDate } from "@date-fns/tz";
 
 import '../../../index.css';
-import { selectCurrentDatetimeAsDate, selectSelectedDateAsDate } from "../../store/slices/appSlice";
+import { selectCurrentDatetimeAsTzDate, selectSelectedDateAsTzDate } from "../../store/slices/appSlice";
 
 type YearGridProps = {
   onMonthSelect: (month: number) => void;
@@ -14,9 +15,9 @@ type YearGridProps = {
 const monthNames = Object.values(MonthEnum);
 const weekDayHeaders = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
-const getMonthDays = (year: number, month: number): (number | null)[] => {
-  const firstDay = new Date(year, month, 1);
-  const lastDay = new Date(year, month + 1, 0);
+const getMonthDays = (year: number, month: number, tz: string): (number | null)[] => {
+  const firstDay = new TZDate(year, month, 1, tz);
+  const lastDay = new TZDate(year, month + 1, 0, tz);
   const daysInMonth = lastDay.getDate();
 
   // Adjust to Monday-based week (0 = Monday, 6 = Sunday)
@@ -46,10 +47,11 @@ const MiniMonth: React.FC<{
 }> = ({ year, month, eventDates, onMonthSelect }) => {
 
   // memoised selectors
-  const currentDate = ourUseSelector(selectCurrentDatetimeAsDate);
-  const selectedDate = ourUseSelector(selectSelectedDateAsDate);
+  const currentDate = ourUseSelector(selectCurrentDatetimeAsTzDate);
+  const selectedDate = ourUseSelector(selectSelectedDateAsTzDate);
+  const tz = selectedDate.timeZone ?? Intl.DateTimeFormat().resolvedOptions().timeZone;
 
-  const days = getMonthDays(year, month);
+  const days = getMonthDays(year, month, tz);
   const isSelectedMonth = selectedDate.getMonth() === month && selectedDate.getFullYear() === year;
 
   const hasEvent = (day: number): boolean => {
@@ -89,7 +91,7 @@ const MiniMonth: React.FC<{
             return <div key={i} className="text-[10px] p-0.5" />;
           }
 
-          const cellDate = new Date(year, month, day);
+          const cellDate = new TZDate(year, month, day, tz);
           const isToday = isSameDay(cellDate, currentDate);
           const isSelected = isSameDay(cellDate, selectedDate);
           const dayHasEvent = hasEvent(day);
@@ -120,7 +122,7 @@ const MiniMonth: React.FC<{
 const YearGrid: React.FC<YearGridProps> = ({ onMonthSelect }) => {
 
   // memoised selectors
-  const selectedDate = ourUseSelector(selectSelectedDateAsDate);
+  const selectedDate = ourUseSelector(selectSelectedDateAsTzDate);
 
   const year = selectedDate.getFullYear();
 
@@ -132,23 +134,24 @@ const YearGrid: React.FC<YearGridProps> = ({ onMonthSelect }) => {
   const events = ourUseSelector(selectProcessedEvents);
 
   // Build a set of dates that have events for quick lookup
+  const tz = selectedDate.timeZone;
   const eventDates = useMemo(() => {
     const dates = new Set<string>();
     events.forEach(event => {
-      const start = new Date(event.start);
-      const end = new Date(event.end);
+      // event.start and event.end are already TZDate
+      let current = new TZDate(event.start.getFullYear(), event.start.getMonth(), event.start.getDate(), tz);
+      const endDate = new TZDate(event.end.getFullYear(), event.end.getMonth(), event.end.getDate(), tz);
 
       // Add all dates the event spans
-      const current = new Date(start);
-      while (current <= end) {
+      while (current <= endDate) {
         if (current.getFullYear() === year) {
           dates.add(`${current.getFullYear()}-${current.getMonth()}-${current.getDate()}`);
         }
-        current.setDate(current.getDate() + 1);
+        current = new TZDate(current.getFullYear(), current.getMonth(), current.getDate() + 1, tz);
       }
     });
     return dates;
-  }, [events, year]);
+  }, [events, year, tz]);
 
   return (
     <div id="year-grid-container" className="w-full h-full flex flex-col p-4 box-border">

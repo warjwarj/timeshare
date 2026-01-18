@@ -4,6 +4,8 @@ import type { EventDTO } from '../../types/EventDTO';
 import { apiClient } from "../../utils/apiClient";
 import axios, { HttpStatusCode } from 'axios';
 import { toastService } from '../../toastService';
+import { TZDate } from '@date-fns/tz';
+import { getUserTimezone } from '../../utils/utils';
 
 const getEvents = createAsyncThunk(
   'getEvents',
@@ -208,31 +210,31 @@ export const selectEvents = (state: { events: EventsState }) => state.events.eve
 // function which returns event selectors
 export const makeEventSelectors = () => {
 
-  // select all events, processing dates from strings into date objects
+  // select all events, processing dates from strings into TZDate objects
   const selectProcessedEvents = createSelector(
     [selectEvents],
-    (events): EventDTO[] =>
-      [...events]
+    (events): EventDTO[] => {
+      const tz = getUserTimezone();
+      return [...events]
         .map(ev => ({
           ...ev,
-          start: new Date(ev.start),
-          end: new Date(ev.end),
+          start: new TZDate(ev.start as unknown as string, tz),
+          end: new TZDate(ev.end as unknown as string, tz),
         }))
-        .sort((a, b) => a.start.getTime() - b.start.getTime())
+        .sort((a, b) => a.start.getTime() - b.start.getTime());
+    }
   );
 
   // select all events which partially overlap with a given date
   const selectEventsSpanningDate = createSelector(
     [
       selectProcessedEvents,
-      (_: unknown, date: Date) => date,
+      (_: unknown, date: TZDate) => date,
     ],
     (events, date): EventDTO[] => {
-
-      const dayStart = new Date(date);
-      dayStart.setHours(0, 0, 0, 0);
-      const dayEnd = new Date(date);
-      dayEnd.setHours(23, 59, 59, 999);
+      const tz = date.timeZone;
+      const dayStart = new TZDate(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0, 0, tz);
+      const dayEnd = new TZDate(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59, 999, tz);
 
       return events.filter(e => e.start <= dayEnd && e.end >= dayStart)
     }
@@ -243,14 +245,12 @@ export const makeEventSelectors = () => {
   const selectEventsBetweenDates = createSelector(
     [
       selectProcessedEvents,
-      (_: unknown, start: Date, end: Date) => ({ start, end }),
+      (_: unknown, start: TZDate, end: TZDate) => ({ start, end }),
     ],
     (events, { start, end }): EventDTO[] => {
-
-      const rangeStart = new Date(start);
-      rangeStart.setHours(0, 0, 0, 0);
-      const rangeEnd = new Date(end);
-      rangeEnd.setHours(23, 59, 59, 999);
+      const tz = start.timeZone;
+      const rangeStart = new TZDate(start.getFullYear(), start.getMonth(), start.getDate(), 0, 0, 0, 0, tz);
+      const rangeEnd = new TZDate(end.getFullYear(), end.getMonth(), end.getDate(), 23, 59, 59, 999, tz);
 
       return events.filter(e => e.start <= rangeEnd && e.end >= rangeStart)
     }

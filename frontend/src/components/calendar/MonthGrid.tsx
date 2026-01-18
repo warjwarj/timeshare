@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { ourUseDispatch, ourUseSelector } from '../../store/hooks';
-import { selectCurrentDatetimeAsDate, selectSelectedDateAsDate, selectSelectedMonthAsDate, setSelectedMonth } from '../../store/slices/appSlice';
+import { selectCurrentDatetimeAsTzDate, selectSelectedDateAsTzDate, selectSelectedMonthAsTzDate, setSelectedMonth } from '../../store/slices/appSlice';
 import { addEvent, deleteEvent, getEvents, makeEventSelectors, updateEvent } from '../../store/slices/eventsSlice';
 import type { MonthGridConfig } from "../../utils/monthGridUtils";
 import { setEventPositions } from "../../utils/monthGridUtils";
@@ -13,6 +13,7 @@ import { Event } from '../events/Event';
 
 import '../../../index.css';
 import { TimeSpanEnum } from "../../types/dateTypes";
+import { TZDate } from "@date-fns/tz";
 
 type MonthGridStyle = {
   eventStyle: EventStyle;
@@ -34,14 +35,15 @@ const MonthGrid: React.FC<MonthGridProps> = ({ gridStyle, gridConfig, colHeaders
   // selectors
   const { selectEventsBetweenDates } = useMemo(() => makeEventSelectors(), []);
   const events = ourUseSelector(state => selectEventsBetweenDates(state, startDate, endDate));
-  const currentDate = ourUseSelector(selectCurrentDatetimeAsDate);
-  const selectedDate = ourUseSelector(selectSelectedDateAsDate);
-  const selectedMonth = ourUseSelector(selectSelectedMonthAsDate);
+  const currentDate = ourUseSelector(selectCurrentDatetimeAsTzDate);
+  const selectedDate = ourUseSelector(selectSelectedDateAsTzDate);
+  const selectedMonth = ourUseSelector(selectSelectedMonthAsTzDate);
 
   // fetch events when date range changes
   useEffect(() => {
-    const startDateISO = new Date(new Date(startDate).setMonth(startDate.getMonth() - 1)).toISOString();
-    const endDateISO = new Date(new Date(endDate).setMonth(endDate.getMonth() + 1)).toISOString();
+    const tz = startDate.timeZone;
+    const startDateISO = new TZDate(startDate.getFullYear(), startDate.getMonth() - 1, startDate.getDate(), tz).toISOString();
+    const endDateISO = new TZDate(endDate.getFullYear(), endDate.getMonth() + 1, endDate.getDate(), tz).toISOString();
     const timeoutId = setTimeout(() => {
       dispatch(getEvents({ start: startDateISO, end: endDateISO }));
     }, 300);
@@ -82,8 +84,8 @@ const MonthGrid: React.FC<MonthGridProps> = ({ gridStyle, gridConfig, colHeaders
     if (!isValidDate(selectedMonth)) {
       return;
     }
-    const date = new Date(selectedMonth);
-    date.setMonth(date.getMonth() + delta);
+    const tz = selectedMonth.timeZone;
+    const date = new TZDate(selectedMonth.getFullYear(), selectedMonth.getMonth() + delta, 1, tz);
     dispatch(setSelectedMonth({ monthIsoStr: date.toISOString() }));
   };
 

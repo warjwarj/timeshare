@@ -7,6 +7,7 @@ import type { ChangeEvent } from 'react'
 // types
 import type { EventDTO } from '../../types/EventDTO';
 import type { EventProps } from './Event';
+import { TZDate } from '@date-fns/tz';
 
 // utils
 import { isValidDate } from '../../utils/utils';
@@ -26,6 +27,7 @@ type EventInfoModalContentProps = {
   closePopup: () => void;
 };
 const EventInfoModalContent: React.FC<EventInfoModalContentProps> = ({ event, updateEvent, deleteEvent, closePopup }) => {
+  const tz = event.eventDTO.start.timeZone;
 
   // save updated event object
   const handleSave = () => {
@@ -42,19 +44,27 @@ const EventInfoModalContent: React.FC<EventInfoModalContentProps> = ({ event, up
   // track the modified event before we save
   const [updatedEvent, setUpdatedEvent] = useState(event.eventDTO);
 
-  // format js date for the html input
-  const formatDateForInput = (date: Date): string => {
-    const tzOffset = date.getTimezoneOffset() * 60000;
+  // format TZDate for the html input
+  const formatDateForInput = (date: TZDate): string => {
     if (!isValidDate(date)) {
       return "";
     }
-    return new Date(date.getTime() - tzOffset).toISOString().slice(0, 16);
+    // Format as YYYY-MM-DDTHH:mm for datetime-local input
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
   }
 
   // change updated event object
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
-    const newDate = new Date(value);
+    const [datePart, timePart] = value.split('T');
+    const [year, month, day] = datePart.split('-').map(Number);
+    const [hours, minutes] = timePart.split(':').map(Number);
+    const newDate = new TZDate(year, month - 1, day, hours, minutes, 0, 0, tz);
     setUpdatedEvent((prev) => ({
       ...prev,
       [id.includes("Start") ? "start" : "end"]: newDate,

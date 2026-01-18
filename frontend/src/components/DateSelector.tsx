@@ -4,13 +4,14 @@ import { ChevronLeft, ChevronRight } from './svgs/Chevrons';
 import { Calendar } from './svgs/Calendar';
 
 import { MonthEnum, WeekDayEnum } from '../types/dateTypes'
-import { formatDate, isSameDay } from '../utils/utils';
+import { formatDate, isSameDay, getUserTimezone } from '../utils/utils';
 import { ourUseDispatch, ourUseSelector } from '../store/hooks';
-import { selectCurrentDatetimeAsDate, selectSelectedDateAsDate, setSelectedDate } from '../store/slices/appSlice';
+import { selectCurrentDatetimeAsTzDate, selectSelectedDateAsTzDate, setSelectedDate } from '../store/slices/appSlice';
+import { TZDate } from '@date-fns/tz';
 
 
 type DateSelectorProps = {
-  startDate: Date;
+  startDate: TZDate;
   onlyMonthSelector: boolean;
 }
 
@@ -21,8 +22,8 @@ const DateSelector: React.FC<DateSelectorProps> = ({ onlyMonthSelector }) => {
   const dayNames = Object.values(WeekDayEnum).map(m => m.substring(0, 3))
 
   // selectors
-  const currentDate = ourUseSelector(selectCurrentDatetimeAsDate);
-  const selectedDate = ourUseSelector(selectSelectedDateAsDate);
+  const currentDate = ourUseSelector(selectCurrentDatetimeAsTzDate);
+  const selectedDate = ourUseSelector(selectSelectedDateAsTzDate);
 
   // helper states and refs
   const [isOpen, setIsOpen] = useState(false);
@@ -52,37 +53,39 @@ const DateSelector: React.FC<DateSelectorProps> = ({ onlyMonthSelector }) => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleDateSelection = (d: Date) => {
+  const handleDateSelection = (d: TZDate) => {
     dispatch(setSelectedDate({ dateIsoStr: d.toISOString() }))
   }
 
-  const getDaysInMonth = (date: Date) => {
+  const getDaysInMonth = (date: TZDate) => {
+    const tz = date.timeZone;
     const year = date.getFullYear();
     const month = date.getMonth();
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
+    const firstDay = new TZDate(year, month, 1, tz);
+    const lastDay = new TZDate(year, month + 1, 0, tz);
     const daysInMonth = lastDay.getDate();
     const startingDayOfWeek = (firstDay.getDay() + 6) % 7;
 
-    const days = [];
+    const days: (TZDate | null)[] = [];
     for (let i = 0; i < startingDayOfWeek; i++) {
       days.push(null);
     }
     for (let i = 1; i <= daysInMonth; i++) {
-      days.push(new Date(year, month, i));
+      days.push(new TZDate(year, month, i, tz));
     }
     return days;
   };
 
-  const [visibleMonth, setVisibleMonth] = useState(new Date());
+  const tz = getUserTimezone();
+  const [visibleMonth, setVisibleMonth] = useState(TZDate.tz(tz));
   const navigateMonth = (direction: number) => {
-    const m = new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() + direction, 1)
+    const m = new TZDate(visibleMonth.getFullYear(), visibleMonth.getMonth() + direction, 1, tz);
     setVisibleMonth(m);
   };
 
   const selectPreset = (days: number) => {
-    const date = new Date();
-    date.setDate(date.getDate() + days);
+    const now = TZDate.tz(tz);
+    const date = new TZDate(now.getFullYear(), now.getMonth(), now.getDate() + days, tz);
     handleDateSelection(date);
     setVisibleMonth(date);
   };

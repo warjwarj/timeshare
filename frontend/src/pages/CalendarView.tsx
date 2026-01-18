@@ -10,9 +10,10 @@ import { DateSelector } from "../components/DateSelector.tsx";
 import { isValidDate } from '../utils/utils.ts';
 import { getMonthGridConfig, type MonthGridConfig } from '../utils/monthGridUtils.ts';
 import { ourUseDispatch, ourUseSelector } from '../store/hooks.ts';
-import { selectCurrentDatetimeAsDate, selectSelectedMonthAsDate, setSelectedMonth } from '../store/slices/appSlice.ts';
+import { selectCurrentDatetimeAsTzDate, selectSelectedMonthAsTzDate, setSelectedMonth } from '../store/slices/appSlice.ts';
 import { ViewHeader } from '../components/ViewHeader.tsx';
 import { ViewBody } from '../components/ViewBody.tsx';
+import { TZDate } from "@date-fns/tz";
 
 // event style for 
 const monthGridEventStyle: EventStyle = {
@@ -50,8 +51,8 @@ const CalendarView: React.FC = () => {
   const weekdayNames = Object.values(WeekDayEnum)
 
   // memoised selectors
-  const currentDate = ourUseSelector(selectCurrentDatetimeAsDate);
-  const selectedMonth = ourUseSelector(selectSelectedMonthAsDate);
+  const currentDate = ourUseSelector(selectCurrentDatetimeAsTzDate);
+  const selectedMonth = ourUseSelector(selectSelectedMonthAsTzDate);
 
   useEffect(() => {
     if (!isValidDate(currentDate)) {
@@ -75,10 +76,12 @@ const CalendarView: React.FC = () => {
   
   // Handler for when a month is clicked in year view
   const handleMonthSelect = useCallback((month: number) => {
-    const date = new Date(
+    const tz = currentDate.timeZone;
+    const date = new TZDate(
       currentDate.getFullYear(),
       month,
-      1
+      1,
+      tz
     );
     dispatch(setSelectedMonth({ monthIsoStr: date.toISOString() }));
   }, [dispatch, currentDate]);

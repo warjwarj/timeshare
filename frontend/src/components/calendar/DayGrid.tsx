@@ -11,10 +11,11 @@ import {
 import type { EventProps, EventStyle } from "../events/Event";
 import { Event } from '../events/Event';
 import { ChevronLeft, ChevronRight } from '../svgs/Chevrons';
+import { TZDate } from "@date-fns/tz";
 
 import { ourUseDispatch, ourUseSelector } from '../../store/hooks';
 import { updateEvent, deleteEvent, makeEventSelectors } from '../../store/slices/eventsSlice';
-import { selectSelectedDateAsDate, setSelectedDate } from '../../store/slices/appSlice';
+import { selectSelectedDateAsTzDate, setSelectedDate } from '../../store/slices/appSlice';
 
 import '../../../index.css';
 
@@ -49,7 +50,7 @@ const DayGrid: React.FC<DayGridProps> = ({
   const [containerHeight, setContainerHeight] = useState(0);
 
   // memoised selectors
-  const selectedDate = ourUseSelector(selectSelectedDateAsDate);
+  const selectedDate = ourUseSelector(selectSelectedDateAsTzDate);
 
   // calculate grid dimensions
   const totalSlots = calculateTotalSlots(timeStart, timeEnd, timeStep);
@@ -118,15 +119,15 @@ const DayGrid: React.FC<DayGridProps> = ({
 
   // Navigate to previous day
   const goToPrevDay = useCallback(() => {
-    const newDate = new Date(selectedDate);
-    newDate.setDate(newDate.getDate() - 1);
+    const tz = selectedDate.timeZone;
+    const newDate = new TZDate(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate() - 1, tz);
     dispatch(setSelectedDate({ dateIsoStr: newDate.toISOString() }));
   }, [dispatch, selectedDate]);
 
   // Navigate to next day
   const goToNextDay = useCallback(() => {
-    const newDate = new Date(selectedDate);
-    newDate.setDate(newDate.getDate() + 1);
+    const tz = selectedDate.timeZone;
+    const newDate = new TZDate(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate() + 1, tz);
     dispatch(setSelectedDate({ dateIsoStr: newDate.toISOString() }));
   }, [dispatch, selectedDate]);
 
