@@ -4,9 +4,9 @@ import { ChevronLeft, ChevronRight } from './svgs/Chevrons';
 import { Calendar } from './svgs/Calendar';
 
 import { MonthEnum, WeekDayEnum } from '../types/dateTypes'
-import { formatDate, isSameDay, getUserTimezone } from '../utils/utils';
+import { formatDate, isSameDay } from '../utils/utils';
 import { ourUseDispatch, ourUseSelector } from '../store/hooks';
-import { selectCurrentDatetimeAsTzDate, selectSelectedDateAsTzDate, setSelectedDate } from '../store/slices/appSlice';
+import { selectCurrentDatetimeAsTzDate, selectSelectedDateAsTzDate, selectSelectedIanaTimezone, setSelectedDate } from '../store/slices/appSlice';
 import { TZDate } from '@date-fns/tz';
 
 
@@ -24,6 +24,7 @@ const DateSelector: React.FC<DateSelectorProps> = ({ onlyMonthSelector }) => {
   // selectors
   const currentDate = ourUseSelector(selectCurrentDatetimeAsTzDate);
   const selectedDate = ourUseSelector(selectSelectedDateAsTzDate);
+  const ianaTimezone = ourUseSelector(selectSelectedIanaTimezone);
 
   // helper states and refs
   const [isOpen, setIsOpen] = useState(false);
@@ -76,16 +77,15 @@ const DateSelector: React.FC<DateSelectorProps> = ({ onlyMonthSelector }) => {
     return days;
   };
 
-  const tz = getUserTimezone();
-  const [visibleMonth, setVisibleMonth] = useState(TZDate.tz(tz));
+  const [visibleMonth, setVisibleMonth] = useState(TZDate.tz(ianaTimezone));
   const navigateMonth = (direction: number) => {
-    const m = new TZDate(visibleMonth.getFullYear(), visibleMonth.getMonth() + direction, 1, tz);
+    const m = new TZDate(visibleMonth.getFullYear(), visibleMonth.getMonth() + direction, 1, ianaTimezone);
     setVisibleMonth(m);
   };
 
   const selectPreset = (days: number) => {
-    const now = TZDate.tz(tz);
-    const date = new TZDate(now.getFullYear(), now.getMonth(), now.getDate() + days, tz);
+    const now = TZDate.tz(ianaTimezone);
+    const date = new TZDate(now.getFullYear(), now.getMonth(), now.getDate() + days, ianaTimezone);
     handleDateSelection(date);
     setVisibleMonth(date);
   };

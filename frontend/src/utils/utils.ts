@@ -42,16 +42,12 @@ export function isNullOrWhitespace(input: string) {
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-export function getUserTimezone(): string {
-  return Intl.DateTimeFormat().resolvedOptions().timeZone;
-}
-
 export function isValidDate(d: TZDate) {
   return (d instanceof TZDate) && !isNaN(d.getTime());
 }
 
-export function getCalendarDaysInMonth(year: number, month: number, timezone?: string) {
-  const tz = timezone ?? getUserTimezone();
+export function getCalendarDaysInMonth(year: number, month: number, timezone: string) {
+  const tz = timezone;
   const monthIndex = month - 1; // 0..11 instead of 1..12
   const names = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
   let date = new TZDate(year, monthIndex, 1, tz);

@@ -36,10 +36,6 @@ const AvailabilityRuleModalContent: React.FC<AvailabilityRuleModalContentProps> 
     end_time: rule.end_time || '',
   })
 
-  useEffect(() => {
-    console.log(formData)
-  }, [formData])
-
   const toggleWeekday = (day: number) => {
     setFormData(prev => ({
       ...prev,
