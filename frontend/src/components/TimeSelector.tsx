@@ -89,7 +89,6 @@ const TimeSelector: React.FC<TimeSelectorProps> = ({ onChange, defaultMins, defa
                   </button>)
               })}
             </div>
-
             {/* Minuite navigation */}
             <div className="flex flex-col p-2 items-center justify-between overflow-x-hidden">
               {minutes.map((m, i) => {
