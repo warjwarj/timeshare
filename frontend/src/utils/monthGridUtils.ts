@@ -152,6 +152,7 @@ export function setEventPositions(
 }
 
 export type MonthGridConfig = {
+  monthStart: TZDate
   startDate: TZDate;
   endDate: TZDate;
   cellCount: number;
@@ -164,17 +165,19 @@ const monthNames = Object.values(MonthEnum)
  * Generates grid configuration for displaying a calendar month.
  * The grid starts on the Monday before (or on) the 1st of the month
  * and ends on the Sunday after (or on) the last day of the month.
+ * 
+ * newMonth is the first of the
  */
-export function getMonthGridConfig(date: TZDate, prevCfg: MonthGridConfig | null): MonthGridConfig | null {
+export function getMonthGridConfig(newMonth: TZDate, prevCfg: MonthGridConfig | null): MonthGridConfig | null {
 
-  // no need to rerender if the selected date is already within the grid.
-  if (prevCfg != null && date >= prevCfg.startDate && date <= prevCfg.endDate) {
+  // skip rerender if not needed
+  if (prevCfg != null && newMonth === prevCfg.monthStart ) {
     return prevCfg;
   }
 
-  const tz = date.timeZone;
-  const year = date.getFullYear();
-  const month = date.getMonth();
+  const tz = newMonth.timeZone;
+  const year = newMonth.getFullYear();
+  const month = newMonth.getMonth();
 
   // First day of the month
   const firstOfMonth = new TZDate(year, month, 1, tz);
@@ -201,6 +204,7 @@ export function getMonthGridConfig(date: TZDate, prevCfg: MonthGridConfig | null
   const gridLabel = `${monthNames[month]} ${year}`;
 
   return {
+    monthStart: newMonth,
     startDate,
     endDate,
     cellCount,
