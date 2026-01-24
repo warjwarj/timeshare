@@ -3,7 +3,7 @@ import { ViewBody } from '../components/ViewBody.tsx';
 import { ViewHeader } from '../components/ViewHeader.tsx';
 import {
   getAvailabilityRules,
-  selectAvailabilityRules,
+  selectProcessedAvailabilityRules,
   createAvailabilityRule
 } from '../store/slices/availabilitySlice.ts';
 import { ourUseDispatch, ourUseSelector } from '../store/hooks.ts';
@@ -16,7 +16,7 @@ import { createPortal } from 'react-dom';
 
 const AvailabilityView: React.FC = () => {
   const dispatch = ourUseDispatch();
-  const rules = ourUseSelector(selectAvailabilityRules);
+  const rules = ourUseSelector(selectProcessedAvailabilityRules);
 
   const [showModal, setShowModal] = useState<boolean>(false);
 

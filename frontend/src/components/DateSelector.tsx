@@ -1,10 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { ChevronLeft, ChevronRight } from './svgs/Chevrons';
-import { Calendar } from './svgs/Calendar';
 
-import { MonthEnum, WeekDayEnum } from '../types/dateTypes'
-import { formatDate, isSameDay } from '../utils/utils';
+import { MonthEnum, WeekDayEnum } from '../types/dateTypes';
+import { isSameDay } from '../utils/utils';
 import { ourUseDispatch, ourUseSelector } from '../store/hooks';
 import { selectCurrentDatetimeAsTzDate, selectSelectedDateAsTzDate, selectSelectedIanaTimezone, setSelectedDate } from '../store/slices/appSlice';
 import { TZDate } from '@date-fns/tz';
@@ -28,18 +27,36 @@ const DateSelector: React.FC<DateSelectorProps> = ({ onlyMonthSelector }) => {
 
   // helper states and refs
   const [isOpen, setIsOpen] = useState(false);
-  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, right: 0 });
+  const [dropdownPosition, setDropdownPosition] = useState<React.CSSProperties>({});
   const dropdownRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
+
+  const DROPDOWN_WIDTH = 240; // w-60
+  const DROPDOWN_HEIGHT = 320; // approximate height
 
   // Update dropdown position when opened
   useEffect(() => {
     if (isOpen && buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect();
-      setDropdownPosition({
-        top: rect.bottom + 4,
-        right: window.innerWidth - rect.right,
-      });
+      const position: React.CSSProperties = {};
+
+      // Vertical positioning
+      const spaceBelow = window.innerHeight - rect.bottom;
+      if (spaceBelow >= DROPDOWN_HEIGHT + 4) {
+        position.top = rect.bottom + 4;
+      } else {
+        position.bottom = window.innerHeight - rect.top + 4;
+      }
+
+      // Horizontal positioning
+      const spaceRight = window.innerWidth - rect.left;
+      if (spaceRight >= DROPDOWN_WIDTH) {
+        position.left = rect.left;
+      } else {
+        position.right = window.innerWidth - rect.right;
+      }
+
+      setDropdownPosition(position);
     }
   }, [isOpen]);
 
@@ -90,42 +107,25 @@ const DateSelector: React.FC<DateSelectorProps> = ({ onlyMonthSelector }) => {
     setVisibleMonth(date);
   };
 
+  const displayDate = () => {
+    return selectedDate.toLocaleDateString() || currentDate.toDateString()
+  }
+
   const days = getDaysInMonth(visibleMonth);
 
   return (
     <>
       <div className="w-full h-auto">
 
-        {/* calendar icon selected date */}
-        <div className="h-full flex items-center justify-end gap-5 p-2">
-
-          {/* selected date */}
-          <div className="rounded-lg hidden sm:block">
-            <p className="text-sm font-medium">Selected Date:</p>
-            <p className="text-lg font-semibold">
-              {formatDate(selectedDate)}
-            </p>
-          </div>
-
-          {/* Show/hide drop down */}
-          <div className="flex justify-center">
-            <button
-              ref={buttonRef}
-              onClick={() => setIsOpen(!isOpen)}
-              className="flex items-center justify-center"
-            >
-              <Calendar classes={`w-14 h-14
-                rounded-lg
-                flex justify-center font-bold
-                bg-light-background
-                dark:bg-dark-background
-                text-light-primary-text
-                dark:text-dark-primary-text
-                hover:bg-v-light-accent
-                hover:dark:bg-v-dark-accent`} />
-            </button>
-          </div>
-
+        {/* Show/hide drop down */}
+        <div className="flex flex-row p-2 rounded-lg border w-min overflow-auto justify-center">
+          <button
+            ref={buttonRef}
+            onClick={() => setIsOpen(!isOpen)}
+            className="flex items-center justify-center text-lg font-semibold"
+          >
+            {displayDate()}
+          </button>
         </div>
 
         {/*  dropdown calendar */}
@@ -133,7 +133,7 @@ const DateSelector: React.FC<DateSelectorProps> = ({ onlyMonthSelector }) => {
           <div
             ref={dropdownRef}
             className="fixed z-50 w-60 border rounded-lg px-2 bg-light-background dark:bg-dark-background shadow-lg"
-            style={{ top: dropdownPosition.top, right: dropdownPosition.right }}
+            style={dropdownPosition}
           >
 
             {/* Month Navigation */}

@@ -45,9 +45,9 @@ const Navbar: React.FC<NavbarProps> = ({ links }) => {
   }, []);
 
   const profileIconMenuItems: MenuItem[] = [
+    { icon: Clock, label: 'Timezone', action: () => { setTzModalOpen(true) } },
     { icon: Settings, label: 'Settings', action: () => navigator('/settings') },
     { icon: LogOut, label: 'Log out', action: () => { dispatch(logout()); navigator('/login') } },
-    { icon: Clock, label: 'Timezone', action: () => { setTzModalOpen(true) } },
   ];
 
   return (

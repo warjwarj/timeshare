@@ -6,6 +6,7 @@ import { selectSelectedIanaTimezone, selectCurrentDatetimeAsTzDate } from "../st
 import { ourUseSelector } from '../store/hooks.ts';
 import { TZDate } from "@date-fns/tz";
 import { isValidDate } from '../utils/utils.ts';
+import { DateSelector } from '../components/DateSelector.tsx';
 
 const EventsView: React.FC = () => {
   const tz = ourUseSelector(selectSelectedIanaTimezone);
@@ -19,10 +20,10 @@ const EventsView: React.FC = () => {
   return (
     <ViewBody id={"EventsView"}>
       <ViewHeader>
-        <></>
+        <> </>
       </ViewHeader>
       <TimeSelector onChange={(time: Date) => { console.log(time) }} defaultHours={currentDatetime.getHours()} defaultMins={currentDatetime.getMinutes()} />
-
+      <DateSelector onlyMonthSelector={false} startDate={currentDatetime} />
       {tzDate.toISOString()}
       {tz}
     </ViewBody>

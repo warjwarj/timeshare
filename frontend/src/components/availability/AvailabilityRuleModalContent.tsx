@@ -1,11 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import '../../../index.css';
 import type { AvailabilityRuleDTO } from '../../types/AvailabilityRuleDTO';
 import { WeekDayEnum } from '../../types/dateTypes';
 import { SaveButton } from '../SaveButton';
 import { selectSelectedIanaTimezone } from "../../store/slices/appSlice";
-import { TZDate } from '@date-fns/tz';
-import { isValid } from "date-fns";
 import { ourUseSelector } from '../../store/hooks';
 
 // consts
@@ -26,14 +24,15 @@ const AvailabilityRuleModalContent: React.FC<AvailabilityRuleModalContentProps> 
 
   // init form data with rule values if they exist
   const [formData, setFormData] = useState({
-    uuid: "",
+    uuid: rule.uuid || "",
     name: rule.name || "",
     prevents_booking: rule.prevents_booking || false,
+    iana_timezone: rule.iana_timezone || tz,
     weekdays: rule.weekdays || [],
-    start_datetime: rule.start_datetime?.split('T')[0] || "",
-    end_datetime: rule.end_datetime?.split('T')[0] || "",
-    start_time: rule.start_time || '',
-    end_time: rule.end_time || '',
+    start_datetime: rule.start_datetime?.slice(0, 16) || "",
+    end_datetime: rule.end_datetime?.slice(0, 16) || "",
+    start_time: rule.start_time || "",
+    end_time: rule.end_time || "",
   })
 
   const toggleWeekday = (day: number) => {
@@ -48,7 +47,9 @@ const AvailabilityRuleModalContent: React.FC<AvailabilityRuleModalContentProps> 
   const internalSave = () => {
     const outgoingState: AvailabilityRuleDTO = {
       ...formData,
-      ...(rule?.uuid && { uuid: rule.uuid })
+      ...{ iana_timezone: editing ? rule.iana_timezone : tz },
+      ...(rule?.uuid && { uuid: rule.uuid }
+      )
     }
     onSave(outgoingState);
     onClose()
@@ -62,6 +63,7 @@ const AvailabilityRuleModalContent: React.FC<AvailabilityRuleModalContentProps> 
           internalSave()
         }
       }}>
+
       {/* Name */}
       <div>
         <label htmlFor="rule-name" className={labelClass}>
@@ -70,21 +72,21 @@ const AvailabilityRuleModalContent: React.FC<AvailabilityRuleModalContentProps> 
         <input
           type="text"
           id="rule-name"
-          defaultValue={rule.name}
+          defaultValue={formData.name}
           onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
           className={inputClass}
           placeholder="e.g., Lunch Break"
         />
       </div>
 
-      {/* Prevents Booking Toggle */}
+      {/* Prevents / allows toggle */}
       <div>
         <label className={labelClass}>Rule Type</label>
         <label className="inline-flex items-center cursor-pointer">
           <span className="select-none me-3 text-sm text-light-secondary-text dark:text-dark-secondary-text">Allows</span>
           <input
             type="checkbox"
-            checked={rule.prevents_booking}
+            checked={formData.prevents_booking}
             onChange={(e) => setFormData(prev => ({ ...prev, prevents_booking: e.target.checked }))}
             className="sr-only peer"
           />
@@ -113,7 +115,12 @@ const AvailabilityRuleModalContent: React.FC<AvailabilityRuleModalContentProps> 
         </div>
       </div>
 
-      {/* Date Range */}
+      {/* Timezone (need to add a warning or something) */}
+      <div>
+        <label className={labelClass}>Rule Timezone: {formData.iana_timezone}</label>
+      </div>
+
+      {/* Date range */}
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label htmlFor="start-date" className={labelClass}>
@@ -123,7 +130,7 @@ const AvailabilityRuleModalContent: React.FC<AvailabilityRuleModalContentProps> 
             type="datetime-local"
             id="start-datetime"
             value={formData.start_datetime}
-            onChange={(e) => setFormData(prev => ({ ...prev, start_datetime: new TZDate(e.target.value, tz).toISOString() }))}
+            onChange={(e) => setFormData(prev => ({ ...prev, start_datetime: e.target.value }))}
             className={inputClass}
             required
           />
@@ -143,7 +150,7 @@ const AvailabilityRuleModalContent: React.FC<AvailabilityRuleModalContentProps> 
         </div>
       </div>
 
-      {/* Time Range */}
+      {/* Time range */}
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label htmlFor="start-time" className={labelClass}>
@@ -171,6 +178,7 @@ const AvailabilityRuleModalContent: React.FC<AvailabilityRuleModalContentProps> 
         </div>
       </div>
 
+      {/* Buttons */}
       <div className="flex justify-between gap-3 pt-4">
         <button
           type="button"
@@ -183,6 +191,7 @@ const AvailabilityRuleModalContent: React.FC<AvailabilityRuleModalContentProps> 
           {editing ? 'Update' : 'Create'}
         </SaveButton>
       </div>
+
     </div>
   )
 };

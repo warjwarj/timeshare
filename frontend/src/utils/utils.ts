@@ -75,12 +75,15 @@ export function getDateFromCellIndex(cellStep: TimeSpan, gridStart: TZDate, cell
 }
 
 export function formatDate(date: TZDate | null) {
-  if (!date) return 'Select a date';
-  return date.toLocaleDateString('en-US', {
+  if (!date) return;
+  return date.toLocaleString("en-US", {
+    timeZone: date.timeZone,
     weekday: 'short',
     year: 'numeric',
     month: 'short',
-    day: 'numeric'
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
   });
 }
 

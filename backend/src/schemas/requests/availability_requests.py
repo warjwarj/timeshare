@@ -1,5 +1,7 @@
 from typing import Annotated, Optional
+from zoneinfo import ZoneInfo
 from pydantic import BeforeValidator, Field, field_serializer, field_validator, model_validator, BaseModel
+from pydantic_extra_types.timezone_name import TimeZoneName
 from datetime import datetime, time
 
 def empty_str_to_none(val):
@@ -17,7 +19,8 @@ class CreateAvailabilityRuleRequest(BaseModel):
   Request schema for creating an availability rule
   """
   name: str = Field(min_length=1, max_length=255)
-  prevents_booking: bool
+  prevents_booking: bool | None
+  iana_timezone: TimeZoneName | None
   weekdays: list[int] | None = Field(default=None)
   start_time: OptionalTime = Field(default=None)
   end_time: OptionalTime = Field(default=None)
@@ -34,13 +37,13 @@ class CreateAvailabilityRuleRequest(BaseModel):
           raise ValueError('Weekday must be between 0 (Monday) and 6 (Sunday)')
     return v
 
-  @field_validator('start_datetime', 'end_datetime')
-  @classmethod
-  def validate_datetime_not_naive(cls, v: datetime | None) -> datetime | None:
-    """Ensure datetime has timezone information if provided"""
-    if v is not None and (v.tzinfo is None or v.tzinfo.utcoffset(v) is None):
-      raise ValueError('Datetime must be timezone-aware')
-    return v
+  # @field_validator('start_datetime', 'end_datetime')
+  # @classmethod
+  # def validate_datetime_not_naive(cls, v: datetime | None) -> datetime | None:
+  #   """Ensure datetime has timezone information if provided"""
+  #   if v is not None and (v.tzinfo is None or v.tzinfo.utcoffset(v) is None):
+  #     raise ValueError('Datetime must be timezone-aware')
+  #   return v
 
   @model_validator(mode='after')
   def validate_time_range(self) -> 'CreateAvailabilityRuleRequest':
@@ -64,7 +67,8 @@ class UpdateAvailabilityRuleRequest(BaseModel):
   Request schema for updating an availability rule
   """
   name: str = Field(min_length=1, max_length=255)
-  prevents_booking: bool
+  prevents_booking: bool | None
+  iana_timezone: TimeZoneName | None
   weekdays: list[int] | None = Field(default=None)
   start_time: OptionalTime = Field(default=None)
   end_time: OptionalTime = Field(default=None)
@@ -81,13 +85,13 @@ class UpdateAvailabilityRuleRequest(BaseModel):
           raise ValueError('Weekday must be between 0 (Monday) and 6 (Sunday)')
     return v
 
-  @field_validator('start_datetime', 'end_datetime')
-  @classmethod
-  def validate_datetime_not_naive(cls, v: datetime | None) -> datetime | None:
-    """Ensure datetime has timezone information if provided"""
-    if v is not None and (v.tzinfo is None or v.tzinfo.utcoffset(v) is None):
-      raise ValueError('Datetime must be timezone-aware')
-    return v
+  # @field_validator('start_datetime', 'end_datetime')
+  # @classmethod
+  # def validate_datetime_not_naive(cls, v: datetime | None) -> datetime | None:
+  #   """Ensure datetime has timezone information if provided"""
+  #   if v is not None and (v.tzinfo is None or v.tzinfo.utcoffset(v) is None):
+  #     raise ValueError('Datetime must be timezone-aware')
+  #   return v
 
   @model_validator(mode='after')
   def validate_time_range(self) -> 'UpdateAvailabilityRuleRequest':
