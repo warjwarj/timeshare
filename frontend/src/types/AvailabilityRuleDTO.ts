@@ -1,10 +1,11 @@
 export type AvailabilityRuleDTO = {
-  uuid?: string;
-  name: string;
-  prevents_booking: boolean;
-  weekdays?: number[] | null;
-  start_datetime?: string | null; // ISO 8601 format
-  end_datetime?: string | null;
-  start_time?: string | null; // ISO time format or HH:mm:ss
-  end_time?: string | null;
+  uuid: string | null;
+  name: string | null;
+  prevents_booking: boolean | null
+  weekdays: number[] | null;
+  start_datetime: string | null;
+  end_datetime: string | null;
+  start_time: string | null;
+  end_time: string | null;
+  iana_timezone: string | null;
 }

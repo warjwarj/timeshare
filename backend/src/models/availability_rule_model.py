@@ -1,4 +1,3 @@
-
 from datetime import datetime, time
 from sqlalchemy import ARRAY, Boolean, DateTime, Integer, String, Index, Text, Time
 from sqlalchemy.ext.declarative import declarative_base
@@ -43,26 +42,30 @@ class AvailabilityRuleModel(Base, TimestampMixin, UUIDMixin):
     comment="If not null, then a list of weekdays that the rule refers to."
   )
   start_time: Mapped[time | None] = mapped_column(
-    Time(timezone=True),
+    Time,
     nullable=True,
-    comment="Start time within each day covered by the availability rule that the rule is referencing."
+    comment="Start time within each day covered by the availability rule that the rule is referencing. No timezone. UTC time."
   )
   end_time: Mapped[time | None] = mapped_column(
-    Time(timezone=True),
+    Time,
     nullable=True,
-    comment="End time within each day covered by the availability rule that the rule is referencing."
+    comment="End time within each day covered by the availability rule that the rule is referencing. No timezone. UTC time."
   )
   start_datetime: Mapped[datetime | None] = mapped_column(
-    DateTime(timezone=True),
+    DateTime,
     nullable=True,
     comment="Start datetime of availability window"
   )
   end_datetime: Mapped[datetime | None] = mapped_column(
-    DateTime(timezone=True),
+    DateTime,
     nullable=True,
     comment="End datetime of availability window"
   )
-
+  iana_timezone: Mapped[str | None] = mapped_column(
+    String,
+    nullable=True,
+    comment="End datetime of availability window"
+  )
 
   def map_to_dto(self):
     return AvailabilityRuleDTO(
@@ -74,5 +77,6 @@ class AvailabilityRuleModel(Base, TimestampMixin, UUIDMixin):
       start_time=self.start_time,
       end_time=self.end_time,
       start_datetime=self.start_datetime,
-      end_datetime=self.end_datetime
+      end_datetime=self.end_datetime,
+      iana_timezone=self.iana_timezone
     )

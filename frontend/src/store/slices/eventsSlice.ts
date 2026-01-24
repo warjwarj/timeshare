@@ -5,7 +5,7 @@ import { apiClient } from "../../utils/apiClient";
 import axios, { HttpStatusCode } from 'axios';
 import { toastService } from '../../toastService';
 import { TZDate } from '@date-fns/tz';
-import { getUserTimezone } from '../../utils/utils';
+import { selectSelectedIanaTimezone } from './appSlice';
 
 const getEvents = createAsyncThunk(
   'getEvents',
@@ -212,14 +212,13 @@ export const makeEventSelectors = () => {
 
   // select all events, processing dates from strings into TZDate objects
   const selectProcessedEvents = createSelector(
-    [selectEvents],
-    (events): EventDTO[] => {
-      const tz = getUserTimezone();
+    [selectEvents, selectSelectedIanaTimezone],
+    (events, ianaTimezone): EventDTO[] => {
       return [...events]
         .map(ev => ({
           ...ev,
-          start: new TZDate(ev.start as unknown as string, tz),
-          end: new TZDate(ev.end as unknown as string, tz),
+          start: new TZDate(ev.start as unknown as string, ianaTimezone),
+          end: new TZDate(ev.end as unknown as string, ianaTimezone),
         }))
         .sort((a, b) => a.start.getTime() - b.start.getTime());
     }

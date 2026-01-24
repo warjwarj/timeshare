@@ -18,18 +18,36 @@ const TimeSelector: React.FC<TimeSelectorProps> = ({ onChange, defaultMins, defa
 
   // helper states and refs
   const [isOpen, setIsOpen] = useState(false);
-  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, right: 0 });
+  const [dropdownPosition, setDropdownPosition] = useState<React.CSSProperties>({});
   const dropdownRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
+
+  const DROPDOWN_WIDTH = 160; // w-40
+  const DROPDOWN_HEIGHT = 240; // h-60
 
   // Update dropdown position when opened
   useEffect(() => {
     if (isOpen && buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect();
-      setDropdownPosition({
-        top: rect.bottom + 4,
-        right: window.innerWidth - rect.right,
-      });
+      const position: React.CSSProperties = {};
+
+      // Vertical positioning
+      const spaceBelow = window.innerHeight - rect.bottom;
+      if (spaceBelow >= DROPDOWN_HEIGHT + 4) {
+        position.top = rect.bottom + 4;
+      } else {
+        position.bottom = window.innerHeight - rect.top + 4;
+      }
+
+      // Horizontal positioning
+      const spaceRight = window.innerWidth - rect.left;
+      if (spaceRight >= DROPDOWN_WIDTH) {
+        position.left = rect.left;
+      } else {
+        position.right = window.innerWidth - rect.right;
+      }
+
+      setDropdownPosition(position);
     }
   }, [isOpen]);
 
@@ -44,7 +62,7 @@ const TimeSelector: React.FC<TimeSelectorProps> = ({ onChange, defaultMins, defa
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const internalOnChange = (m: number, h: number)=> {
+  const internalOnChange = (m: number, h: number) => {
     setSelectedMin(m)
     setSelectedHour(h)
     console.log()
@@ -54,7 +72,7 @@ const TimeSelector: React.FC<TimeSelectorProps> = ({ onChange, defaultMins, defa
     <>
       <div className="w-full h-auto">
         {/* selected time */}
-        <div className="flex flex-row p-2 rounded-lg border w-min">
+        <div className="flex flex-row p-2 rounded-lg border w-min overflow-auto">
           <button
             ref={buttonRef}
             onClick={() => setIsOpen(!isOpen)}
@@ -75,7 +93,7 @@ const TimeSelector: React.FC<TimeSelectorProps> = ({ onChange, defaultMins, defa
           <div
             ref={dropdownRef}
             className="flex flex-row justify-between fixed z-50 w-40 h-60 border rounded-lg px-2 bg-light-background dark:bg-dark-background shadow-lg overflow-x-hidden"
-            style={{ top: dropdownPosition.top, right: dropdownPosition.right }}
+            style={dropdownPosition}
           >
             {/* Hour navigation */}
             <div className="flex flex-col p-2 items-center justify-between overflow-x-hidden">
@@ -89,7 +107,6 @@ const TimeSelector: React.FC<TimeSelectorProps> = ({ onChange, defaultMins, defa
                   </button>)
               })}
             </div>
-
             {/* Minuite navigation */}
             <div className="flex flex-col p-2 items-center justify-between overflow-x-hidden">
               {minutes.map((m, i) => {

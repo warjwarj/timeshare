@@ -36,23 +36,18 @@ export function isNullOrWhitespace(input: string) {
   return !input || !input.trim();
 }
 
-
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   Date utils
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-export function getUserTimezone(): string {
-  return Intl.DateTimeFormat().resolvedOptions().timeZone;
-}
-
 export function isValidDate(d: TZDate) {
   return (d instanceof TZDate) && !isNaN(d.getTime());
 }
 
-export function getCalendarDaysInMonth(year: number, month: number, timezone?: string) {
-  const tz = timezone ?? getUserTimezone();
+export function getCalendarDaysInMonth(year: number, month: number, timezone: string) {
+  const tz = timezone;
   const monthIndex = month - 1; // 0..11 instead of 1..12
   const names = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
   let date = new TZDate(year, monthIndex, 1, tz);
@@ -80,12 +75,15 @@ export function getDateFromCellIndex(cellStep: TimeSpan, gridStart: TZDate, cell
 }
 
 export function formatDate(date: TZDate | null) {
-  if (!date) return 'Select a date';
-  return date.toLocaleDateString('en-US', {
+  if (!date) return;
+  return date.toLocaleString("en-US", {
+    timeZone: date.timeZone,
     weekday: 'short',
     year: 'numeric',
     month: 'short',
-    day: 'numeric'
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
   });
 }
 

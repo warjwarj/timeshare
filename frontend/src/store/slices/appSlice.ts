@@ -53,6 +53,9 @@ export const appSlice = createSlice({
     },
     setSelectedDate: (state, action: PayloadAction<{ dateIsoStr: string }>) => {
       state.selectedDate = action.payload.dateIsoStr
+    },
+    setSelectedTimezone: (state, action: PayloadAction<{ newTz: string }>) => {
+      state.ianaTimezone = action.payload.newTz
     }
   },
   extraReducers: (builder) => {
@@ -89,7 +92,7 @@ export const selectSelectedMonthAsTzDate = createSelector(
 )
 
 // reducers
-export const { setSelectedDate, setSelectedMonth } = appSlice.actions;
+export const { setSelectedDate, setSelectedMonth, setSelectedTimezone } = appSlice.actions;
 
 // thunks
 export { getCurrentDate };

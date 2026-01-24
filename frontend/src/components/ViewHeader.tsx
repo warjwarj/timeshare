@@ -8,7 +8,7 @@ type ViewHeaderProps = {
 const ViewHeader: React.FC<ViewHeaderProps> = ({ children }) => {
   const { isCollapsed, setIsCollapsed, isPhone } = useLayoutContext();
   return (
-    <div className="flex h-[5rem] gap-1 p-2 border-b border-light-border dark:border-dark-border">
+    <div className="flex h-[5rem] gap-1 p-2 border-b border-light-border dark:border-dark-border items-center">
 
       {/* Collapse button on the left of the header area. Hidden when sidebar is open on phone. */}
       {!(isPhone && !isCollapsed) && (

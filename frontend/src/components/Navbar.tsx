@@ -1,10 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from "react-router-dom";
-import { Settings, LogOut } from 'lucide-react';
+import { Settings, LogOut, Clock } from 'lucide-react';
 
 import { selectName } from '../store/slices/authSlice';
 import { ourUseDispatch, ourUseSelector } from '../store/hooks';
 import { logout } from '../store/slices/authSlice';
+import { createPortal } from 'react-dom';
+import { Modal } from './Modal';
+import { TimezoneSelectorModalContent } from './TimezoneSelectorModalContent';
 
 type NavLink = {
   name: string;
@@ -28,7 +31,7 @@ const Navbar: React.FC<NavbarProps> = ({ links }) => {
   const navigator = useNavigate()
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-
+  const [tzModalOpen, setTzModalOpen] = useState(false)
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -42,6 +45,7 @@ const Navbar: React.FC<NavbarProps> = ({ links }) => {
   }, []);
 
   const profileIconMenuItems: MenuItem[] = [
+    { icon: Clock, label: 'Timezone', action: () => { setTzModalOpen(true) } },
     { icon: Settings, label: 'Settings', action: () => navigator('/settings') },
     { icon: LogOut, label: 'Log out', action: () => { dispatch(logout()); navigator('/login') } },
   ];
@@ -74,14 +78,28 @@ const Navbar: React.FC<NavbarProps> = ({ links }) => {
 
       <div className="flex items-center space-x-4">
 
-        {/* Profile Icon */}
         <div className="relative" ref={dropdownRef}>
+          {/* Profile Icon */}
           <button
             onClick={() => setIsOpen(!isOpen)}
             className="grid place-items-center w-10 h-10 rounded-full bg-blue-600 text-white font-semibold hover:bg-blue-700 text-lg"
           >
             {name[0]?.toLocaleUpperCase()}
           </button>
+
+          {/* Timezone selector */}
+          {tzModalOpen && createPortal(
+            <Modal
+              label="Select timezone"
+              isOpen={tzModalOpen}
+              onClose={() => setTzModalOpen(false)}
+            >
+              <TimezoneSelectorModalContent
+                onClose={() => setTzModalOpen(false)}
+              />
+            </Modal>,
+            document.body
+          )}
 
           {/* Dropdown */}
           {isOpen && (

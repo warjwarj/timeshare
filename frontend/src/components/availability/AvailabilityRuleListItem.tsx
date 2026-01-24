@@ -7,6 +7,9 @@ import { ourUseDispatch } from '../../store/hooks';
 import { createPortal } from 'react-dom';
 import { AvailabilityRuleModalContent } from './AvailabilityRuleModalContent';
 import { Modal } from '../Modal';
+import React from 'react';
+import { formatDate } from '../../utils/utils';
+import { TZDate } from '@date-fns/tz';
 
 const WEEKDAY_NAMES = Object.values(WeekDayEnum).map(wd => wd.substring(0, 3));
 
@@ -28,7 +31,7 @@ const AvailabilityRuleListItem: React.FC<AvailabilityRuleListItemProps> = ({ rul
   };
 
   return (
-    <>
+    <React.Fragment key={rule.uuid}>
       <div
         key={rule.uuid}
         className="p-4 flex flex-col justify-between bg-light-background dark:bg-dark-background border border-light-border dark:border-dark-border rounded-lg"
@@ -47,7 +50,7 @@ const AvailabilityRuleListItem: React.FC<AvailabilityRuleListItemProps> = ({ rul
 
         {(
           <div className="mb-2 text-sm text-light-secondary-text dark:text-dark-secondary-text">
-            <span className="font-medium">Days: </span>
+            <span className="font-medium">Weekdays: </span>
             {rule.weekdays && (
               <>{rule.weekdays.map(d => WEEKDAY_NAMES[d]).join(', ')}</>
             )}
@@ -55,14 +58,14 @@ const AvailabilityRuleListItem: React.FC<AvailabilityRuleListItemProps> = ({ rul
         )}
 
         <div className="mb-2 text-sm text-light-secondary-text dark:text-dark-secondary-text">
-          <span className="font-medium">Dates: </span>
-          {rule.start_datetime && rule.end_datetime && (
-            <>{rule.start_datetime?.split('T')[0]} to {rule.end_datetime?.split('T')[0]}</>
+          <span className="font-medium">Start & end: </span>
+          {rule.start_datetime && rule.end_datetime && rule.iana_timezone && (
+            <>{formatDate(new TZDate(rule.start_datetime, rule.iana_timezone))} to {formatDate(new TZDate(rule.end_datetime, rule.iana_timezone))}</>
           )}
         </div>
 
         <div className="mb-2 text-sm text-light-secondary-text dark:text-dark-secondary-text">
-          <span className="font-medium">Time: </span>
+          <span className="font-medium">Working hours: </span>
           {rule.start_time || '00:00'} - {rule.end_time || '23:59'}
         </div>
 
@@ -98,7 +101,7 @@ const AvailabilityRuleListItem: React.FC<AvailabilityRuleListItemProps> = ({ rul
         </Modal>,
         document.body
       )}
-    </>
+    </React.Fragment>
   )
 };
 

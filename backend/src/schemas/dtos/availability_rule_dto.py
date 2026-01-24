@@ -14,6 +14,7 @@ class AvailabilityRuleDTO:
   uuid: str
   name: str
   created_by_user_uuid: str
+  iana_timezone: str
   prevents_booking: bool = None
   weekdays: Optional[list[int]] = None
   start_time: Optional[time] = None

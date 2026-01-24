@@ -1,6 +1,7 @@
 from typing import Optional
 from datetime import datetime, time
 from dataclasses import dataclass
+from pydantic_extra_types.timezone_name import TimeZoneName
   
 
 @dataclass
@@ -14,6 +15,7 @@ class SafeAvailabilityRuleDTO:
   uuid: str
   name: str
   prevents_booking: bool = None
+  iana_timezone: TimeZoneName = None
   weekdays: Optional[list[int]] = None
   start_time: Optional[time] = None
   end_time: Optional[time] = None

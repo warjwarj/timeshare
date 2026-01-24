@@ -1,9 +1,10 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, createSelector } from '@reduxjs/toolkit';
 
 import { apiClient } from "../../utils/apiClient";
 import axios, { HttpStatusCode } from 'axios';
 import { toastService } from '../../toastService';
-import type { AvailabilityRuleDTO } from '../../types/AvailabilityRuleDTO';
+import { type AvailabilityRuleDTO } from '../../types/AvailabilityRuleDTO';
+import { fromZonedTime, toZonedTime } from 'date-fns-tz';
 
 const getAvailabilityRules = createAsyncThunk(
   'getAvailabilityRules',
@@ -59,6 +60,12 @@ const createAvailabilityRule = createAsyncThunk(
   'createAvailabilityRule',
   async (rule: AvailabilityRuleDTO, { signal, rejectWithValue }) => {
     try {
+      // format to utc+0 time on outbound
+      if (rule.iana_timezone && rule.start_datetime && rule.end_datetime) {
+        rule.start_datetime = fromZonedTime(rule.start_datetime, rule.iana_timezone).toISOString()
+        rule.end_datetime = fromZonedTime(rule.end_datetime, rule.iana_timezone).toISOString()
+      }
+
       const res = await apiClient.post("/availability", rule, {
         signal,
         validateStatus: status => status < 500,
@@ -84,11 +91,17 @@ const updateAvailabilityRule = createAsyncThunk(
   'updateAvailabilityRule',
   async (rule: AvailabilityRuleDTO, { signal, rejectWithValue }) => {
     try {
+      // format to utc+0 time on outbound
+      if (rule.iana_timezone && rule.start_datetime && rule.end_datetime) {
+        rule.start_datetime = fromZonedTime(rule.start_datetime, rule.iana_timezone).toISOString()
+        rule.end_datetime = fromZonedTime(rule.end_datetime, rule.iana_timezone).toISOString()
+      }
+
       const res = await apiClient.put(
-        `/availability/${rule.uuid}`, 
+        `/availability/${rule.uuid}`,
         rule, {
-          signal,
-          validateStatus: status => status < 500,
+        signal,
+        validateStatus: status => status < 500,
       });
       if (res.status !== HttpStatusCode.Ok) {
         const errMsg = res.data?.["detail"]?.[0]?.["msg"] || "Unknown error";
@@ -231,10 +244,22 @@ export const availabilitySlice = createSlice({
   }
 });
 
-// selectors
-export const selectAvailabilityRules = (state: { availability: AvailabilityState }) => state.availability.availabilityRules;
-export const selectAvailabilityPending = (state: { availability: AvailabilityState }) => state.availability.pending;
-export const selectAvailabilityError = (state: { availability: AvailabilityState }) => state.availability.error;
+// internal selector
+const selectAvailabilityRules = (state: { availability: AvailabilityState }) => state.availability.availabilityRules;
+
+// export selector for processed availability rules
+export const selectProcessedAvailabilityRules = createSelector(
+  [
+    selectAvailabilityRules,
+  ],
+  (rules): AvailabilityRuleDTO[] => {
+    return rules.map(r => ({
+      ...r,
+      start_datetime: r.start_datetime && r.iana_timezone ? toZonedTime(r.start_datetime, r.iana_timezone).toISOString() : null,
+      end_datetime: r.end_datetime && r.iana_timezone ? toZonedTime(r.end_datetime, r.iana_timezone).toISOString() : null
+    }))
+  }
+);
 
 // thunks
 export {

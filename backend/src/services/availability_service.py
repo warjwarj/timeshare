@@ -43,12 +43,13 @@ def create_availability_rule(user_uuid: str, rule: CreateAvailabilityRuleRequest
     name=rule.name,
     prevents_booking=rule.prevents_booking,
     weekdays=rule.weekdays,
+    iana_timezone=rule.iana_timezone,
     start_time=rule.start_time,
     end_time=rule.end_time,
     start_datetime=rule.start_datetime,
     end_datetime=rule.end_datetime,
     created_by_user_uuid=user_uuid
-  )
+  )  
   if rec is not None:
     return sanitise_availability_rule(rec)
   
@@ -85,6 +86,7 @@ def update_availability_rule(uuid: str, rule: UpdateAvailabilityRuleRequest) -> 
   rec = availability_repo.update_record(
     uuid=uuid,
     name=rule.name,
+    iana_timezone=rule.iana_timezone,
     prevents_booking=rule.prevents_booking,
     weekdays=rule.weekdays,
     start_time=rule.start_time,
