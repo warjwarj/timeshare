@@ -28,7 +28,7 @@ class AvailabilityRuleModel(Base, TimestampMixin, UUIDMixin):
     String(36),
     index=True,
     nullable=False,
-    comment="the uuid of the user that created this rule."
+    comment="the uuid of the user who created this rule."
   )
   prevents_booking: Mapped[bool] = mapped_column(
     Boolean,
@@ -54,17 +54,17 @@ class AvailabilityRuleModel(Base, TimestampMixin, UUIDMixin):
   start_datetime: Mapped[datetime | None] = mapped_column(
     DateTime,
     nullable=True,
-    comment="Start datetime of availability window"
+    comment="Start datetime of availability window. No timezone. UTC time."
   )
   end_datetime: Mapped[datetime | None] = mapped_column(
     DateTime,
     nullable=True,
-    comment="End datetime of availability window"
+    comment="End datetime of availability window. No timezone. UTC time."
   )
   iana_timezone: Mapped[str | None] = mapped_column(
     String,
     nullable=True,
-    comment="End datetime of availability window"
+    comment="iana timezone standard string."
   )
 
   def map_to_dto(self):

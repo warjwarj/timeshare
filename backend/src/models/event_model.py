@@ -16,12 +16,39 @@ class EventModel(Base, TimestampMixin, UUIDMixin):
   
   """
   __tablename__: str = "events"
-  
-  start: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True, nullable=False)
-  end: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True, nullable=False)
-  name: Mapped[str] = mapped_column(String(255), index=True, nullable=False)
-  colour: Mapped[str] = mapped_column(String(16), index=True, nullable=True)
-  created_by_user_uuid: Mapped[str] = mapped_column(String(36), index=True, nullable=False)
+  name: Mapped[str] = mapped_column(
+    String(255),
+    nullable=False,
+    comment="Name of event."
+  )  
+  created_by_user_uuid: Mapped[str] = mapped_column(
+    String(36), 
+    index=True, 
+    nullable=False,
+    comment="The uuid of the user who created this event."    
+  )
+  start: Mapped[datetime] = mapped_column(
+    DateTime, 
+    index=True, 
+    nullable=False,
+    comment="Start datetime of event. No timezone. UTC time."
+  )
+  end: Mapped[datetime] = mapped_column(
+    DateTime, 
+    index=True, 
+    nullable=False,
+    comment="Start datetime of event. No timezone. UTC time."
+  )
+  iana_timezone: Mapped[str | None] = mapped_column(
+    String,
+    nullable=True,
+    comment="iana timezone standard string."
+  )  
+  colour: Mapped[str] = mapped_column(
+    String(16),
+    nullable=True,
+    comment="Event colour."
+  )
 
   # example index - come back to this
   __table_args__: tuple[Index] = (
