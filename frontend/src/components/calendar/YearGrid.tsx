@@ -127,7 +127,7 @@ const YearGrid: React.FC<YearGridProps> = ({ onMonthSelect }) => {
   const year = selectedDate.getFullYear();
 
   // Get events to show indicators
-  const { selectProcessedEvents } = useMemo(
+  const { selectProcessedEventsAsDate: selectProcessedEvents } = useMemo(
     () => makeEventSelectors(),
     []
   );

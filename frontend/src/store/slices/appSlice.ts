@@ -16,7 +16,7 @@ const getCurrentDate = createAsyncThunk(
         },
         signal,
         validateStatus: status => status < 500
-      })
+      })      
       if (res.status !== HttpStatusCode.Ok) {
         const errMsg = res.data?.["detail"]?.[0]?.["msg"] || "Unknown error";
         toastService.showError("Couldn't get current datetime", errMsg);

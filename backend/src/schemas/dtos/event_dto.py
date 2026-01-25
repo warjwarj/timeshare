@@ -11,6 +11,7 @@ class EventDTO():
   uuid: Optional[str]
   start: datetime
   end: datetime
+  iana_timezone: str
   name: str
   colour: str
   created_by_user_uuid: str

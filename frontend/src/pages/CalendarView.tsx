@@ -5,7 +5,7 @@ import type { GridStyle } from '../components/calendar/MonthGrid.tsx';
 import { TimeSpanEnum, WeekDayEnum } from "../types/dateTypes.ts";
 import { DayGrid } from '../components/calendar/DayGrid.tsx';
 import { YearGrid } from '../components/calendar/YearGrid.tsx';
-import type { EventStyle } from '../components/events/Event.tsx';
+import type { EventBarStyle } from '../components/calendar/EventBar.tsx';
 import { DateSelector } from "../components/DateSelector.tsx";
 import { isValidDate } from '../utils/utils.ts';
 import { getMonthGridConfig, type MonthGridConfig } from '../utils/monthGridUtils.ts';
@@ -16,7 +16,7 @@ import { ViewBody } from '../components/ViewBody.tsx';
 import { TZDate } from "@date-fns/tz";
 
 // event style for 
-const monthGridEventStyle: EventStyle = {
+const monthGridEventStyle: EventBarStyle = {
   eventHeightStyle: "1.6em",
   defaultEventStyle: "absolute pb-0.5 pl-2 text-white text-center text-sm items-center justify-left text-nowrap",
   extraClasses: "",
@@ -27,7 +27,7 @@ const monthGridEventStyle: EventStyle = {
 };
 
 // event style
-const dayGridEventStyle: EventStyle = {
+const dayGridEventStyle: EventBarStyle = {
   eventHeightStyle: "",
   defaultEventStyle: "text-white text-center w-fit",
   extraClasses: "",

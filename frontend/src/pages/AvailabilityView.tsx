@@ -51,7 +51,7 @@ const AvailabilityView: React.FC = () => {
             No availability rules yet. Click "Add Rule" to create one.
           </div>
         )}        
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="flex flex-col gap-2">
           {rules
             .filter((rule): rule is AvailabilityRuleDTO & { uuid: string } => !!rule.uuid)
             .sort(rule => rule.prevents_booking ? -1 : 1)

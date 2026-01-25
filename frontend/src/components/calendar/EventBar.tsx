@@ -4,15 +4,17 @@ import { createPortal } from 'react-dom';
 
 // components
 import { Modal } from '../Modal';
-import { EventInfoModalContent } from './EventInfoModalContent';
+import { EventModalContent } from '../events/EventModalContent';
 
 // types
 import { type EventDTO } from '../../types/EventDTO';
 
 // css
 import '../../../index.css';
+import { TZDate } from '@date-fns/tz';
+import { formatDate } from '../../utils/utils';
 
-type EventStyle = {
+type EventBarStyle = {
   defaultEventStyle: string;
   eventHeightStyle: string;
   extraClasses: string;
@@ -22,24 +24,14 @@ type EventStyle = {
   lane: number;
   top?: number; // Optional: direct top position in pixels (used by DayGrid)
 }
-type EventProps = {
-  readonly eventDTO: EventDTO
-  evStyle: EventStyle
+type EventBarProps = {
+  readonly eventDTO: EventDTO & { start: Date, end: Date }
+  evStyle: EventBarStyle
   key: string
 };
 
-const formatDate = (date: Date): string => {
-  return date.toLocaleDateString(undefined, {
-    weekday: 'short',
-    month: 'short',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit'
-  });
-};
-
-const Event: React.FC<{
-  eventProps: EventProps,
+const EventBar: React.FC<{
+  eventProps: EventBarProps,
   updateEvent: (updatedEvent: EventDTO) => void;
   deleteEvent: (uuid: string) => void;
 }> = ({
@@ -56,13 +48,13 @@ const Event: React.FC<{
     const [hoverPos, setHoverPos] = useState({ x: 0, y: 0 });
     const hoverTimeout = useRef<number | null>(null);
 
+    // show / hide the hover popup
     const handleMouseEnter = (e: React.MouseEvent) => {
       hoverTimeout.current = window.setTimeout(() => {
         setHoverPos({ x: e.clientX, y: e.clientY });
         setShowHover(true);
       }, 300);
     };
-
     const handleMouseLeave = () => {
       if (hoverTimeout.current) {
         clearTimeout(hoverTimeout.current);
@@ -78,7 +70,7 @@ const Event: React.FC<{
     };
 
     return (
-      <div key={eventProps.eventDTO.key}>
+      <div key={eventProps.key}>
         <span
           onClick={() => { setShowHover(false); setShowModal(true); }}
           onMouseEnter={handleMouseEnter}
@@ -105,7 +97,7 @@ const Event: React.FC<{
             {eventProps.eventDTO.name}
           </span>
         </span>
-        {showHover && createPortal(
+        {showHover && eventProps.eventDTO.start && eventProps.eventDTO.end && createPortal(
           <div
             className="fixed z-50 pointer-events-none px-3 py-2 bg-gray-900 text-white text-sm rounded-lg shadow-lg max-w-xs"
             style={{
@@ -115,8 +107,8 @@ const Event: React.FC<{
           >
             <div className="font-semibold mb-1">{eventProps.eventDTO.name}</div>
             <div className="text-gray-300 text-xs">
-              <div>{formatDate(eventProps.eventDTO.start)}</div>
-              <div>to {formatDate(eventProps.eventDTO.end)}</div>
+              <div>{formatDate(new TZDate(eventProps.eventDTO.start))}</div>
+              <div>to {formatDate(new TZDate(eventProps.eventDTO.end))}</div>
             </div>
           </div>,
           document.body
@@ -127,11 +119,12 @@ const Event: React.FC<{
             isOpen={showModal}
             onClose={() => setShowModal(false)}
           >
-            <EventInfoModalContent
-              event={eventProps}
-              updateEvent={updateEvent}
-              deleteEvent={deleteEvent}
-              closePopup={() => setShowModal(false)}
+            <EventModalContent
+              event={eventProps.eventDTO}
+              editing={true}
+              onSave={updateEvent}
+              onDelete={deleteEvent}
+              onClose={() => setShowModal(false)}
             />
           </Modal>,
           document.body
@@ -140,6 +133,7 @@ const Event: React.FC<{
     )
   };
 
-export { Event };
-export type { EventStyle }
-export type { EventProps }
+export { EventBar };
+
+export type { EventBarStyle }
+export type { EventBarProps }

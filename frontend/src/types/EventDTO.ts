@@ -1,10 +1,8 @@
-import type { TZDate } from "@date-fns/tz";
-
 export type EventDTO = {
-  key: string;
-  uuid: string
-  start: TZDate; // event start
-  end: TZDate;   // inclusive
-  name: string;
-  colour: string;
+  uuid: string | null;
+  name: string | null;
+  start: string | Date | null
+  end: string | Date | null;
+  iana_timezone: string | null;
+  colour: string | null;
 };

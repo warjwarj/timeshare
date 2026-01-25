@@ -86,7 +86,6 @@ def update_availability_rule(uuid: str, rule: UpdateAvailabilityRuleRequest) -> 
   rec = availability_repo.update_record(
     uuid=uuid,
     name=rule.name,
-    iana_timezone=rule.iana_timezone,
     prevents_booking=rule.prevents_booking,
     weekdays=rule.weekdays,
     start_time=rule.start_time,

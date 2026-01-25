@@ -5,7 +5,7 @@ import { apiClient } from "../../utils/apiClient";
 import axios, { HttpStatusCode } from 'axios';
 import { toastService } from '../../toastService';
 import { TZDate } from '@date-fns/tz';
-import { selectSelectedIanaTimezone } from './appSlice';
+import { fromZonedTime, toZonedTime } from 'date-fns-tz';
 
 const getEvents = createAsyncThunk(
   'getEvents',
@@ -19,19 +19,19 @@ const getEvents = createAsyncThunk(
         signal,
         validateStatus: status => status < 500,
       })
-      
+
       if (res.status !== HttpStatusCode.Ok) {
         const errorMsg = res.data?.["detail"]?.[0]?.["msg"] || "Unknown error";
         toastService.showError("Couldn't get events", errorMsg);
         return rejectWithValue(errorMsg);
       }
-      
+
       return res.data as EventDTO[];
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') {
         return rejectWithValue('Request cancelled');
       }
-      
+
       const err = error instanceof Error ? error.message : 'Unknown error';
       toastService.showError("Couldn't get events", err);
       return rejectWithValue(err);
@@ -41,11 +41,17 @@ const getEvents = createAsyncThunk(
 
 const updateEvent = createAsyncThunk(
   'updateEvent',
-  async (modifiedEvent: EventDTO, { signal, rejectWithValue }) => {
+  async (event: EventDTO, { signal, rejectWithValue }) => {
     try {
+      // format to utc+0 time on outbound
+      if (event.iana_timezone && event.start && event.end) {
+        event.start = fromZonedTime(event.start, event.iana_timezone).toISOString()
+        event.end = fromZonedTime(event.end, event.iana_timezone).toISOString()
+      }
+
       const res = await apiClient.put(
-        `/events/${modifiedEvent.uuid}`,
-        modifiedEvent,
+        `/events/${event.uuid}`,
+        event,
         { signal, validateStatus: status => status < 500 }
       )
       if (res.status !== HttpStatusCode.Ok) {
@@ -67,11 +73,17 @@ const updateEvent = createAsyncThunk(
 
 const addEvent = createAsyncThunk(
   'addEvent',
-  async (newEvent: Omit<EventDTO, 'key' | 'uuid'>, { signal, rejectWithValue }) => {
+  async (event: Omit<EventDTO, 'uuid'>, { signal, rejectWithValue }) => {
     try {
+      // format to utc+0 time on outbound
+      if (event.iana_timezone && event.start && event.end) {
+        event.start = fromZonedTime(event.start, event.iana_timezone).toISOString()
+        event.end = fromZonedTime(event.end, event.iana_timezone).toISOString()
+      }
+
       const res = await apiClient.post(
         "/events",
-        newEvent,
+        event,
         { signal, validateStatus: status => status < 500 }
       )
       if (res.status !== HttpStatusCode.Created) {
@@ -210,32 +222,52 @@ export const selectEvents = (state: { events: EventsState }) => state.events.eve
 // function which returns event selectors
 export const makeEventSelectors = () => {
 
-  // select all events, processing dates from strings into TZDate objects
-  const selectProcessedEvents = createSelector(
-    [selectEvents, selectSelectedIanaTimezone],
-    (events, ianaTimezone): EventDTO[] => {
+  // select all events with start and end dates as date objects
+  const selectProcessedEventsAsDate = createSelector(
+    [
+      selectEvents
+    ],
+    (events: EventDTO[]): (EventDTO & { start: Date, end: Date })[] => {
       return [...events]
         .map(ev => ({
           ...ev,
-          start: new TZDate(ev.start as unknown as string, ianaTimezone),
-          end: new TZDate(ev.end as unknown as string, ianaTimezone),
+          start: ev.start && ev.iana_timezone ? toZonedTime(ev.start, ev.iana_timezone) : null,
+          end: ev.end && ev.iana_timezone ? toZonedTime(ev.end, ev.iana_timezone) : null
         }))
-        .sort((a, b) => a.start.getTime() - b.start.getTime());
+        .filter((ev): ev is typeof ev & { start: Date; end: Date } =>
+          ev.start !== null && ev.end !== null
+        )
+        .sort((a, b) => a.start.getTime() - b.start.getTime())
+    }
+  );
+
+  // select all events with start and end dates as strings
+  const selectProcessedEventsAsString = createSelector(
+    [
+      selectProcessedEventsAsDate
+    ],
+    (events: (EventDTO & { start: Date, end: Date })[]): (EventDTO & { start: string, end: string })[] => {
+      return [...events]
+        .map(ev => ({
+          ...ev,
+          start: ev.start.toISOString(),
+          end: ev.end.toISOString()
+        }))
     }
   );
 
   // select all events which partially overlap with a given date
   const selectEventsSpanningDate = createSelector(
     [
-      selectProcessedEvents,
+      selectProcessedEventsAsDate,
       (_: unknown, date: TZDate) => date,
     ],
-    (events, date): EventDTO[] => {
+    (events, date): (EventDTO & { start: Date, end: Date })[] => {
       const tz = date.timeZone;
       const dayStart = new TZDate(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0, 0, tz);
       const dayEnd = new TZDate(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59, 999, tz);
 
-      return events.filter(e => e.start <= dayEnd && e.end >= dayStart)
+      return events.filter(e => e.start && e.start <= dayEnd && e.end && e.end >= dayStart)
     }
   );
 
@@ -243,20 +275,21 @@ export const makeEventSelectors = () => {
   // (includes events that start, end, or span entirely across the range)
   const selectEventsBetweenDates = createSelector(
     [
-      selectProcessedEvents,
+      selectProcessedEventsAsDate,
       (_: unknown, start: TZDate, end: TZDate) => ({ start, end }),
     ],
-    (events, { start, end }): EventDTO[] => {
+    (events, { start, end }): (EventDTO & { start: Date, end: Date })[] => {
       const tz = start.timeZone;
       const rangeStart = new TZDate(start.getFullYear(), start.getMonth(), start.getDate(), 0, 0, 0, 0, tz);
       const rangeEnd = new TZDate(end.getFullYear(), end.getMonth(), end.getDate(), 23, 59, 59, 999, tz);
 
-      return events.filter(e => e.start <= rangeEnd && e.end >= rangeStart)
+      return events.filter(e => e.start && e.start <= rangeEnd && e.end && e.end >= rangeStart)
     }
   );
 
   return {
-    selectProcessedEvents,
+    selectProcessedEventsAsDate,
+    selectProcessedEventsAsString,
     selectEventsSpanningDate,
     selectEventsBetweenDates
   };

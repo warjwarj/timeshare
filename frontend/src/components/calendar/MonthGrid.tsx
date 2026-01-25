@@ -8,15 +8,15 @@ import { getDateFromCellIndex, isSameDay, isValidDate } from "../../utils/utils"
 import { ChevronLeft, ChevronRight } from '../svgs/Chevrons';
 import type { CellStyle } from "./Cell";
 import { Cell } from "./Cell";
-import type { EventProps, EventStyle } from "../events/Event";
-import { Event } from '../events/Event';
+import type { EventBarProps, EventBarStyle } from "./EventBar";
+import { EventBar } from './EventBar';
 
 import '../../../index.css';
 import { TimeSpanEnum } from "../../types/dateTypes";
 import { TZDate } from "@date-fns/tz";
 
 type MonthGridStyle = {
-  eventStyle: EventStyle;
+  eventStyle: EventBarStyle;
   cellStyle: CellStyle;
   colCount: number;
 }
@@ -54,7 +54,7 @@ const MonthGrid: React.FC<MonthGridProps> = ({ gridStyle, gridConfig, colHeaders
   const cellLaneEvents = useRef(new Map<number, Map<number, string>>());
   const gridRowWidthRef = useRef<HTMLDivElement>(null);
   const [gridRowWidth, setGridRowWidth] = useState(0);
-  const [eventProps, setEventProps] = useState<EventProps[][]>();
+  const [eventProps, setEventProps] = useState<EventBarProps[][]>();
 
   // measure container width on mount and resize
   useEffect(() => {
@@ -90,11 +90,11 @@ const MonthGrid: React.FC<MonthGridProps> = ({ gridStyle, gridConfig, colHeaders
   };
 
   // Get events for a specific cell
-  const getEventsInCell = (cellIndex: number): EventProps[] => {
+  const getEventsInCell = (cellIndex: number): EventBarProps[] => {
     const laneMap = cellLaneEvents.current.get(cellIndex);
     if (!laneMap) return [];
     const allEvents = eventProps?.flat() ?? [];
-    const result: EventProps[] = [];
+    const result: EventBarProps[] = [];
     laneMap.forEach((id, lane) => {
       const evObj = allEvents.find(ev => ev?.eventDTO.uuid === id);
       if (evObj) {
@@ -184,7 +184,7 @@ const MonthGrid: React.FC<MonthGridProps> = ({ gridStyle, gridConfig, colHeaders
             {eventProps && gridRowWidth > 0 && (
               <div className="absolute top-8 left-0 w-full">
                 {eventProps[rowIndex]?.map((evp) => evp && (
-                  <Event
+                  <EventBar
                     key={evp.key}
                     eventProps={evp}
                     updateEvent={(ev) => dispatch(updateEvent(ev))}

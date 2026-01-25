@@ -30,17 +30,17 @@ class EventModel(Base, TimestampMixin, UUIDMixin):
   start: Mapped[datetime] = mapped_column(
     DateTime, 
     index=True, 
-    nullable=False,
+    nullable=True,
     comment="Start datetime of event. No timezone. UTC time."
   )
   end: Mapped[datetime] = mapped_column(
     DateTime, 
     index=True, 
-    nullable=False,
+    nullable=True,
     comment="Start datetime of event. No timezone. UTC time."
   )
-  iana_timezone: Mapped[str | None] = mapped_column(
-    String,
+  iana_timezone: Mapped[str] = mapped_column(
+    String(64),
     nullable=True,
     comment="iana timezone standard string."
   )  
@@ -59,6 +59,7 @@ class EventModel(Base, TimestampMixin, UUIDMixin):
     return EventDTO(
       start=self.start,
       end=self.end,
+      iana_timezone=self.iana_timezone,
       name=self.name,
       colour=self.colour,
       created_at=self.created_at,

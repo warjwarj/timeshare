@@ -40,10 +40,7 @@ def create_event(user_uuid: str, event: CreateEventRequest) -> SafeEventDTO:
   events_repo = EventsRepository()
   
   rec = events_repo.add_record(
-    start=event.start,
-    end=event.end,
-    name=event.name,
-    colour=event.colour,
+    **event.model_dump(),
     created_by_user_uuid=user_uuid
   )
   if rec is not None:
@@ -99,5 +96,7 @@ def delete_event(event_uuid: str) -> dict:
   Delete an event
   """
   events_repo = EventsRepository()
+  
   events_repo.delete_record(event_uuid)
+  
   return {"success": True}

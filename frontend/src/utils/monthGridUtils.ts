@@ -1,5 +1,5 @@
 import { TZDate } from "@date-fns/tz";
-import type { EventProps, EventStyle } from "../components/events/Event";
+import type { EventBarProps, EventBarStyle } from "../components/calendar/EventBar";
 import { MonthEnum, TimeSpanEnum, type TimeSpan } from "../types/dateTypes";
 import type { EventDTO } from "../types/EventDTO";
 import { getPreviousMonday } from "./utils";
@@ -38,14 +38,14 @@ function getCellIndexFromDate(cellStep: TimeSpan, gridStart: TZDate, dt: TZDate)
 */
 
 export function setEventPositions(
-  evDtos: EventDTO[],
+  evDtos: (EventDTO & { start: Date, end: Date })[],
   cellLaneEvents: Map<number, Map<number, string>>,
   gridRowWidth: number,
   start: TZDate,
   cellCount: number,
   colCount: number,
-  defaultEventStyle: EventStyle
-): EventProps[][] {
+  defaultEventStyle: EventBarStyle
+): EventBarProps[][] {
 
   // 1. Init the lane event cell map (1-based to match Grid cell numbering)
   cellLaneEvents.clear();
@@ -55,7 +55,7 @@ export function setEventPositions(
 
   // Constants
   const numOfRows = Math.ceil(cellCount / colCount);
-  const rows: EventProps[][] = Array.from({ length: numOfRows }, () => []);
+  const rows: EventBarProps[][] = Array.from({ length: numOfRows }, () => []);
   const cellWidth = gridRowWidth / colCount;
 
   // 2. Sort events by start time (Essential for correct lane stacking)

@@ -1,7 +1,7 @@
 import { TZDate } from "@date-fns/tz";
 import { TimeSpanEnum, type TimeSpan } from "../types/dateTypes";
 import type { EventDTO } from "../types/EventDTO";
-import type { EventProps, EventStyle } from "../components/events/Event";
+import type { EventBarProps, EventStyle } from "../components/calendar/EventBar";
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -175,7 +175,7 @@ function assignColumns(group: OverlapGroup): void {
 function setDayEventPositions(
   events: EventDTO[],
   config: DayGridConfig
-): EventProps[] {
+): EventBarProps[] {
   const { selectedDate, timeStart, timeEnd, timeStep, snapToStep, gridHeight, gridWidth, defaultEventStyle } = config;
 
   // Filter events for this day
@@ -191,7 +191,7 @@ function setDayEventPositions(
   // Find overlap groups
   const overlapGroups = findOverlapGroups(dayEvents);
 
-  const eventPropsArray: EventProps[] = [];
+  const eventPropsArray: EventBarProps[] = [];
 
   for (const group of overlapGroups) {
     for (const event of group.events) {

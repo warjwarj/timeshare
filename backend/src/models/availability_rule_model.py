@@ -62,7 +62,7 @@ class AvailabilityRuleModel(Base, TimestampMixin, UUIDMixin):
     comment="End datetime of availability window. No timezone. UTC time."
   )
   iana_timezone: Mapped[str | None] = mapped_column(
-    String,
+    String(64),
     nullable=True,
     comment="iana timezone standard string."
   )

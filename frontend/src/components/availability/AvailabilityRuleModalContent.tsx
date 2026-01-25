@@ -24,7 +24,6 @@ const AvailabilityRuleModalContent: React.FC<AvailabilityRuleModalContentProps> 
 
   // init form data with rule values if they exist
   const [formData, setFormData] = useState({
-    uuid: rule.uuid || "",
     name: rule.name || "",
     prevents_booking: rule.prevents_booking || false,
     iana_timezone: rule.iana_timezone || tz,
@@ -47,9 +46,8 @@ const AvailabilityRuleModalContent: React.FC<AvailabilityRuleModalContentProps> 
   const internalSave = () => {
     const outgoingState: AvailabilityRuleDTO = {
       ...formData,
-      ...{ iana_timezone: editing ? rule.iana_timezone : tz },
-      ...(rule?.uuid && { uuid: rule.uuid }
-      )
+      ...{ iana_timezone: editing ? formData.iana_timezone : tz },
+      ...{ uuid: editing && rule.uuid ? rule.uuid : null}
     }
     onSave(outgoingState);
     onClose()
@@ -130,7 +128,7 @@ const AvailabilityRuleModalContent: React.FC<AvailabilityRuleModalContentProps> 
             type="datetime-local"
             id="start-datetime"
             value={formData.start_datetime}
-            onChange={(e) => setFormData(prev => ({ ...prev, start_datetime: new TZDate(e.target.value, tz).toISOString() }))}
+            onChange={(e) => setFormData(prev => ({ ...prev, start_datetime: e.target.value }))}
             className={inputClass}
             required
           />

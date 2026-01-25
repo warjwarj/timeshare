@@ -4,27 +4,25 @@ import { createPortal } from 'react-dom';
 
 // components
 import { Modal } from '../Modal';
-import { AddEventModalContent } from '../events/AddEventModalContent';
 
 // types
-import type { EventProps } from '../events/Event';
+import type { EventBarProps } from './EventBar';
 import type { EventDTO } from '../../types/EventDTO';
 import { TZDate } from '@date-fns/tz';
+import { addHours } from "date-fns";
 
 // css
 import '../../../index.css';
+import { EventModalContent } from '../events/EventModalContent';
+import { formatDate } from '../../utils/utils';
 
 type CellInfoModalContentProps = {
-  eventsInCell: EventProps[];
-  cellDate: TZDate;
+  eventsInCell: EventBarProps[];
+  cellDate: Date;
   onAddEvent: (newEvent: Omit<EventDTO, 'key' | 'uuid'>) => void;
 };
 const CellInfoModalContent: React.FC<CellInfoModalContentProps> = ({ eventsInCell, cellDate, onAddEvent }) => {
   const [showAddEventModal, setShowAddEventModal] = useState(false);
-
-  const tz = cellDate.timeZone;
-  const defaultStart = new TZDate(cellDate.getFullYear(), cellDate.getMonth(), cellDate.getDate(), 9, 0, 0, 0, tz);
-  const defaultEnd = new TZDate(cellDate.getFullYear(), cellDate.getMonth(), cellDate.getDate(), 10, 0, 0, 0, tz);
 
   return (
     <>
@@ -32,15 +30,15 @@ const CellInfoModalContent: React.FC<CellInfoModalContentProps> = ({ eventsInCel
         return (
           <div className="bg-light-background dark:bg-dark-background text-light-primary-text dark:text-dark-primary-text" key={ev.key + "cell-modal-content"}>
             <h3 style={{
-              backgroundColor: ev.eventDTO.colour
+              backgroundColor: ev.eventDTO.colour ?? ""
             }}>
               <strong>{ev.eventDTO.name}</strong>
             </h3>
             <div>
               <div> id: {ev.eventDTO.uuid}</div>
               <div> Lane: {ev.evStyle.lane}</div>
-              <div> Start: {ev.eventDTO.start.toDateString()}</div>
-              <div> End: {ev.eventDTO.end.toDateString()}</div>
+              <div> Start: {formatDate(new TZDate(ev.eventDTO.start))}</div>
+              <div> End: {formatDate(new TZDate(ev.eventDTO.end))}</div>
             </div>
           </div>
         )
@@ -52,11 +50,12 @@ const CellInfoModalContent: React.FC<CellInfoModalContentProps> = ({ eventsInCel
           isOpen={showAddEventModal}
           onClose={() => setShowAddEventModal(false)}
         >
-          <AddEventModalContent
-            start={defaultStart}
-            end={defaultEnd}
+          <EventModalContent
+            event={{ start: cellDate, end: addHours(cellDate, 1) } as EventDTO & { start: Date, end: Date }}
+            editing={false}
             onSave={onAddEvent}
             onClose={() => setShowAddEventModal(false)}
+            onDelete={() => {}}
           />
         </Modal>,
         document.body

@@ -8,8 +8,8 @@ import {
   calculateTotalSlots,
   type DayGridConfig
 } from "../../utils/dayGridUtils";
-import type { EventProps, EventStyle } from "../events/Event";
-import { Event } from '../events/Event';
+import type { EventBarProps, EventStyle } from "./EventBar";
+import { EventBar } from './EventBar';
 import { ChevronLeft, ChevronRight } from '../svgs/Chevrons';
 import { TZDate } from "@date-fns/tz";
 
@@ -46,7 +46,7 @@ const DayGrid: React.FC<DayGridProps> = ({
   const dispatch = ourUseDispatch();
   const containerRef = useRef<HTMLDivElement>(null);
   const gridRef = useRef<HTMLDivElement>(null);
-  const [eventProps, setEventProps] = useState<EventProps[]>([]);
+  const [eventProps, setEventProps] = useState<EventBarProps[]>([]);
   const [containerHeight, setContainerHeight] = useState(0);
 
   // memoised selectors
@@ -208,8 +208,8 @@ const DayGrid: React.FC<DayGridProps> = ({
             className="absolute inset-0 ml-2 mr-2 mb-2"
             style={{ height: gridHeight }}
           >
-            {eventProps.map((evp: EventProps) => (
-              <Event
+            {eventProps.map((evp: EventBarProps) => (
+              <EventBar
                 key={evp.key}
                 eventProps={evp}
                 updateEvent={updateEventCallback}
