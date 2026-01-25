@@ -42,8 +42,8 @@ export function isNullOrWhitespace(input: string) {
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-export function isValidDate(d: TZDate) {
-  return (d instanceof TZDate) && !isNaN(d.getTime());
+export function isValidDate(d: Date) {
+  return (d instanceof Date) && !isNaN(d.getTime());
 }
 
 export function getCalendarDaysInMonth(year: number, month: number, timezone: string) {
@@ -74,10 +74,10 @@ export function getDateFromCellIndex(cellStep: TimeSpan, gridStart: TZDate, cell
   return gridStart;
 }
 
-export function formatDate(date: TZDate | null) {
+export function formatDate(date: Date | null, timezone?: string) {
   if (!date) return;
   return date.toLocaleString("en-US", {
-    timeZone: date.timeZone,
+    timeZone: timezone,
     weekday: 'short',
     year: 'numeric',
     month: 'short',
@@ -87,7 +87,7 @@ export function formatDate(date: TZDate | null) {
   });
 }
 
-export function isSameDay(date1: TZDate | null, date2: TZDate | null): boolean {
+export function isSameDay(date1: Date | null, date2: Date | null): boolean {
   if (!date1 || !date2) return false;
   return date1.getDate() === date2.getDate() &&
     date1.getMonth() === date2.getMonth() &&

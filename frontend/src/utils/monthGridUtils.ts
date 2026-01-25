@@ -1,44 +1,59 @@
 import { TZDate } from "@date-fns/tz";
 import type { EventBarProps, EventBarStyle } from "../components/calendar/EventBar";
-import { MonthEnum, TimeSpanEnum, type TimeSpan } from "../types/dateTypes";
+import { MonthEnum } from "../types/dateTypes";
 import type { EventDTO } from "../types/EventDTO";
 import { getPreviousMonday } from "./utils";
+import { differenceInMilliseconds } from "date-fns";
 
-// get cell index from the date (1-based to match Grid cell numbering)
-function getCellIndexFromDate(cellStep: TimeSpan, gridStart: TZDate, dt: TZDate): number {
-  const diffMs = dt.getTime() - gridStart.getTime();
-  const msPerMinute = 60 * 1000;
-  const msPerHour = 60 * msPerMinute;
-  const msPerDay = 24 * msPerHour;
+const msPerDay = 24 * 60 * 60 * 1000;
 
-  switch (cellStep) {
-    case TimeSpanEnum.Mins5:
-      return Math.floor(diffMs / (5 * msPerMinute)) + 1;
-    case TimeSpanEnum.Mins10:
-      return Math.floor(diffMs / (10 * msPerMinute)) + 1;
-    case TimeSpanEnum.Mins15:
-      return Math.floor(diffMs / (15 * msPerMinute)) + 1;
-    case TimeSpanEnum.Mins30:
-      return Math.floor(diffMs / (30 * msPerMinute)) + 1;
-    case TimeSpanEnum.Hour:
-      return Math.floor(diffMs / msPerHour) + 1;
-    case TimeSpanEnum.Day:
-      return Math.floor(diffMs / msPerDay) + 1;
-  }
-  return 1;
+/**
+ * Get the 1 based cell index of a date within the grid.
+ * We want to display each event in it's local time.
+ * This means we need to do the index calculation with each event in the same tiemzone.
+ * 
+ * @param gridStart   start date of the grid
+ * @param dt          event's date
+ * @param tz          event's timezone
+ * @returns           1 based index of the cell within the grid.
+ */
+function getCellIndexFromDate(gridStart: TZDate, dt: Date, evtz: string): number {
+  const gridStartInEvtz = new TZDate(
+    gridStart.getFullYear(),
+    gridStart.getMonth(),
+    gridStart.getDate(),
+    gridStart.getHours(),
+    gridStart.getMinutes(),
+    gridStart.getSeconds(),
+    evtz
+  );  
+  const dtInEvtz = new TZDate(
+    dt.getFullYear(),
+    dt.getMonth(),
+    dt.getDate(),
+    dt.getHours(),
+    dt.getMinutes(),
+    dt.getSeconds(),
+    evtz
+  );
+  const diffMs = differenceInMilliseconds(dtInEvtz, gridStartInEvtz);
+  return Math.floor(diffMs / msPerDay) + 1;
 }
 
-/*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  SET EVENT POSITIONS
-  create event style objects
-
-  This function is a beast that needs to be tamed
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-*/
-
+/**
+ * Do the calculations needed to set each event bar's style such that it accurately represents the event's timespan.
+ *
+ * @param evDtos                The event dto objects.
+ * @param cellLaneEvents        Map for vertically ordering events within cells. Map<cellIndex, Map<lane, eventId>>.
+ * @param gridRowWidth          Grid width.
+ * @param start                 Grid start date.
+ * @param cellCount             Number of cells in the grid .
+ * @param colCount              Number of columns in the grid.
+ * @param defaultEventStyle     Default event style tailwind string.
+ * @returns 
+ */
 export function setEventPositions(
-  evDtos: (EventDTO & { start: Date, end: Date })[],
+  evDtos: (EventDTO & { uuid: string, start: Date, end: Date, iana_timezone: string, colour: string })[],
   cellLaneEvents: Map<number, Map<number, string>>,
   gridRowWidth: number,
   start: TZDate,
@@ -64,8 +79,8 @@ export function setEventPositions(
   // Iterate through sorted events
   sortedEvents.forEach((ev) => {
 
-    let cellStartIndex = getCellIndexFromDate(TimeSpanEnum.Day, start, ev.start);
-    let cellEndIndex = getCellIndexFromDate(TimeSpanEnum.Day, start, ev.end);
+    let cellStartIndex = getCellIndexFromDate(start, ev.start, ev.iana_timezone);
+    let cellEndIndex = getCellIndexFromDate(start, ev.end, ev.iana_timezone);
 
     // Safety checks for grid boundaries (1-based: valid range is 1 to cellCount)
     if (cellStartIndex < 1) cellStartIndex = 1;
@@ -130,7 +145,7 @@ export function setEventPositions(
         classes += " rounded-r-4xl";
       }
 
-      const evStyle: EventStyle = {
+      const evStyle: EventBarStyle = {
         eventHeightStyle: defaultEventStyle.eventHeightStyle,
         defaultEventStyle: defaultEventStyle.defaultEventStyle,
         extraClasses: classes.trim(),

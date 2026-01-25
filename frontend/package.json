@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@date-fns/tz": "github:date-fns/tz",
+    "@date-fns/utc": "github:date-fns/utc",
     "@reduxjs/toolkit": "^2.11.2",
     "@tailwindcss/vite": "^4.1.16",
     "axios": "^1.13.2",

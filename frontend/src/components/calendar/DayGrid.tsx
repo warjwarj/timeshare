@@ -1,153 +1,77 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { EventDTO } from "../../types/EventDTO";
-import { TimeSpanEnum, type TimeSpan, WeekDayEnum, MonthEnum } from "../../types/dateTypes";
-import { isValidDate } from "../../utils/utils";
-import {
-  setDayEventPositions,
-  generateTimeLabels,
-  calculateTotalSlots,
-  type DayGridConfig
-} from "../../utils/dayGridUtils";
-import type { EventBarProps, EventStyle } from "./EventBar";
-import { EventBar } from './EventBar';
-import { ChevronLeft, ChevronRight } from '../svgs/Chevrons';
-import { TZDate } from "@date-fns/tz";
-
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { ourUseDispatch, ourUseSelector } from '../../store/hooks';
-import { updateEvent, deleteEvent, makeEventSelectors } from '../../store/slices/eventsSlice';
 import { selectSelectedDateAsTzDate, setSelectedDate } from '../../store/slices/appSlice';
+import { deleteEvent, makeEventSelectors, updateEvent } from '../../store/slices/eventsSlice';
+import type { DayGridConfig } from "../../utils/dayGridUtils";
+import { setDayEventPositions } from "../../utils/dayGridUtils";
+import { isValidDate } from "../../utils/utils";
+import { ChevronLeft, ChevronRight } from '../svgs/Chevrons';
+import type { EventBarProps, EventBarStyle } from "./EventBar";
+import { EventBar } from './EventBar';
+import { TZDate } from "@date-fns/tz";
 
 import '../../../index.css';
 
-/*
-  Day Grid component - displays a single day's events in a vertical time-based layout
-*/
-
 type DayGridStyle = {
-  eventStyle: EventStyle;
+  eventStyle: EventBarStyle;
 }
 
 type DayGridProps = {
-  style: DayGridStyle;
-  timeStart?: number;      // Start hour (default: 0)
-  timeEnd?: number;        // End hour (default: 24)
-  timeStep?: TimeSpan;     // Step granularity (default: Hour)
-  snapToStep?: boolean;    // Snap events to step (default: false)
+  gridStyle: DayGridStyle;
+  gridConfig: DayGridConfig;
 };
 
-const DayGrid: React.FC<DayGridProps> = ({
-  style,
-  timeStart = 0,
-  timeEnd = 24,
-  timeStep = TimeSpanEnum.Hour,
-  snapToStep = false
-}) => {
-
+const DayGrid: React.FC<DayGridProps> = ({ gridStyle, gridConfig }) => {
+  const { selectedDate, totalSlots, timeLabels, gridLabel } = gridConfig;
+  const { eventStyle } = gridStyle;
   const dispatch = ourUseDispatch();
+
+  // selectors
+  const { selectEventsSpanningDate } = useMemo(() => makeEventSelectors(), []);
+  const events = ourUseSelector(state => selectEventsSpanningDate(state, selectedDate));
+
+  // refs and state for grid measurement
   const containerRef = useRef<HTMLDivElement>(null);
   const gridRef = useRef<HTMLDivElement>(null);
-  const [eventProps, setEventProps] = useState<EventBarProps[]>([]);
   const [containerHeight, setContainerHeight] = useState(0);
-
-  // memoised selectors
-  const selectedDate = ourUseSelector(selectSelectedDateAsTzDate);
-
-  // calculate grid dimensions
-  const totalSlots = calculateTotalSlots(timeStart, timeEnd, timeStep);
-  const gridHeight = containerHeight;
-
-  const { selectEventsSpanningDate } = useMemo(
-    () => makeEventSelectors(),
-    []
-  );
-
-  const events = ourUseSelector(state =>
-    selectEventsSpanningDate(state, selectedDate)
-  );
+  const [eventProps, setEventProps] = useState<EventBarProps[]>([]);
 
   // measure container height on mount and resize
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
-    const updateHeight = () => {
-      const height = container.getBoundingClientRect().height;
-      setContainerHeight(height);
-    };
+    const updateHeight = () => setContainerHeight(container.getBoundingClientRect().height);
     updateHeight();
     const resizeObserver = new ResizeObserver(updateHeight);
     resizeObserver.observe(container);
     return () => resizeObserver.disconnect();
   }, []);
 
-  // update event positions
+  // calculate event positions when events or grid dimensions change
   useEffect(() => {
-    if (!events) {
-      return;
-    }
-    if (events.length === 0 || !isValidDate(selectedDate) || !gridRef.current) {
+    if (!isValidDate(selectedDate) || events.length === 0 || !gridRef.current || containerHeight === 0) {
       setEventProps([]);
       return;
     }
     const gridWidth = gridRef.current.getBoundingClientRect().width;
-    const config: DayGridConfig = {
-      selectedDate,
-      timeStart,
-      timeEnd,
-      timeStep,
-      snapToStep,
-      gridHeight,
-      gridWidth,
-      defaultEventStyle: style.eventStyle
-    };
-    setEventProps(setDayEventPositions(events, config));
-  }, [events, selectedDate, timeStart, timeEnd, timeStep, snapToStep, gridHeight, style.eventStyle]);
+    setEventProps(setDayEventPositions(events, gridConfig, containerHeight, gridWidth, eventStyle));
+  }, [events, gridConfig, containerHeight, eventStyle, selectedDate]);
 
-  // callback update single event
-  const updateEventCallback = useCallback((moddedev: EventDTO) => {
-    dispatch(updateEvent(moddedev));
-  }, [dispatch]);
-
-  // // callback add new event
-  // const addEventCallback = useCallback((newEvent: Omit<EventDTO, 'key' | 'uuid'>) => {
-  //   dispatch(addEvent(newEvent));
-  // }, [dispatch]);
-
-  // callback delete event
-  const deleteEventCallback = useCallback((uuid: string) => {
-    dispatch(deleteEvent(uuid));
-  }, [dispatch]);
-
-  // Navigate to previous day
-  const goToPrevDay = useCallback(() => {
+  // day navigation handler
+  const navigateDay = (delta: number) => {
+    if (!isValidDate(selectedDate)) return;
     const tz = selectedDate.timeZone;
-    const newDate = new TZDate(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate() - 1, tz);
+    const newDate = new TZDate(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate() + delta, tz);
     dispatch(setSelectedDate({ dateIsoStr: newDate.toISOString() }));
-  }, [dispatch, selectedDate]);
-
-  // Navigate to next day
-  const goToNextDay = useCallback(() => {
-    const tz = selectedDate.timeZone;
-    const newDate = new TZDate(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate() + 1, tz);
-    dispatch(setSelectedDate({ dateIsoStr: newDate.toISOString() }));
-  }, [dispatch, selectedDate]);
-
-  // Format date label
-  const weekdayNames = Object.values(WeekDayEnum);
-  const monthNames = Object.values(MonthEnum);
-  const dayLabel = isValidDate(selectedDate)
-    ? `${weekdayNames[selectedDate.getDay() === 0 ? 6 : selectedDate.getDay() - 1]}, ${monthNames[selectedDate.getMonth()].substring(0, 3)} ${selectedDate.getDate()}, ${selectedDate.getFullYear()}`
-    : '';
-
-  // generate time labels
-  const timeLabels = generateTimeLabels(timeStart, timeEnd, timeStep);
+  };
 
   return (
     <div className="w-full h-[calc(95%-2.5rem)]">
       {/* Day navigation */}
-      <div className="flex items-center justify-between w-full h-10 mt-3">
+      <div className="flex items-center justify-center w-full h-10 mt-3">
         <div className="flex-1 flex justify-end">
           <button
-            onClick={goToPrevDay}
+            onClick={() => navigateDay(-1)}
             className="p-2 rounded-full hover:bg-light-accent dark:hover:bg-dark-accent transition-colors"
             aria-label="Previous day"
           >
@@ -155,11 +79,11 @@ const DayGrid: React.FC<DayGridProps> = ({
           </button>
         </div>
         <div className="px-4 py-1 text-center text-2xl font-bold text-light-primary-text dark:text-dark-primary-text rounded transition-colors">
-          {dayLabel}
+          {gridLabel}
         </div>
         <div className="flex-1 flex justify-start">
           <button
-            onClick={goToNextDay}
+            onClick={() => navigateDay(1)}
             className="p-2 rounded-full hover:bg-light-accent dark:hover:bg-dark-accent transition-colors"
             aria-label="Next day"
           >
@@ -176,7 +100,7 @@ const DayGrid: React.FC<DayGridProps> = ({
         {/* Time labels column */}
         <div
           className="flex flex-col flex-shrink-0 whitespace-nowrap w-fit overflow-hidden"
-          style={{ height: gridHeight }}
+          style={{ height: containerHeight }}
         >
           {timeLabels.map((label, index) => (
             <div
@@ -189,7 +113,7 @@ const DayGrid: React.FC<DayGridProps> = ({
         </div>
 
         {/* Events grid */}
-        <div className="flex-1 relative" style={{ height: gridHeight }}>
+        <div className="flex-1 relative" style={{ height: containerHeight }}>
           {/* Background slot lines */}
           <div className="absolute inset-0 flex flex-col">
             {Array.from({ length: totalSlots }).map((_, index) => (
@@ -206,14 +130,14 @@ const DayGrid: React.FC<DayGridProps> = ({
           <div
             ref={gridRef}
             className="absolute inset-0 ml-2 mr-2 mb-2"
-            style={{ height: gridHeight }}
+            style={{ height: containerHeight }}
           >
-            {eventProps.map((evp: EventBarProps) => (
+            {eventProps.map((evp) => (
               <EventBar
                 key={evp.key}
                 eventProps={evp}
-                updateEvent={updateEventCallback}
-                deleteEvent={deleteEventCallback}
+                updateEvent={(ev) => dispatch(updateEvent(ev))}
+                deleteEvent={(uuid) => dispatch(deleteEvent(uuid))}
               />
             ))}
           </div>

@@ -115,7 +115,7 @@ const AvailabilityRuleModalContent: React.FC<AvailabilityRuleModalContentProps> 
 
       {/* Timezone (need to add a warning or something) */}
       <div>
-        <label className={labelClass}>Rule Timezone: {formData.iana_timezone}</label>
+        <label className={"block text-xl font-medium text-light-primary-text dark:text-dark-primary-text mb-2"}>Rule Timezone: {formData.iana_timezone}</label>
       </div>
 
       {/* Date range */}

@@ -8,7 +8,6 @@ import { Modal } from '../Modal';
 // types
 import type { EventBarProps } from './EventBar';
 import type { EventDTO } from '../../types/EventDTO';
-import { TZDate } from '@date-fns/tz';
 import { addHours } from "date-fns";
 
 // css
@@ -37,8 +36,8 @@ const CellInfoModalContent: React.FC<CellInfoModalContentProps> = ({ eventsInCel
             <div>
               <div> id: {ev.eventDTO.uuid}</div>
               <div> Lane: {ev.evStyle.lane}</div>
-              <div> Start: {formatDate(new TZDate(ev.eventDTO.start))}</div>
-              <div> End: {formatDate(new TZDate(ev.eventDTO.end))}</div>
+              <div> Start: {formatDate(ev.eventDTO.start, ev.eventDTO.iana_timezone ?? undefined)}</div>
+              <div> End: {formatDate(ev.eventDTO.end, ev.eventDTO.iana_timezone ?? undefined)}</div>
             </div>
           </div>
         )

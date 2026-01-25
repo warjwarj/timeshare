@@ -2,15 +2,17 @@ import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 
 import { MonthGrid } from '../components/calendar/MonthGrid.tsx';
 import type { GridStyle } from '../components/calendar/MonthGrid.tsx';
-import { TimeSpanEnum, WeekDayEnum } from "../types/dateTypes.ts";
 import { DayGrid } from '../components/calendar/DayGrid.tsx';
+import type { DayGridStyle } from '../components/calendar/DayGrid.tsx';
 import { YearGrid } from '../components/calendar/YearGrid.tsx';
 import type { EventBarStyle } from '../components/calendar/EventBar.tsx';
 import { DateSelector } from "../components/DateSelector.tsx";
+import { TimeSpanEnum, WeekDayEnum } from "../types/dateTypes.ts";
 import { isValidDate } from '../utils/utils.ts';
 import { getMonthGridConfig, type MonthGridConfig } from '../utils/monthGridUtils.ts';
+import { getDayGridConfig, type DayGridConfig } from '../utils/dayGridUtils.ts';
 import { ourUseDispatch, ourUseSelector } from '../store/hooks.ts';
-import { selectCurrentDatetimeAsTzDate, selectSelectedMonthAsTzDate, setSelectedMonth } from '../store/slices/appSlice.ts';
+import { selectCurrentDatetimeAsTzDate, selectSelectedDateAsTzDate, selectSelectedMonthAsTzDate, setSelectedMonth } from '../store/slices/appSlice.ts';
 import { ViewHeader } from '../components/ViewHeader.tsx';
 import { ViewBody } from '../components/ViewBody.tsx';
 import { TZDate } from "@date-fns/tz";
@@ -37,8 +39,8 @@ const dayGridEventStyle: EventBarStyle = {
   width: 0
 };
 
-// grid style
-const gridStyle: GridStyle = {
+// month grid style
+const monthGridStyle: GridStyle = {
   eventStyle: monthGridEventStyle,
   cellStyle: {
     heightStyle: "150px",
@@ -46,12 +48,18 @@ const gridStyle: GridStyle = {
   colCount: 7
 }
 
+// day grid style
+const dayGridStyle: DayGridStyle = {
+  eventStyle: dayGridEventStyle,
+}
+
 const CalendarView: React.FC = () => {
   const dispatch = ourUseDispatch();
   const weekdayNames = Object.values(WeekDayEnum)
 
-  // memoised selectors
+  // selectors
   const currentDate = ourUseSelector(selectCurrentDatetimeAsTzDate);
+  const selectedDate = ourUseSelector(selectSelectedDateAsTzDate);
   const selectedMonth = ourUseSelector(selectSelectedMonthAsTzDate);
 
   useEffect(() => {
@@ -59,20 +67,29 @@ const CalendarView: React.FC = () => {
       return;
     }
     dispatch(setSelectedMonth({ monthIsoStr: currentDate.toISOString() }))
-  }, [currentDate])
+  }, [dispatch, currentDate])
 
   const [dayViewOn, setDayViewOn] = useState<boolean>(false);
   const [monthViewOn, setMonthViewOn] = useState<boolean>(true);
   const [yearViewOn, setYearViewOn] = useState<boolean>(false);
 
-  // grid config - ref for prev val so can skip recalc if viable
-  const dateForGrid = isValidDate(selectedMonth) ? selectedMonth : currentDate;
-  const gridConfigRef = useRef<MonthGridConfig | null>(null)
-  const gridConfig = useMemo<MonthGridConfig | null>(
-    () => isValidDate(dateForGrid) ? getMonthGridConfig(dateForGrid, gridConfigRef.current) : null,
-    [dateForGrid]
+  // month grid config
+  const dateForMonthGrid = isValidDate(selectedMonth) ? selectedMonth : currentDate;
+  const monthGridConfigRef = useRef<MonthGridConfig | null>(null)
+  const monthGridConfig = useMemo<MonthGridConfig | null>(
+    () => isValidDate(dateForMonthGrid) ? getMonthGridConfig(dateForMonthGrid, monthGridConfigRef.current) : null,
+    [dateForMonthGrid]
   );
-  gridConfigRef.current = gridConfig;
+  monthGridConfigRef.current = monthGridConfig;
+
+  // day grid config
+  const dateForDayGrid = isValidDate(selectedDate) ? selectedDate : currentDate;
+  const dayGridConfigRef = useRef<DayGridConfig | null>(null)
+  const dayGridConfig = useMemo<DayGridConfig | null>(
+    () => isValidDate(dateForDayGrid) ? getDayGridConfig(dateForDayGrid, 0, 24, TimeSpanEnum.Mins30, dayGridConfigRef.current) : null,
+    [dateForDayGrid]
+  );
+  dayGridConfigRef.current = dayGridConfig;
   
   // Handler for when a month is clicked in year view
   const handleMonthSelect = useCallback((month: number) => {
@@ -135,25 +152,20 @@ const CalendarView: React.FC = () => {
             />
           </div>
         )}
-        {monthViewOn && gridConfig && (
+        {monthViewOn && monthGridConfig && (
           <div className="w-full max-h-[calc(100dvh-6rem)] overflow-y-auto">
             <MonthGrid
-              gridStyle={gridStyle}
-              gridConfig={gridConfig}
+              gridStyle={monthGridStyle}
+              gridConfig={monthGridConfig}
               colHeaders={weekdayNames.map(x => x.substring(0, 3))}
             />
           </div>
         )}
-        {dayViewOn && (
+        {dayViewOn && dayGridConfig && (
           <div className="w-full max-h-[calc(100dvh-6rem)] overflow-hidden">
             <DayGrid
-              timeStart={0}
-              timeEnd={24}
-              timeStep={TimeSpanEnum.Mins30}
-              snapToStep={false}
-              style={{
-                eventStyle: dayGridEventStyle,
-              }}
+              gridStyle={dayGridStyle}
+              gridConfig={dayGridConfig}
             />
           </div>
         )}

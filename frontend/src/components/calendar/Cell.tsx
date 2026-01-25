@@ -9,7 +9,6 @@ import { CellInfoModalContent } from './CellInfoModalContent';
 // types
 import type { EventBarProps } from './EventBar';
 import type { EventDTO } from '../../types/EventDTO';
-import type { TZDate } from '@date-fns/tz';
 
 // css
 import '../../../index.css';
@@ -27,7 +26,7 @@ type CellProps = {
   rowStartIndex: number;
   cellIndex: number;
   egcStyle: CellStyle;
-  cellDate: TZDate;
+  cellDate: Date;
   getEvents: (cellIndex: number) => EventBarProps[];
   onAddEvent: (newEvent: Omit<EventDTO, 'key' | 'uuid'>) => void;
   isOutsideMonth?: boolean;

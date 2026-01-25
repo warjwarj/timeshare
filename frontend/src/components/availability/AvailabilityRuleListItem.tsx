@@ -9,7 +9,6 @@ import { AvailabilityRuleModalContent } from './AvailabilityRuleModalContent';
 import { Modal } from '../Modal';
 import React from 'react';
 import { formatDate } from '../../utils/utils';
-import { TZDate } from '@date-fns/tz';
 
 const WEEKDAY_NAMES = Object.values(WeekDayEnum).map(wd => wd.substring(0, 3));
 
@@ -60,7 +59,7 @@ const AvailabilityRuleListItem: React.FC<AvailabilityRuleListItemProps> = ({ rul
         <div className="mb-2 text-sm text-light-secondary-text dark:text-dark-secondary-text">
           <span className="font-medium">Start & end: </span>
           {rule.start_datetime && rule.end_datetime && rule.iana_timezone && (
-            <>{formatDate(new TZDate(rule.start_datetime, rule.iana_timezone))} to {formatDate(new TZDate(rule.end_datetime, rule.iana_timezone))}</>
+            <>{formatDate(new Date(rule.start_datetime), rule.iana_timezone)} to {formatDate(new Date(rule.end_datetime), rule.iana_timezone)}</>
           )}
         </div>
 

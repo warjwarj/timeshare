@@ -11,7 +11,6 @@ import { type EventDTO } from '../../types/EventDTO';
 
 // css
 import '../../../index.css';
-import { TZDate } from '@date-fns/tz';
 import { formatDate } from '../../utils/utils';
 
 type EventBarStyle = {
@@ -107,8 +106,8 @@ const EventBar: React.FC<{
           >
             <div className="font-semibold mb-1">{eventProps.eventDTO.name}</div>
             <div className="text-gray-300 text-xs">
-              <div>{formatDate(new TZDate(eventProps.eventDTO.start))}</div>
-              <div>to {formatDate(new TZDate(eventProps.eventDTO.end))}</div>
+              <div>{formatDate(eventProps.eventDTO.start, eventProps.eventDTO.iana_timezone ?? undefined)}</div>
+              <div>to {formatDate(eventProps.eventDTO.end, eventProps.eventDTO.iana_timezone ?? undefined)}</div>
             </div>
           </div>,
           document.body

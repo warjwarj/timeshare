@@ -10,7 +10,7 @@ import { TZDate } from '@date-fns/tz';
 
 
 type DateSelectorProps = {
-  startDate: TZDate;
+  startDate: Date;
   onlyMonthSelector: boolean;
 }
 
