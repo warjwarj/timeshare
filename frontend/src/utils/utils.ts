@@ -42,6 +42,19 @@ export function isNullOrWhitespace(input: string) {
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
+// Get TimeSpan duration in minutes
+export function getTimeSpanInMinutes(timeSpan: TimeSpan): number {
+  switch (timeSpan) {
+    case TimeSpanEnum.Mins5: return 5;
+    case TimeSpanEnum.Mins10: return 10;
+    case TimeSpanEnum.Mins15: return 15;
+    case TimeSpanEnum.Mins30: return 30;
+    case TimeSpanEnum.Hour: return 60;
+    case TimeSpanEnum.Day: return 1440;
+    default: return 60;
+  }
+}
+
 export function isValidDate(d: Date) {
   return (d instanceof Date) && !isNaN(d.getTime());
 }

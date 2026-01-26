@@ -2,6 +2,7 @@ import { TZDate } from "@date-fns/tz";
 import { TimeSpanEnum, type TimeSpan, WeekDayEnum, MonthEnum } from "../types/dateTypes";
 import type { EventDTO } from "../types/EventDTO";
 import type { EventBarProps, EventBarStyle } from "../components/calendar/EventBar";
+import { getTimeSpanInMinutes } from "./utils";
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -21,19 +22,6 @@ export type DayGridConfig = {
 
 const weekdayNames = Object.values(WeekDayEnum);
 const monthNames = Object.values(MonthEnum);
-
-// Get TimeSpan duration in minutes
-function getTimeSpanInMinutes(timeSpan: TimeSpan): number {
-  switch (timeSpan) {
-    case TimeSpanEnum.Mins5: return 5;
-    case TimeSpanEnum.Mins10: return 10;
-    case TimeSpanEnum.Mins15: return 15;
-    case TimeSpanEnum.Mins30: return 30;
-    case TimeSpanEnum.Hour: return 60;
-    case TimeSpanEnum.Day: return 1440;
-    default: return 60;
-  }
-}
 
 /**
  * Generates grid configuration for displaying a day view.
