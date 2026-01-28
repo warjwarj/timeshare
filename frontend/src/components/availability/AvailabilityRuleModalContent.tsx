@@ -5,6 +5,7 @@ import { WeekDayEnum } from '../../types/dateTypes';
 import { SaveButton } from '../SaveButton';
 import { selectSelectedIanaTimezone } from "../../store/slices/appSlice";
 import { ourUseSelector } from '../../store/hooks';
+import { toastService } from '../../toastService';
 
 // consts
 const WEEKDAY_NAMES = Object.values(WeekDayEnum).map(wd => wd.substring(0, 3));
@@ -19,7 +20,7 @@ type AvailabilityRuleModalContentProps = {
   onClose: () => void;
 }
 
-const AvailabilityRuleModalContent: React.FC<AvailabilityRuleModalContentProps> = ({ rule, editing, onClose, onSave }) => {
+const AvailabilityRuleModalContent: React.FC<AvailabilityRuleModalContentProps> = ({ rule, editing, onClose, onDelete, onSave }) => {
   const tz = ourUseSelector(selectSelectedIanaTimezone)
 
   // init form data with rule values if they exist
@@ -47,10 +48,20 @@ const AvailabilityRuleModalContent: React.FC<AvailabilityRuleModalContentProps> 
     const outgoingState: AvailabilityRuleDTO = {
       ...formData,
       ...{ iana_timezone: editing ? formData.iana_timezone : tz },
-      ...{ uuid: editing && rule.uuid ? rule.uuid : null}
+      ...{ uuid: editing && rule.uuid ? rule.uuid : null }
     }
     onSave(outgoingState);
     onClose()
+  }
+
+  // delete event
+  const internalDelete = () => {
+    if (editing && rule?.uuid) {
+      onDelete(rule.uuid);
+      onClose();
+    } else {
+      toastService.showError("Couldn't delete event", "Availability rule, or its uuid was null. This shouldn't happen...")
+    }
   }
 
   return (
@@ -184,6 +195,12 @@ const AvailabilityRuleModalContent: React.FC<AvailabilityRuleModalContentProps> 
           className="px-4 py-2 text-sm text-light-primary-text dark:text-dark-primary-text border border-light-border dark:border-dark-border rounded-lg hover:bg-light-accent dark:hover:bg-dark-accent transition-colors"
         >
           Cancel
+        </button>
+        <button
+          onClick={internalDelete}
+          className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+        >
+          Delete
         </button>
         <SaveButton onClick={() => internalSave()}>
           {editing ? 'Update' : 'Create'}

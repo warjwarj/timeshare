@@ -61,7 +61,7 @@ const EventModalContent: React.FC<EventModalContentProps> = ({ event, editing, o
       onDelete(event.uuid);
       onClose();
     } else {
-      toastService.showError("Couldn't delete event", "Event's uuid was null. This shouldn't happen...")
+      toastService.showError("Couldn't delete event", "Event, or its uuid was null. This shouldn't happen...")
     }
   }
 

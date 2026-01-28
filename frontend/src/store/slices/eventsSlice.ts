@@ -28,10 +28,9 @@ const getEvents = createAsyncThunk(
 
       return res.data as EventDTO[];
     } catch (error) {
-      if (error instanceof Error && error.name === 'AbortError') {
+      if (axios.isCancel(error)) {
         return rejectWithValue('Request cancelled');
       }
-
       const err = error instanceof Error ? error.message : 'Unknown error';
       toastService.showError("Couldn't get events", err);
       return rejectWithValue(err);

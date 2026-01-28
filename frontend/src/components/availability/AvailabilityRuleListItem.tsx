@@ -35,7 +35,7 @@ const AvailabilityRuleListItem: React.FC<AvailabilityRuleListItemProps> = ({ rul
         key={rule.uuid}
         className="p-4 flex flex-col justify-between bg-light-background dark:bg-dark-background border border-light-border dark:border-dark-border rounded-lg"
       >
-        <div className="flex justify-between gap-6 items-start mb-3">
+        <div className="flex gap-6 items-start mb-3">
           <h3 className="font-semibold text-light-primary-text dark:text-dark-primary-text">
             {rule.name}
           </h3>

@@ -121,7 +121,7 @@ const DayGrid: React.FC<DayGridProps> = ({ gridStyle, gridConfig }) => {
                 key={`slot-${index}`}
                 className="flex-1 flex items-center"
               >
-                <hr className="w-full" />
+                <hr className="w-full border-light-border dark:border-dark-border" />
               </div>
             ))}
           </div>
