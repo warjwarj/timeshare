@@ -38,18 +38,7 @@ def create_availability_rule(user_uuid: str, rule: CreateAvailabilityRuleRequest
   Create an availability rule
   """
   availability_repo = AvailabilityRepository()
-
-  rec = availability_repo.add_record(
-    name=rule.name,
-    prevents_booking=rule.prevents_booking,
-    weekdays=rule.weekdays,
-    iana_timezone=rule.iana_timezone,
-    start_time=rule.start_time,
-    end_time=rule.end_time,
-    start_datetime=rule.start_datetime,
-    end_datetime=rule.end_datetime,
-    created_by_user_uuid=user_uuid
-  )  
+  rec = availability_repo.add_record(**vars(rule), created_by_user_uuid=user_uuid)  
   if rec is not None:
     return sanitise_availability_rule(rec)
   
@@ -58,9 +47,7 @@ def get_availability_rules(user_uuid: str) -> list[SafeAvailabilityRuleDTO]:
   Get all availability rules for a user
   """
   availability_repo = AvailabilityRepository()
-
   rules = availability_repo.get_record(multiple=True, created_by_user_uuid=user_uuid)
-
   if rules:
     return sanitise_availability_rules(rules)
   return []
@@ -70,9 +57,7 @@ def get_availability_rule(uuid: str) -> SafeAvailabilityRuleDTO | None:
   Get a single availability rule by uuid
   """
   availability_repo = AvailabilityRepository()
-
   rule = availability_repo.get_record(uuid=uuid)
-
   if rule:
     return sanitise_availability_rule(rule)
   return None
@@ -82,17 +67,7 @@ def update_availability_rule(uuid: str, rule: UpdateAvailabilityRuleRequest) -> 
   Update an availability rule
   """
   availability_repo = AvailabilityRepository()
-
-  rec = availability_repo.update_record(
-    uuid=uuid,
-    name=rule.name,
-    prevents_booking=rule.prevents_booking,
-    weekdays=rule.weekdays,
-    start_time=rule.start_time,
-    end_time=rule.end_time,
-    start_datetime=rule.start_datetime,
-    end_datetime=rule.end_datetime,
-  )
+  rec = availability_repo.update_record(uuid, **vars(rule))  
   if rec is not None:
     return sanitise_availability_rule(rec)
 
@@ -100,8 +75,7 @@ def delete_availability_rule(uuid: str) -> dict:
   """
   Delete an availability rule
   """
-  availability_repo = AvailabilityRepository()
-  
+  availability_repo = AvailabilityRepository()  
   availability_repo.delete_record(uuid)
   return {"success": True}
 
@@ -111,7 +85,6 @@ def create_multiple_availability_rules(user_uuid: str, req: CreateMultipleAvaila
   Create multiple availability rules
   """
   availability_repo = AvailabilityRepository()
-
   objs = [
     { **r.model_dump(), "created_by_user_uuid": user_uuid }
     for r in req.rules

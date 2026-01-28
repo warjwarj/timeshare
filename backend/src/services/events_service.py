@@ -37,12 +37,8 @@ def create_event(user_uuid: str, event: CreateEventRequest) -> SafeEventDTO:
   """
   Add an event
   """  
-  events_repo = EventsRepository()
-  
-  rec = events_repo.add_record(
-    **event.model_dump(),
-    created_by_user_uuid=user_uuid
-  )
+  events_repo = EventsRepository()  
+  rec = events_repo.add_record(**vars(event), created_by_user_uuid=user_uuid)
   if rec is not None:
     return sanitiseEvent(rec)
 
@@ -50,15 +46,8 @@ def update_event(uuid: str, event: UpdateEventRequest) -> SafeEventDTO:
   """
   Add an event
   """  
-  events_repo = EventsRepository()
-  
-  rec = events_repo.update_record(
-    uuid=uuid,
-    start=event.start,
-    end=event.end,
-    name=event.name,
-    colour=event.colour,
-  )
+  events_repo = EventsRepository()  
+  rec = events_repo.update_record(**vars(event))
   if rec is not None:
     return sanitiseEvent(rec)
 
@@ -67,8 +56,6 @@ def create_multiple_events(user_uuid: str, req: CreateMultipleEventsRequest) -> 
   Add multiple events
   """  
   events_repo = EventsRepository()
-  
-  # we'll trust that the pydantic validation ensures correctly formatted events, for now at least
   objs = [
     { **o.model_dump(), "created_by_user_uuid": user_uuid }
     for o in req.events
@@ -86,17 +73,13 @@ def get_all_events(user_uuid: str, start: datetime, end: datetime) -> list[SafeE
   :type user_id: str
   """
   events_repo = EventsRepository()
-
   evs = events_repo.get_events_by_datetimes(user_uuid=user_uuid, start=start, end=end)
-
   return sanitiseEvents(evs)
 
 def delete_event(event_uuid: str) -> dict:
   """
   Delete an event
   """
-  events_repo = EventsRepository()
-  
-  events_repo.delete_record(event_uuid)
-  
+  events_repo = EventsRepository()  
+  events_repo.delete_record(event_uuid)  
   return {"success": True}
