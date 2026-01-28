@@ -12,12 +12,15 @@ import type { EventDTO } from '../types/EventDTO';
 import { EventListItem } from '../components/events/EventListItem.tsx';
 import { EventModalContent } from '../components/events/EventModalContent.tsx';
 import { createPortal } from 'react-dom';
+import { selectCurrentDatetime } from '../store/slices/appSlice.ts';
+import { addHours } from 'date-fns';
 
 
 const EventsView: React.FC = () => {
   const dispatch = ourUseDispatch();
   const { selectProcessedEventsAsDate } = useMemo(() => makeEventSelectors(), []);
   const events = ourUseSelector(selectProcessedEventsAsDate);
+  const currentDate = ourUseSelector(selectCurrentDatetime);
 
   const [showModal, setShowModal] = useState<boolean>(false);
 
@@ -72,7 +75,7 @@ const EventsView: React.FC = () => {
           onClose={() => setShowModal(false)}
         >
           <EventModalContent
-            event={null}
+            event={{ start: new Date(currentDate), end: addHours(new Date(currentDate), 1) } as EventDTO & { start: Date, end: Date }}
             editing={false}
             onClose={() => setShowModal(false)}
             onDelete={() => {}}

@@ -36,15 +36,15 @@ const AvailabilityRuleListItem: React.FC<AvailabilityRuleListItemProps> = ({ rul
         className="p-4 flex flex-col justify-between bg-light-background dark:bg-dark-background border border-light-border dark:border-dark-border rounded-lg"
       >
         <div className="flex gap-6 items-start mb-3">
-          <h3 className="font-semibold text-light-primary-text dark:text-dark-primary-text">
-            {rule.name}
-          </h3>
           <span className={`px-2 py-1 text-xs rounded-full ${rule.prevents_booking
             ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
             : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
             }`}>
             {rule.prevents_booking ? 'Prevents' : 'Allows'}
           </span>
+          <h3 className="font-semibold text-light-primary-text dark:text-dark-primary-text">
+            {rule.name}
+          </h3>
         </div>
 
         {(

@@ -33,8 +33,6 @@ type EventModalContentProps = {
 const EventModalContent: React.FC<EventModalContentProps> = ({ event, editing, onSave, onDelete, onClose }) => {
   const tz = ourUseSelector(selectSelectedIanaTimezone)
 
-  console.log(event)
-
   // init form data with rule values if they exist
   const [formData, setFormData] = useState({
     name: event?.name || "",
@@ -46,6 +44,10 @@ const EventModalContent: React.FC<EventModalContentProps> = ({ event, editing, o
 
   // save updated event object
   const internalSave = () => {
+    if (formData.name.trim() == "") {
+      toastService.showError("Validation error", "Event name must not be empty.")
+      return;
+    }
     const outgoingState: EventDTO = {
       ...formData,
       ...{ iana_timezone: editing ? formData.iana_timezone : tz },

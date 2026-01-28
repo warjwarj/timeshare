@@ -1,5 +1,5 @@
 import { TZDate } from "@date-fns/tz";
-import { TimeSpanEnum, type TimeSpan, WeekDayEnum, MonthEnum } from "../types/dateTypes";
+import { type TimeSpan, WeekDayEnum, MonthEnum } from "../types/dateTypes";
 import type { EventDTO } from "../types/EventDTO";
 import type { EventBarProps, EventBarStyle } from "../components/calendar/EventBar";
 import { getTimeSpanInMinutes } from "./utils";
