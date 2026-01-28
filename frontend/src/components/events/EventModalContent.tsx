@@ -141,13 +141,20 @@ const EventModalContent: React.FC<EventModalContentProps> = ({ event, editing, o
         </div>
       </div>
 
-      <div className="justify-end flex gap-2 mt-2">
+      <div className="justify-between flex gap-2 mt-2">
         <button
+          type="button"
+          onClick={onClose}
+          className="px-4 py-2 text-sm text-light-primary-text dark:text-dark-primary-text border border-light-border dark:border-dark-border rounded-lg hover:bg-light-accent dark:hover:bg-dark-accent transition-colors"
+        >
+          Cancel
+        </button>
+        {editing && <button
           onClick={internalDelete}
           className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
         >
           Delete
-        </button>
+        </button>}
         <SaveButton onClick={internalSave} children={"Save"} />
       </div>
     </div>

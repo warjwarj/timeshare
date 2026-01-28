@@ -196,12 +196,12 @@ const AvailabilityRuleModalContent: React.FC<AvailabilityRuleModalContentProps> 
         >
           Cancel
         </button>
-        <button
+        {editing && <button
           onClick={internalDelete}
           className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
         >
           Delete
-        </button>
+        </button>}
         <SaveButton onClick={() => internalSave()}>
           {editing ? 'Update' : 'Create'}
         </SaveButton>
