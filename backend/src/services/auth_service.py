@@ -21,8 +21,6 @@ from settings import settings
 
 passhasher = PasswordHasher()
 
-cipher = SecureEncoder("REALLY REALLY SAFE PASSWORD")
-
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Services
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -71,7 +69,6 @@ def encode_token(jwt_payload: dict) -> str:
   
   # encrypt user id
   try:
-    jwt_payload['user_uuid'] = cipher.encrypt(jwt_payload['user_uuid'])
     return jwt.encode(jwt_payload, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
   except Exception:
     raise HTTPException(
@@ -87,8 +84,7 @@ def decode_token(encoded_token: str) -> dict:
   try:
     payload = jwt.decode(encoded_token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
     
-    # decrypt user id and check if valid
-    payload['user_uuid'] = cipher.decrypt(payload['user_uuid'])
+    # check user uuid if it's valid
     user = users_repo.get_record(uuid=payload['user_uuid'])
     
     if not user:

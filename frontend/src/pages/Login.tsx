@@ -23,7 +23,7 @@ const LoginForm: React.FC = () => {
     }
     try {
       await dispatch(login({ name: "asd", email, password, role: "asd" })).unwrap();
-      navigate('/home');
+      navigate('/calendar');
     } catch (error: unknown) {
       const errorMessage = typeof error === 'string'
         ? error
