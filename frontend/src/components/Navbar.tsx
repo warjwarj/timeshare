@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from "react-router-dom";
-import { Settings, LogOut, Clock } from 'lucide-react';
+import { Settings, LogOut, Clock, User } from 'lucide-react';
 
 import { selectName } from '../store/slices/authSlice';
 import { ourUseDispatch, ourUseSelector } from '../store/hooks';
@@ -26,7 +26,7 @@ type MenuItem = {
 };
 
 const Navbar: React.FC<NavbarProps> = ({ links }) => {
-  const name: string = ourUseSelector(selectName)
+  const name: string | null = ourUseSelector(selectName)
   const dispatch = ourUseDispatch()
   const navigator = useNavigate()
   const [isOpen, setIsOpen] = useState(false);
@@ -82,9 +82,9 @@ const Navbar: React.FC<NavbarProps> = ({ links }) => {
           {/* Profile Icon */}
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className="grid place-items-center w-10 h-10 rounded-full bg-blue-600 text-white font-semibold hover:bg-blue-700 text-lg"
+            className="flex items-center justify-center w-10 h-10 rounded-full bg-blue-600 text-white font-semibold hover:bg-blue-700 text-lg leading-none"
           >
-            {name[0]?.toLocaleUpperCase()}
+            {name ? <p className="mb-[0.09rem]">{name[0]?.toLocaleUpperCase()}</p> : <User width={15} />}
           </button>
 
           {/* Timezone selector */}
