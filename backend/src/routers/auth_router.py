@@ -2,7 +2,7 @@ import logging
 from http import HTTPStatus
 from fastapi import APIRouter
 
-from src.services.auth_service import register_user, create_token, encode_token, login_user, get_current_user_data, update_user_account
+from src.services.auth_service import register_user, create_token, encode_token, login_user, update_user_account
 from src.schemas.requests.auth_requests import LoginRequest, RegisterRequest, UpdateAccountRequest
 from src.schemas.responses.auth_responses import LoginResponse, RegisterResponse, UpdateAccountResponse
 from src.schemas.dtos.user_dto import UserDTO
@@ -24,83 +24,23 @@ logger = logging.getLogger(__name__)
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 @auth_router.post("/register", status_code=HTTPStatus.CREATED)
-async def register(
-    request: RegisterRequest,
-  ):
+async def register(request: RegisterRequest):
   """
-  Route for registering a user.
-  returns the registered user model.
+  Handle a registration request
   """
-  # will raise exception if unauthorised
-  user = register_user(UserDTO(
-    uuid=None,
-    email=request.email,
-    password=request.password,
-    name=request.name,
-    role=request.role
-  ))
-
-  if user:
-    return RegisterResponse(
-      success=True,
-      name=user.name,
-      email=user.email
-    )
+  return register_user(request)
     
   
-@auth_router.post("/login", response_model=LoginResponse, status_code=HTTPStatus.OK)
-async def login(request: LoginRequest):
+@auth_router.post("/login", status_code=HTTPStatus.OK)
+async def login(req: LoginRequest):
   """  
-  Route for logging in a user.  
+  Handle login request
   """
-  
-  u = UserDTO(
-    uuid=None,
-    email=request.email,
-    password=request.password,
-    name=request.name,
-  )
-  
-  # this will raise an exception if unauthorised
-  u = login_user(u)
-    
-  token = create_token(u)
-  encoded_token = encode_token(token)
-  
-  return LoginResponse(
-    success=True,
-    access_token=encoded_token,
-    token_type="bearer",
-    name=u.name,
-    email=u.email
-  )
+  return login_user(req)
 
-@auth_router.post("/whoami")
-async def login(
-    jwt_payload: IsAuthedDep,
-  ):
+@auth_router.put("/account", status_code=HTTPStatus.OK)
+async def update_account(jwt_payload: IsAuthedDep, req: UpdateAccountRequest):
   """
-  Protected route, get current user information
+  Protected route, handle a user account update request
   """
-  return get_current_user_data(jwt_payload)
-
-@auth_router.put("/account", response_model=UpdateAccountResponse, status_code=HTTPStatus.OK)
-async def update_account(
-    request: UpdateAccountRequest,
-    jwt_payload: IsAuthedDep,
-  ):
-  """
-  Protected route, update current user account information (name and/or email)
-  """
-  user = update_user_account(
-    user_uuid=jwt_payload["user_uuid"],
-    name=request.name,
-    email=request.email
-  )
-
-  return UpdateAccountResponse(
-    success=True,
-    name=user.name,
-    email=user.email,
-    updated_at=str(user.updated_at)
-  )
+  return update_user_account(jwt_payload["user_uuid"], req)

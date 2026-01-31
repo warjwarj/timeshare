@@ -3,33 +3,40 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { apiClient } from "../../utils/apiClient";
 import { toastService } from '../../toastService';
 import axios, { HttpStatusCode } from 'axios';
+import { tryParseAxiosErrorMessage, tryParseAxiosMessage } from '../../utils/utils';
 
 const login = createAsyncThunk(
   'auth/login',
   async (
-    { name, email, password, role }: { name: string, email: string, password: string, role: string },
+    { name, email, password }: { name: string | null, email: string, password: string },
     { signal, rejectWithValue }
   ) => {
     try {
-      const res = await apiClient.post(
-        "/auth/login", {
+      const res = await apiClient.post("/auth/login", {
         name,
         email,
-        password,
-        role
+        password
       },
         { signal, validateStatus: status => status < 500 }
       );
       if (res.status !== HttpStatusCode.Ok) {
-        const errMsg = res.data?.["detail"]?.[0]?.["msg"] || "Unknown error";
+        const errMsg = tryParseAxiosMessage(res)
         toastService.showError("Couldn't login", errMsg);
         return rejectWithValue(errMsg);
       }
       return res.data;
     } catch (error: unknown) {
+      // don't show message if cancel
       if (axios.isCancel(error)) {
         return rejectWithValue('Request cancelled');
       }
+      // try and parse the error from server
+      if (axios.isAxiosError(error)) {
+        const errMsg = tryParseAxiosErrorMessage(error)
+        toastService.showError("Couldn't login", errMsg);
+        return rejectWithValue(errMsg);
+      }
+      // fallback to exception message or unknown
       const err = error instanceof Error ? error.message : 'Unknown error';
       toastService.showError("Couldn't login", err);
       return rejectWithValue(err);
@@ -40,28 +47,35 @@ const login = createAsyncThunk(
 const register = createAsyncThunk(
   'auth/register',
   async (
-    { name, email, password, role }: { name: string, email: string, password: string, role: string },
+    { name, email, password }: { name: string | null, email: string, password: string },
     { signal, rejectWithValue }
   ) => {
     try {
       const res = await apiClient.post("/auth/register", {
         name,
         email,
-        password,
-        role
+        password
       },
         { signal, validateStatus: status => status < 500 }
       );
-      if (res.status !== HttpStatusCode.Ok) {
-        const errMsg = res.data?.["detail"]?.[0]?.["msg"] || "Unknown error";
+      if (res.status !== HttpStatusCode.Created) {
+        const errMsg = tryParseAxiosMessage(res)
         toastService.showError("Couldn't register", errMsg);
         return rejectWithValue(errMsg);
       }
       return res.data;
     } catch (error: unknown) {
+      // cancel error, don't show message
       if (axios.isCancel(error)) {
         return rejectWithValue('Request cancelled');
       }
+      // try and parse the error
+      if (axios.isAxiosError(error)) {
+        const errMsg = tryParseAxiosErrorMessage(error)
+        toastService.showError("Couldn't register", errMsg);
+        return rejectWithValue(errMsg);
+      }
+      // fallback to exception message or unknown
       const err = error instanceof Error ? error.message : 'Unknown error';
       toastService.showError("Couldn't register", err);
       return rejectWithValue(err);
@@ -83,7 +97,7 @@ const updateAccount = createAsyncThunk(
         { signal, validateStatus: status => status < 500 }
       );
       if (res.status !== HttpStatusCode.Ok) {
-        const errMsg = res.data?.["detail"]?.[0]?.["msg"] || "Unknown error";
+        const errMsg = res.data?.["detail"]?.[0]?.["msg"] || res.data?.["detail"] || "Unknown error";
         toastService.showError("Couldn't update account", errMsg);
         return rejectWithValue(errMsg);
       }
@@ -100,7 +114,7 @@ const updateAccount = createAsyncThunk(
 );
 
 interface Auth {
-  name: string
+  name: string | null
   email: string
   token: string
 }
@@ -120,7 +134,7 @@ export const authSlice = createSlice({
     builder
       .addCase(login.fulfilled, (state, action) => {
         const { success, name, email, access_token } = action.payload;
-        if (!success || !name || !email || !access_token) {
+        if (!success || !access_token) {
           toastService.showError("Couldn't log in", action.payload.detail as string)
           return;
         }

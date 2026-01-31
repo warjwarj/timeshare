@@ -5,7 +5,8 @@ from pydantic import StringConstraints
 
 class LoginRequest(BaseModel):
   """
-  Pydantic class for validating a login request.
+  Pydantic class for validating a login request.  
+  Can send either name or email but not neither
   """
   name: Optional[Annotated[str, StringConstraints(max_length=255)]]
   email: Optional[Annotated[str, StringConstraints(max_length=255)]]
@@ -13,16 +14,17 @@ class LoginRequest(BaseModel):
   
 class RegisterRequest(BaseModel):
   """
-  Pydantic class for validating a login request.
+  Pydantic class for validating a register request.
+  All fields required.
   """
-  name: Annotated[str, StringConstraints(max_length=255)]
+  name: Optional[Annotated[str, StringConstraints(max_length=255)]]
   email: Annotated[str, StringConstraints(max_length=255)]
-  password: Optional[Annotated[str, StringConstraints(max_length=255)]]
-  role: Optional[Annotated[str, StringConstraints(max_length=255)]]
+  password: Annotated[str, StringConstraints(max_length=255)]
 
 class UpdateAccountRequest(BaseModel):
   """
   Pydantic class for validating an account update request.
+  Can send either name or email.
   """
   name: Optional[Annotated[str, StringConstraints(max_length=255)]] = None
   email: Optional[Annotated[str, StringConstraints(max_length=255)]] = None

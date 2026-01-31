@@ -23,7 +23,11 @@ const RegisterForm: React.FC = () => {
       return;
     }
     try {
-      await dispatch(register({ name: name, email, password, role: "asd" })).unwrap();
+      await dispatch(register({ 
+        name: null, 
+        email, 
+        password
+      })).unwrap();
       navigate('/login');
     } catch (error: unknown) {
       const errorMessage = typeof error === 'string'

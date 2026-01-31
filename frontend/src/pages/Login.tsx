@@ -22,7 +22,11 @@ const LoginForm: React.FC = () => {
       return;
     }
     try {
-      await dispatch(login({ name: "asd", email, password, role: "asd" })).unwrap();
+      await dispatch(login({ 
+        name: null, 
+        email, 
+        password,
+      })).unwrap();
       navigate('/calendar');
     } catch (error: unknown) {
       const errorMessage = typeof error === 'string'

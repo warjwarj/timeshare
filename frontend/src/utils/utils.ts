@@ -1,7 +1,7 @@
 // fake enum
 import { useOutletContext } from "react-router-dom";
 import { TimeSpanEnum, type TimeSpan } from "../types/dateTypes";
-import axios from 'axios'
+import axios, { AxiosError, type AxiosResponse } from 'axios'
 import type { MainLayoutContext } from "../MainLayout";
 import { TZDate } from "@date-fns/tz";
 
@@ -10,6 +10,29 @@ import { TZDate } from "@date-fns/tz";
   Generic utils
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
+
+/**
+ * try and get our assumed validation error from the axios response object
+ * @returns Our message parsed from the axios response
+ */
+export function tryParseAxiosMessage(
+  e: AxiosResponse<{ detail?: string | Array<{ msg?: string }> }>
+): string {
+  const detail = e.data?.detail;
+  return (Array.isArray(detail) ? detail[0]?.msg : detail) ?? "Unknown error";
+}
+
+/**
+ * Try and get our error message from the axios err response object
+ * @returns Our error from server parsed from the axios error message
+ */
+export function tryParseAxiosErrorMessage(
+  e: AxiosError<{ detail?: string | Array<{ msg?: string }> }>
+): string {
+  const detail = e.response?.data?.detail;
+  return (Array.isArray(detail) ? detail[0]?.msg : detail) ?? "Unknown error";
+}
+
 
 export function useLayoutContext() {
   return useOutletContext<MainLayoutContext>();
