@@ -247,14 +247,14 @@ export const makeEventSelectors = () => {
     [
       selectEvents
     ],
-    (events: EventDTO[]): (EventDTO & { start: Date, end: Date })[] => {
+    (events: EventDTO[]): (EventDTO & { uuid: string, start: Date, end: Date, iana_timezone: string })[] => {
       return [...events]
         .map(ev => ({
           ...ev,
           start: ev.start && ev.iana_timezone ? toZonedTime(ev.start, ev.iana_timezone) : null,
           end: ev.end && ev.iana_timezone ? toZonedTime(ev.end, ev.iana_timezone) : null
         }))
-        .filter((ev): ev is typeof ev & { start: Date; end: Date } =>
+        .filter((ev): ev is typeof ev & { uuid: string, start: Date, end: Date, iana_timezone: string } =>
           ev.start !== null && ev.end !== null
         )
         .sort((a, b) => a.start.getTime() - b.start.getTime())
@@ -266,7 +266,7 @@ export const makeEventSelectors = () => {
     [
       selectProcessedEventsAsDate
     ],
-    (events: (EventDTO & { start: Date, end: Date })[]): (EventDTO & { start: string, end: string })[] => {
+    (events: (EventDTO & { uuid: string, start: Date, end: Date, iana_timezone: string })[]): (EventDTO & { uuid: string, start: string, end: string, iana_timezone: string })[] => {
       return [...events]
         .map(ev => ({
           ...ev,
@@ -282,7 +282,7 @@ export const makeEventSelectors = () => {
       selectProcessedEventsAsDate,
       (_: unknown, date: TZDate) => date,
     ],
-    (events, date): (EventDTO & { start: Date, end: Date })[] => {
+    (events, date): (EventDTO & { uuid: string, start: Date, end: Date, iana_timezone: string })[] => {
       const tz = date.timeZone;
       const dayStart = new TZDate(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0, 0, tz);
       const dayEnd = new TZDate(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59, 999, tz);
@@ -298,7 +298,7 @@ export const makeEventSelectors = () => {
       selectProcessedEventsAsDate,
       (_: unknown, start: TZDate, end: TZDate) => ({ start, end }),
     ],
-    (events, { start, end }): (EventDTO & { start: Date, end: Date })[] => {
+    (events, { start, end }): (EventDTO & { uuid: string, start: Date, end: Date, iana_timezone: string })[] => {
       const tz = start.timeZone;
       const rangeStart = new TZDate(start.getFullYear(), start.getMonth(), start.getDate(), 0, 0, 0, 0, tz);
       const rangeEnd = new TZDate(end.getFullYear(), end.getMonth(), end.getDate(), 23, 59, 59, 999, tz);

@@ -53,7 +53,7 @@ function getCellIndexFromDate(gridStart: TZDate, dt: Date, evtz: string): number
  * @returns 
  */
 export function setEventPositions(
-  evDtos: (EventDTO & { uuid: string, start: Date, end: Date, iana_timezone: string, colour: string })[],
+  evDtos: (EventDTO & { uuid: string, start: Date, end: Date, iana_timezone: string })[],
   cellLaneEvents: Map<number, Map<number, string>>,
   gridRowWidth: number,
   start: TZDate,
@@ -149,7 +149,7 @@ export function setEventPositions(
         eventHeightStyle: defaultEventStyle.eventHeightStyle,
         defaultEventStyle: defaultEventStyle.defaultEventStyle,
         extraClasses: classes.trim(),
-        colour: ev.colour,
+        colour: ev.colour ?? "#525252",
         left: left,
         width: width,
         lane: lane,

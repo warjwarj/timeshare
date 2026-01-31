@@ -17,6 +17,8 @@ import { ViewHeader } from '../components/ViewHeader.tsx';
 import { ViewBody } from '../components/ViewBody.tsx';
 import { TZDate } from "@date-fns/tz";
 
+const weekdayNames = Object.values(WeekDayEnum)
+
 // event style for 
 const monthGridEventStyle: EventBarStyle = {
   eventHeightStyle: "1.6em",
@@ -55,23 +57,24 @@ const dayGridStyle: DayGridStyle = {
 
 const CalendarView: React.FC = () => {
   const dispatch = ourUseDispatch();
-  const weekdayNames = Object.values(WeekDayEnum)
 
   // selectors
   const currentDate = ourUseSelector(selectCurrentDatetimeAsTzDate);
   const selectedDate = ourUseSelector(selectSelectedDateAsTzDate);
   const selectedMonth = ourUseSelector(selectSelectedMonthAsTzDate);
 
+  // state
+  const [dayViewOn, setDayViewOn] = useState<boolean>(false);
+  const [monthViewOn, setMonthViewOn] = useState<boolean>(true);
+  const [yearViewOn, setYearViewOn] = useState<boolean>(false);
+
+  // set default selected month
   useEffect(() => {
     if (!isValidDate(currentDate)) {
       return;
     }
     dispatch(setSelectedMonth({ monthIsoStr: currentDate.toISOString() }))
   }, [dispatch, currentDate])
-
-  const [dayViewOn, setDayViewOn] = useState<boolean>(false);
-  const [monthViewOn, setMonthViewOn] = useState<boolean>(true);
-  const [yearViewOn, setYearViewOn] = useState<boolean>(false);
 
   // month grid config
   const dateForMonthGrid = isValidDate(selectedMonth) ? selectedMonth : currentDate;
@@ -91,7 +94,7 @@ const CalendarView: React.FC = () => {
   );
   dayGridConfigRef.current = dayGridConfig;
   
-  // Handler for when a month is clicked in year view
+  // handler for when a month is clicked in year view
   const handleMonthSelect = useCallback((month: number) => {
     const tz = currentDate.timeZone;
     const date = new TZDate(

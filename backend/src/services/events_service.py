@@ -44,7 +44,7 @@ def update_event(uuid: str, event: UpdateEventRequest) -> SafeEventDTO:
   Add an event
   """  
   events_repo = EventsRepository()  
-  rec = events_repo.update_record(**vars(event))
+  rec = events_repo.update_record(uuid, **vars(event))
   if rec is not None:
     return sanitiseEvent(rec)
 
