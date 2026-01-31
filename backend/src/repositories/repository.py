@@ -63,55 +63,76 @@ class Repository(ABC, Generic[ModelClass, DtoClass]):
     Check if the database table exists and create it if it doesn't
     """
     
+    # crash the app, this should never happen
     if self.model_class is None:
-      raise ValueError(f"{self.__class__.__name__} must define 'model_class")
+      err = f"_ENSURE_TABLES_EXIST: {self.__class__.__name__} must define 'model_class"
+      logger.critical(err)
+      raise ValueError(err)
     
     try:
+      
       engine = get_engine(DB_URL)
       inspector = inspect(engine)
-      existing_tables = inspector.get_table_names()
-      
+      existing_tables = inspector.get_table_names()      
       if self.model_class.__tablename__ not in existing_tables:
         Base.metadata.create_all(engine, tables=[self.model_class.__table__])
+        
     except Exception as e:
-      print("ERROR CREATING TABLE", e)
+      logger.critical(F"ERROR CREATING TABLE: {e}")
       raise
   
   def update_record(self, uuid: str, **kwargs) -> DtoClass | None:
     """
     Update a record by its uuid
     """
-    if not kwargs:
-      raise ValueError("No fields provided for update")
     
-    # Validate all fields exist on model
+    # crash the app, this should never happen
+    # if we pass a value to this function that isn't defined on the schema
+    # then we should change the schema.
+    if not kwargs:
+      err = "UPDATE_RECORD: kwargs not provided to update_record."
+      logger.critical(err)
+      raise ValueError(err)
     for attr in kwargs:
       if not hasattr(self.model_class, attr):
-        raise ValueError(f"{self.model_class.__name__} has no attribute '{attr}'")  
+        err = f"UPDATE_RECORD: {self.model_class.__name__} has no attribute '{attr}'"
+        logger.critical(err)
+        raise ValueError(err)  
     
-    with yield_session(DB_URL) as session:
-      record = session.query(self.model_class).filter(
-        self.model_class.uuid == uuid
-      ).first()                
-      if not record:
-        return None
+    try:
       
-      for key, value in kwargs.items():
-        setattr(record, key, value)        
-      session.commit()
-      session.refresh(record)
+      with yield_session(DB_URL) as session:
+        record = session.query(self.model_class).filter(
+          self.model_class.uuid == uuid
+        ).first()                
+        if not record:
+          return None        
+        for key, value in kwargs.items():
+          setattr(record, key, value)        
+        session.commit()
+        session.refresh(record)        
+        return record.map_to_dto() if record else None
       
-      return record.map_to_dto() if record else None
+    except Exception as e:
+      logger.error(f"ERROR UPDATING RECORD: {e}")
 
   def add_record(self, **kwargs) -> DtoClass | None:
     """
     Add a record and get a dto of that record which was added
     """
+    
+    # crash if we pass a value to this function that isn't defined on the schema
+    if not kwargs:
+      err = "ADD RECORD: kwargs not provided to add_record."
+      logger.critical(err)
+      raise ValueError(err)
+    for attr in kwargs:
+      if not hasattr(self.model_class, attr):
+        err = f"ADD RECORD: {self.model_class.__name__} has no attribute '{attr}'"
+        logger.critical(err)
+        raise ValueError(err)
+        
     try:
-      
-      for attr in kwargs:
-        if not hasattr(self.model_class, attr):
-          raise ValueError(f"{self.model_class} must define '{attr}'")
       
       with yield_session(DB_URL) as session:
         model = self.model_class(**kwargs)
@@ -122,12 +143,25 @@ class Repository(ABC, Generic[ModelClass, DtoClass]):
         return dto
       
     except Exception as e:
-      print(f"ERROR ADDING RECORD: {e}")
+      logger.error(f"ERROR ADDING RECORD: {e}")
 
   def add_multiple_records(self, records: Iterable[ModelClass]) -> list[DtoClass] | None:
     """
     Add a record and get a dto of that record which was added
     """
+    
+    # crash if we pass a value to this function that isn't defined on the schema
+    if not records:
+      err = "ADD MULTIPLE RECORDS: kwargs not provided to add_record."
+      logger.critical(err)
+      raise ValueError(err)
+    for r in records :
+      for attr in vars(r):
+        if not hasattr(self.model_class, attr):
+          err = f"ADD MULTIPLE RECORDS: {self.model_class.__name__} has no attribute '{attr}'"
+          logger.critical(err)
+          raise ValueError(err)
+    
     try:
       
       with yield_session(DB_URL) as session:
@@ -137,7 +171,7 @@ class Repository(ABC, Generic[ModelClass, DtoClass]):
         return [r.map_to_dto() for r in records]
       
     except Exception as e:
-      print(f"ERROR ADDING MULTIPLE RECORDS: {e}")
+      logger.error(f"ERROR ADDING MULTIPLE RECORDS: {e}")
       
   def get_record(self, multiple: bool = False, **kwargs) -> DtoClass | list[DtoClass] | None:
     """
@@ -150,12 +184,17 @@ class Repository(ABC, Generic[ModelClass, DtoClass]):
     """
     try:
       
+      # crash if we try and get every single record in the database lol
+      # or if we pass a value to this function that isn't defined on the schema
       if not kwargs:
-        raise ValueError("Must provide at least one filter parameter")
-
+        err = "GET_RECORD: must provide at least one filter parameter"
+        logger.critical(err)
+        raise ValueError(err)
       for key, value in kwargs.items():
         if not hasattr(self.model_class, key):
-          raise ValueError(f"{self.model_class} must define '{value}'")
+          err = f"GET_RECORD: {self.model_class} must define '{value}'"
+          logger.critical(err)
+          raise ValueError(err)
 
       with yield_session(DB_URL) as session:
         if multiple:
@@ -166,7 +205,7 @@ class Repository(ABC, Generic[ModelClass, DtoClass]):
           return rec.map_to_dto() if rec else None
 
     except Exception as e:
-      print(f"ERROR GETTING RECORD: {e}")
+      logger.error(f"ERROR GETTING RECORD: {e}")
       
       
   def delete_record(self, uuid: str) -> ModelClass | None:
@@ -182,4 +221,4 @@ class Repository(ABC, Generic[ModelClass, DtoClass]):
       return rec
     
     except Exception as e:
-      print(f"ERROR DELETING RECORD: {e}")
+      logger.error(f"ERROR DELETING RECORD: {e}")
