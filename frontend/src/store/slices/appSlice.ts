@@ -4,6 +4,7 @@ import type { PayloadAction } from '@reduxjs/toolkit'
 import { apiClient } from "../../utils/apiClient";
 import axios, { HttpStatusCode } from 'axios';
 import { toastService } from '../../toastService';
+import { tryParseAxiosErrorMessage, tryParseAxiosMessage } from '../../utils/utils';
 import { TZDate } from '@date-fns/tz';
 
 const getCurrentDate = createAsyncThunk(
@@ -18,14 +19,19 @@ const getCurrentDate = createAsyncThunk(
         validateStatus: status => status < 500
       })      
       if (res.status !== HttpStatusCode.Ok) {
-        const errMsg = res.data?.["detail"]?.[0]?.["msg"] || "Unknown error";
+        const errMsg = tryParseAxiosMessage(res);
         toastService.showError("Couldn't get current datetime", errMsg);
         return rejectWithValue(errMsg);
       }
       return res.data
-    } catch (error) {
+    } catch (error: unknown) {
       if (axios.isCancel(error)) {
         return rejectWithValue('Request cancelled');
+      }
+      if (axios.isAxiosError(error)) {
+        const errMsg = tryParseAxiosErrorMessage(error);
+        toastService.showError("Couldn't reach server", errMsg);
+        return rejectWithValue(errMsg);
       }
       const err = error instanceof Error ? error.message : 'Unknown error';
       toastService.showError("Couldn't reach server", err);

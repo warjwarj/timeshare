@@ -4,6 +4,7 @@ import type { EventDTO } from '../../types/EventDTO';
 import { apiClient } from "../../utils/apiClient";
 import axios, { HttpStatusCode } from 'axios';
 import { toastService } from '../../toastService';
+import { tryParseAxiosErrorMessage, tryParseAxiosMessage } from '../../utils/utils';
 import { TZDate } from '@date-fns/tz';
 import { fromZonedTime, toZonedTime } from 'date-fns-tz';
 
@@ -21,15 +22,20 @@ const getEvents = createAsyncThunk(
       })
 
       if (res.status !== HttpStatusCode.Ok) {
-        const errorMsg = res.data?.["detail"]?.[0]?.["msg"] || "Unknown error";
-        toastService.showError("Couldn't get events", errorMsg);
-        return rejectWithValue(errorMsg);
+        const errMsg = tryParseAxiosMessage(res);
+        toastService.showError("Couldn't get events", errMsg);
+        return rejectWithValue(errMsg);
       }
 
       return res.data as EventDTO[];
-    } catch (error) {
+    } catch (error: unknown) {
       if (axios.isCancel(error)) {
         return rejectWithValue('Request cancelled');
+      }
+      if (axios.isAxiosError(error)) {
+        const errMsg = tryParseAxiosErrorMessage(error);
+        toastService.showError("Couldn't get events", errMsg);
+        return rejectWithValue(errMsg);
       }
       const err = error instanceof Error ? error.message : 'Unknown error';
       toastService.showError("Couldn't get events", err);
@@ -54,14 +60,19 @@ const updateEvent = createAsyncThunk(
         { signal, validateStatus: status => status < 500 }
       )
       if (res.status !== HttpStatusCode.Ok) {
-        const errMsg = res.data?.["detail"]?.[0]?.["msg"] || "Unknown error";
+        const errMsg = tryParseAxiosMessage(res);
         toastService.showError("Couldn't update event", errMsg);
         return rejectWithValue(errMsg);
       }
       return res.data as EventDTO;
-    } catch (error) {
+    } catch (error: unknown) {
       if (axios.isCancel(error)) {
         return rejectWithValue('Request cancelled');
+      }
+      if (axios.isAxiosError(error)) {
+        const errMsg = tryParseAxiosErrorMessage(error);
+        toastService.showError("Couldn't update event", errMsg);
+        return rejectWithValue(errMsg);
       }
       const err = error instanceof Error ? error.message : 'Unknown error';
       toastService.showError("Couldn't update event", err);
@@ -86,14 +97,19 @@ const addEvent = createAsyncThunk(
         { signal, validateStatus: status => status < 500 }
       )
       if (res.status !== HttpStatusCode.Created) {
-        const errMsg = res.data?.["detail"]?.[0]?.["msg"] || "Unknown error";
+        const errMsg = tryParseAxiosMessage(res);
         toastService.showError("Couldn't add event", errMsg);
         return rejectWithValue(errMsg);
       }
       return res.data as EventDTO;
-    } catch (error) {
+    } catch (error: unknown) {
       if (axios.isCancel(error)) {
         return rejectWithValue('Request cancelled');
+      }
+      if (axios.isAxiosError(error)) {
+        const errMsg = tryParseAxiosErrorMessage(error);
+        toastService.showError("Couldn't add event", errMsg);
+        return rejectWithValue(errMsg);
       }
       const err = error instanceof Error ? error.message : 'Unknown error';
       toastService.showError("Couldn't add event", err);
@@ -111,14 +127,19 @@ const deleteEvent = createAsyncThunk(
         { signal, validateStatus: status => status < 500 }
       )
       if (res.status !== HttpStatusCode.Ok) {
-        const errMsg = res.data?.["detail"]?.[0]?.["msg"] || "Unknown error";
+        const errMsg = tryParseAxiosMessage(res);
         toastService.showError("Couldn't delete event", errMsg);
         return rejectWithValue(errMsg);
       }
       return uuid;
-    } catch (error) {
+    } catch (error: unknown) {
       if (axios.isCancel(error)) {
         return rejectWithValue('Request cancelled');
+      }
+      if (axios.isAxiosError(error)) {
+        const errMsg = tryParseAxiosErrorMessage(error);
+        toastService.showError("Couldn't delete event", errMsg);
+        return rejectWithValue(errMsg);
       }
       const err = error instanceof Error ? error.message : 'Unknown error';
       toastService.showError("Couldn't delete event", err);

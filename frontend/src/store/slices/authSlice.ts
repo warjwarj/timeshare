@@ -86,7 +86,7 @@ const register = createAsyncThunk(
 const updateAccount = createAsyncThunk(
   'auth/updateAccount',
   async (
-    { name, email }: { name?: string, email?: string },
+    { name, email }: { name: string | null, email: string },
     { signal, rejectWithValue }
   ) => {
     try {
@@ -97,17 +97,25 @@ const updateAccount = createAsyncThunk(
         { signal, validateStatus: status => status < 500 }
       );
       if (res.status !== HttpStatusCode.Ok) {
-        const errMsg = res.data?.["detail"]?.[0]?.["msg"] || res.data?.["detail"] || "Unknown error";
+        const errMsg = tryParseAxiosMessage(res)
         toastService.showError("Couldn't update account", errMsg);
         return rejectWithValue(errMsg);
       }
       return res.data;
     } catch (error: unknown) {
+      // cancel error, don't show message
       if (axios.isCancel(error)) {
         return rejectWithValue('Request cancelled');
       }
+      // try and parse the error
+      if (axios.isAxiosError(error)) {
+        const errMsg = tryParseAxiosErrorMessage(error)
+        toastService.showError("Couldn't register", errMsg);
+        return rejectWithValue(errMsg);
+      }
+      // fallback to exception message or unknown
       const err = error instanceof Error ? error.message : 'Unknown error';
-      toastService.showError("Couldn't update account", err);
+      toastService.showError("Couldn't register", err);
       return rejectWithValue(err);
     }
   }
@@ -151,6 +159,7 @@ export const authSlice = createSlice({
         }
         state.name = name
         state.email = email
+        console.log(action.payload)
         localStorage.setItem("auth_state", JSON.stringify({ ...state }))
         toastService.showSuccess("Account updated successfully")
       })

@@ -3,6 +3,7 @@ import { createSlice, createAsyncThunk, createSelector } from '@reduxjs/toolkit'
 import { apiClient } from "../../utils/apiClient";
 import axios, { HttpStatusCode } from 'axios';
 import { toastService } from '../../toastService';
+import { tryParseAxiosErrorMessage, tryParseAxiosMessage } from '../../utils/utils';
 import { type AvailabilityRuleDTO } from '../../types/AvailabilityRuleDTO';
 import { fromZonedTime, toZonedTime } from 'date-fns-tz';
 
@@ -15,14 +16,19 @@ const getAvailabilityRules = createAsyncThunk(
         validateStatus: status => status < 500,
       });
       if (res.status !== HttpStatusCode.Ok) {
-        const errMsg = res.data?.["detail"]?.[0]?.["msg"] || "Unknown error";
+        const errMsg = tryParseAxiosMessage(res);
         toastService.showError("Couldn't get availability rules", errMsg);
         return rejectWithValue(errMsg);
       }
       return res.data as AvailabilityRuleDTO[];
-    } catch (error) {
+    } catch (error: unknown) {
       if (axios.isCancel(error)) {
         return rejectWithValue('Request cancelled');
+      }
+      if (axios.isAxiosError(error)) {
+        const errMsg = tryParseAxiosErrorMessage(error);
+        toastService.showError("Couldn't get availability rules", errMsg);
+        return rejectWithValue(errMsg);
       }
       const err = error instanceof Error ? error.message : 'Unknown error';
       toastService.showError("Couldn't get availability rules", err);
@@ -40,14 +46,19 @@ const getAvailabilityRule = createAsyncThunk(
         validateStatus: status => status < 500,
       });
       if (res.status !== HttpStatusCode.Ok) {
-        const errMsg = res.data?.["detail"]?.[0]?.["msg"] || "Unknown error";
+        const errMsg = tryParseAxiosMessage(res);
         toastService.showError("Couldn't get availability rule", errMsg);
         return rejectWithValue(errMsg);
       }
       return res.data as AvailabilityRuleDTO;
-    } catch (error) {
+    } catch (error: unknown) {
       if (axios.isCancel(error)) {
         return rejectWithValue('Request cancelled');
+      }
+      if (axios.isAxiosError(error)) {
+        const errMsg = tryParseAxiosErrorMessage(error);
+        toastService.showError("Couldn't get availability rule", errMsg);
+        return rejectWithValue(errMsg);
       }
       const err = error instanceof Error ? error.message : 'Unknown error';
       toastService.showError("Couldn't get availability rule", err);
@@ -71,14 +82,19 @@ const createAvailabilityRule = createAsyncThunk(
         validateStatus: status => status < 500,
       });
       if (res.status !== HttpStatusCode.Created) {
-        const errMsg = res.data?.["detail"]?.[0]?.["msg"] || "Unknown error";
+        const errMsg = tryParseAxiosMessage(res);
         toastService.showError("Couldn't create availability rule", errMsg);
         return rejectWithValue(errMsg);
       }
       return res.data as AvailabilityRuleDTO;
-    } catch (error) {
+    } catch (error: unknown) {
       if (axios.isCancel(error)) {
         return rejectWithValue('Request cancelled');
+      }
+      if (axios.isAxiosError(error)) {
+        const errMsg = tryParseAxiosErrorMessage(error);
+        toastService.showError("Couldn't create availability rule", errMsg);
+        return rejectWithValue(errMsg);
       }
       const err = error instanceof Error ? error.message : 'Unknown error';
       toastService.showError("Couldn't create availability rule", err);
@@ -104,14 +120,19 @@ const updateAvailabilityRule = createAsyncThunk(
         validateStatus: status => status < 500,
       });
       if (res.status !== HttpStatusCode.Ok) {
-        const errMsg = res.data?.["detail"]?.[0]?.["msg"] || "Unknown error";
+        const errMsg = tryParseAxiosMessage(res);
         toastService.showError("Couldn't update availability rule", errMsg);
         return rejectWithValue(errMsg);
       }
       return res.data as AvailabilityRuleDTO;
-    } catch (error) {
+    } catch (error: unknown) {
       if (axios.isCancel(error)) {
         return rejectWithValue('Request cancelled');
+      }
+      if (axios.isAxiosError(error)) {
+        const errMsg = tryParseAxiosErrorMessage(error);
+        toastService.showError("Couldn't update availability rule", errMsg);
+        return rejectWithValue(errMsg);
       }
       const err = error instanceof Error ? error.message : 'Unknown error';
       toastService.showError("Couldn't update availability rule", err);
@@ -129,14 +150,19 @@ const deleteAvailabilityRule = createAsyncThunk(
         validateStatus: status => status < 500,
       });
       if (res.status !== HttpStatusCode.Ok) {
-        const errMsg = res.data?.["detail"]?.[0]?.["msg"] || "Unknown error";
+        const errMsg = tryParseAxiosMessage(res);
         toastService.showError("Couldn't delete availability rule", errMsg);
         return rejectWithValue(errMsg);
       }
       return uuid;
-    } catch (error) {
+    } catch (error: unknown) {
       if (axios.isCancel(error)) {
         return rejectWithValue('Request cancelled');
+      }
+      if (axios.isAxiosError(error)) {
+        const errMsg = tryParseAxiosErrorMessage(error);
+        toastService.showError("Couldn't delete availability rule", errMsg);
+        return rejectWithValue(errMsg);
       }
       const err = error instanceof Error ? error.message : 'Unknown error';
       toastService.showError("Couldn't delete availability rule", err);
