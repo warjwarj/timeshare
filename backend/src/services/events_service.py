@@ -1,16 +1,13 @@
 import logging
 from dataclasses import asdict
-from uuid import uuid4
-from datetime import datetime, timezone, timedelta
+from datetime import datetime
 
 from src.repositories.events_repository import EventsRepository
-from src.repositories.users_repository import UserRepository
 from src.schemas.dtos.event_dto import EventDTO
 from src.models.event_model import EventModel
 from src.schemas.requests.event_requests import CreateEventRequest, UpdateEventRequest, CreateMultipleEventsRequest
 from src.schemas.responses.events_responses import SafeEventDTO
 
-from settings import settings
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Module vars
@@ -36,7 +33,7 @@ def sanitiseEvents(evs: list[EventDTO]) -> list[SafeEventDTO]:
 def create_event(user_uuid: str, event: CreateEventRequest) -> SafeEventDTO:
   """
   Add an event
-  """  
+  """ 
   events_repo = EventsRepository()  
   rec = events_repo.add_record(**vars(event), created_by_user_uuid=user_uuid)
   if rec is not None:

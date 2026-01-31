@@ -1,9 +1,9 @@
-from datetime import datetime, timedelta, timezone, time
+from datetime import datetime, timedelta, timezone
 from http import HTTPStatus
 from typing import Optional
 from argon2 import PasswordHasher
 from argon2.exceptions import VerificationError, VerifyMismatchError, InvalidHashError
-from fastapi import HTTPException, Depends
+from fastapi import HTTPException
 from http import HTTPStatus
 import jwt
 
@@ -11,7 +11,6 @@ from src.repositories.users_repository import UserRepository
 from src.schemas.dtos.jwt_payload import JwtPayload
 from src.schemas.dtos.user_dto import UserDTO
 from src.utils.utils import getUnixEpoch, getUtcDatetimeNow
-from src.utils.encoder import SecureEncoder
 
 from settings import settings
 
