@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from "react-router-dom";
 import { Settings, LogOut, Clock, User } from 'lucide-react';
 
-import { selectName } from '../store/slices/authSlice';
+import { selectName, selectToken } from '../store/slices/authSlice';
 import { ourUseDispatch, ourUseSelector } from '../store/hooks';
 import { logout } from '../store/slices/authSlice';
 import { createPortal } from 'react-dom';
@@ -26,12 +26,13 @@ type MenuItem = {
 };
 
 const Navbar: React.FC<NavbarProps> = ({ links }) => {
-  const name: string | null = ourUseSelector(selectName)
   const dispatch = ourUseDispatch()
   const navigator = useNavigate()
+  const name: string | null = ourUseSelector(selectName)
+  const token = ourUseSelector(selectToken)
   const [isOpen, setIsOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
   const [tzModalOpen, setTzModalOpen] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -79,13 +80,14 @@ const Navbar: React.FC<NavbarProps> = ({ links }) => {
       <div className="flex items-center space-x-4">
 
         <div className="relative" ref={dropdownRef}>
+
           {/* Profile Icon */}
-          <button
+          {token && <button
             onClick={() => setIsOpen(!isOpen)}
             className="flex items-center justify-center w-10 h-10 rounded-full bg-blue-600 text-white font-semibold hover:bg-blue-700 text-lg leading-none"
           >
             {name ? <p className="mb-[0.09rem]">{name[0]?.toLocaleUpperCase()}</p> : <User width={15} />}
-          </button>
+          </button>}
 
           {/* Timezone selector */}
           {tzModalOpen && createPortal(

@@ -33,11 +33,8 @@ webserver_log_handler.setLevel(WEBSERVER_LOG_LEVEL)
 
 # intercept uvicorn/fastapi loggers
 for logger_name in ("uvicorn", "uvicorn.error", "uvicorn.access", "fastapi"):
-  logger = logging.getLogger(logger_name)
-  logger.addHandler(webserver_log_handler)
-  logger.setLevel(WEBSERVER_LOG_LEVEL)
-
-root_logger.info("Logging initialised")
+  lg = logging.getLogger(logger_name)
+  lg.addHandler(webserver_log_handler)
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Web server
