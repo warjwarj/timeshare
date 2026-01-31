@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ourUseSelector, ourUseDispatch } from '../store/hooks';
 import { selectEmail, selectName, updateAccount } from '../store/slices/authSlice';
 import { toastService } from '../toastService';
-import  { SaveButton } from '../components/SaveButton';
+import { SaveButton } from '../components/SaveButton';
 
 const Settings: React.FC = () => {
 
@@ -10,10 +10,9 @@ const Settings: React.FC = () => {
   const reduxName = ourUseSelector(selectName)
   const reduxEmail = ourUseSelector(selectEmail)
 
-  const [name, setName] = useState<string>("");
-  const [email, setEmail] = useState<string>("");
+  const [name, setName] = useState<string | null>(reduxName);
+  const [email, setEmail] = useState<string>(reduxEmail);
 
-  // Initialize form with Redux values
   useEffect(() => {
     setName(reduxName);
     setEmail(reduxEmail);
@@ -28,19 +27,11 @@ const Settings: React.FC = () => {
   };
 
   const handleSave = async () => {
-    if (!name.trim() || !email.trim()) {
-      toastService.showError("Validation Error", "Name and email cannot be empty");
+    if (!email.trim()) {
+      toastService.showError("Validation error", "Email cannot be empty.");
       return;
     }
-    
-    try {
-      await dispatch(updateAccount({ name, email })).unwrap();
-    } catch (error: unknown) {
-      const errorMessage = typeof error === 'string'
-        ? error
-        : 'An unexpected error occurred';
-      toastService.showError("Update Failed", errorMessage);
-    }
+    dispatch(updateAccount({ name, email })).unwrap()
   };
 
   return (
@@ -48,7 +39,14 @@ const Settings: React.FC = () => {
       <div className="max-w-2xl mx-auto p-6">
         <h1 className="text-3xl font-bold mb-8 text-light-primary-text dark:text-dark-primary-text">Settings</h1>
 
-        <form className="bg-light-background dark:bg-dark-background border border-light-border dark:border-dark-border rounded-lg p-6">
+        <div
+          className="bg-light-background dark:bg-dark-background border border-light-border dark:border-dark-border rounded-lg p-6"
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              handleSave();
+            }
+          }}>        
           <h2 className="text-xl font-semibold mb-6 text-light-primary-text dark:text-dark-primary-text">Account Information</h2>
 
           <div className="space-y-6">
@@ -60,7 +58,7 @@ const Settings: React.FC = () => {
               <input
                 type="text"
                 id="name"
-                value={name}
+                value={name ?? ""}
                 onChange={handleNameChange}
                 className="w-full px-4 py-2 bg-[#F5F5F5] dark:bg-[#2A2A2A] border border-light-border dark:border-dark-border text-light-primary-text dark:text-dark-primary-text placeholder-light-secondary-text dark:placeholder-dark-secondary-text rounded-lg focus:ring-2 focus:ring-light-accent dark:focus:ring-dark-accent focus:border-transparent"
                 placeholder="Enter your name"
@@ -83,11 +81,11 @@ const Settings: React.FC = () => {
             </div>
           </div>
 
-          {/* Action Buttons */}
+          {/* Update*/}
           <div className="flex gap-3 mt-8">
-            <SaveButton onClick={handleSave} children={"Save"} />
+            <SaveButton onClick={handleSave} children={"Update"} />
           </div>
-        </form>
+        </div>
       </div>
     </div>
   );
