@@ -79,6 +79,11 @@ def decode_token(encoded_token: str) -> dict:
   users_repo = UserRepository()  
   try:    
     payload = jwt.decode(encoded_token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+    if datetime.fromisoformat(payload["expires_at"]) < datetime.now(timezone.utc):
+      raise HTTPException(
+        status_code=HTTPStatus.UNAUTHORIZED,
+        detail="Token expired"
+      )
     user = users_repo.get_record(uuid=payload['user_uuid'])  
     if not user:
       raise HTTPException(
@@ -137,7 +142,7 @@ def login_user(req: LoginRequest) -> LoginResponse:
       detail="Invalid user."
     )
   verify_password(rec.password, req.password)
-  encoded_token = encode_token(create_token(rec.uuid))
+  encoded_token = encode_token(create_token(rec.uuid, timedelta(seconds=5)))
   return LoginResponse(
     success=True,
     access_token=encoded_token,
