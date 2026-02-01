@@ -142,7 +142,7 @@ def login_user(req: LoginRequest) -> LoginResponse:
       detail="Invalid user."
     )
   verify_password(rec.password, req.password)
-  encoded_token = encode_token(create_token(rec.uuid, timedelta(seconds=5)))
+  encoded_token = encode_token(create_token(rec.uuid, timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)))
   return LoginResponse(
     success=True,
     access_token=encoded_token,
