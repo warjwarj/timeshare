@@ -30,12 +30,12 @@ def sanitiseEvents(evs: list[EventDTO]) -> list[SafeEventDTO]:
 # Services
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-def create_event(user_uuid: str, event: CreateEventRequest) -> SafeEventDTO:
+def create_event(event: CreateEventRequest) -> SafeEventDTO:
   """
   Add an event
   """ 
   events_repo = EventsRepository()  
-  rec = events_repo.add_record(**vars(event), created_by_user_uuid=user_uuid)
+  rec = events_repo.add_record(**vars(event))
   if rec is not None:
     return sanitiseEvent(rec)
 

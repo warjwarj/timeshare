@@ -6,8 +6,9 @@ from abc import ABC
 
 from sqlalchemy import inspect
 
+from src.models import Base
 from src.db.session import DB_URL, get_engine, get_sessionmaker, yield_session
-from src.models.event_model import Base, EventModel
+from src.models.event_model import EventModel
 from src.schemas.dtos.user_dto import UserDTO
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

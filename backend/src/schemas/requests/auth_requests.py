@@ -1,7 +1,7 @@
-from pydantic import BaseModel
+from pydantic import UUID7, BaseModel
 from typing import Annotated
 from typing import Optional
-from pydantic import StringConstraints
+from pydantic import StringConstraints, UUID7
 
 class LoginRequest(BaseModel):
   """
@@ -17,6 +17,8 @@ class RegisterRequest(BaseModel):
   Pydantic class for validating a register request.
   All fields required.
   """
+  # organisation_uuid shouldn't be optional in prod. Hardcoding for now.
+  organisation_uuid: Optional[UUID7]
   name: Optional[Annotated[str, StringConstraints(max_length=255)]]
   email: Annotated[str, StringConstraints(max_length=255)]
   password: Annotated[str, StringConstraints(max_length=255)]

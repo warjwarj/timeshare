@@ -53,13 +53,13 @@ def create_token(uuid: str, expires_delta: Optional[timedelta] = None) -> dict:
   if expires_delta:
     expires = datetime.now(timezone.utc) + expires_delta
   else:
-    expires = datetime.now(timezone.utc) + timedelta(minutes=15)    
+    expires = datetime.now(timezone.utc) + timedelta(minutes=15)
   jwt_payload = {
     "user_uuid": str(uuid),
     "expires_at": str(expires), # this can be iso string
     "iat": getUnixEpoch() # jwt needs an int for iat
   }
-  return jwt_payload  
+  return jwt_payload
 
 def encode_token(jwt_payload: dict) -> str:
   """
@@ -106,16 +106,18 @@ def register_user(req: RegisterRequest) -> RegisterResponse:
   """    
   Initial registration of a new user.
   """  
-  users_repo = UserRepository()    
+  users_repo = UserRepository()  
   if users_repo.get_record(email=req.email):
     raise HTTPException(
       status_code=HTTPStatus.FORBIDDEN,
       detail="Email already registered."
     )
+
   hashed_password = hash_password(req.password)
   fields = vars(req)
   fields["password"] = hashed_password
-  rec = users_repo.add_record(**fields)  
+  
+  rec = users_repo.register_user(**fields)  
   if rec is not None:
     return RegisterResponse(name=rec.name, email=rec.email)
   else:    
@@ -123,8 +125,7 @@ def register_user(req: RegisterRequest) -> RegisterResponse:
     raise HTTPException(
       status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
       detail="Failed to register user."
-    )
-    
+    )    
 
 def login_user(req: LoginRequest) -> LoginResponse:
   """    
@@ -136,6 +137,7 @@ def login_user(req: LoginRequest) -> LoginResponse:
   else:
     search_term = {"email": req.email}
   rec = users_repo.get_record(**search_term)
+  print(rec)
   if not rec:
     raise HTTPException(
       status_code=HTTPStatus.UNAUTHORIZED,
@@ -152,7 +154,6 @@ def login_user(req: LoginRequest) -> LoginResponse:
   )
 
 
-# TODO USE THE UPDATE SCHEMA
 def update_user_account(user_uuid: str, req: UpdateAccountRequest) -> UpdateAccountResponse:
   """
   Update user account information (name and/or email)

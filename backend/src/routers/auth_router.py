@@ -24,11 +24,15 @@ logger = logging.getLogger(__name__)
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 @auth_router.post("/register", status_code=HTTPStatus.CREATED)
-async def register(request: RegisterRequest):
+async def register(req: RegisterRequest):
   """
   Handle a registration request
   """
-  return register_user(request)
+  
+  # organisation_uuid is hardcoded for now, will update when necessary
+  req.organisation_uuid = "019c4ea9-deba-7e4f-8334-e2f7ace5e4e1"
+  
+  return register_user(req)
     
   
 @auth_router.post("/login", status_code=HTTPStatus.OK)

@@ -1,5 +1,9 @@
 import logging
 
+from sqlalchemy import select
+
+from src.models.organisation_user_model import OrganisationUserModel
+from src.models.organisation_model import OrganisationModel
 from src.models.user_model import UserModel
 from src.schemas.dtos.user_dto import UserDTO
 from src.repositories.repository import Repository
@@ -14,20 +18,18 @@ logger = logging.getLogger(__name__)
 # UserRepository
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-
-class UserRepository(Repository[UserModel, UserDTO]):
+class OrganisationRepository(Repository[UserModel, UserDTO]):
   """
   
   Repository for managing user records
   
   """
-  model_class=UserModel
+  model_class=OrganisationModel
   
-  def register_user(self, **kwargs):
-    """
-    Register a user.
+  def get_orgs_for_user(user_uuid: str):
+    stmt = (
+      select(OrganisationModel, OrganisationUserModel)
+      .join(OrganisationModel.id)
+      .where(OrganisationModel.id == OrganisationUserModel.org_id)      
+    )
     
-    We need to also create the OrganisationUser relationship.
-    """
-    user_model = {k:v for k, v in kwargs if k != "organisation_uuid"}
-    organisation_user_

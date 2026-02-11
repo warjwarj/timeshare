@@ -41,3 +41,23 @@ class EventsRepository(Repository[EventModel, EventDTO]):
 
     except Exception as e:
       print(f"ERROR GETTING RECORD: {e}")
+  
+  def add_event(self, user_uuid: str, start: datetime, end: datetime):
+    """
+    Get all events visible to user, within the given timespan
+    """
+    try:
+
+      with yield_session(DB_URL) as session:
+        records = session.query(self.model_class).filter_by(
+            created_by_user_uuid=user_uuid
+          ).filter(
+            self.model_class.start <= end,
+            self.model_class.end >= start
+          ).all()
+        if records:
+          return [r.map_to_dto() for r in records]
+      return []
+
+    except Exception as e:
+      print(f"ERROR GETTING RECORD: {e}")

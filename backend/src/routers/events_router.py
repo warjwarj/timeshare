@@ -33,15 +33,14 @@ async def all(jwt_payload: IsAuthedDep, start: datetime, end: datetime):
   return get_all_events(user_uuid, start, end)
 
 @events_router.post("/", status_code=HTTPStatus.CREATED)
-async def create(jwt_payload: IsAuthedDep, event: CreateEventRequest):
+async def create(_: IsAuthedDep, event: CreateEventRequest):
   """
   Create an event.
   """
-  user_uuid = jwt_payload["user_uuid"]
-  return create_event(user_uuid, event)
+  return create_event(event)
 
 @events_router.put("/{uuid}", status_code=HTTPStatus.OK)
-async def update(uuid: str, jwt_payload: IsAuthedDep, event: UpdateEventRequest):
+async def update(uuid: str, _: IsAuthedDep, event: UpdateEventRequest):
   """
   Update an event.
   """
