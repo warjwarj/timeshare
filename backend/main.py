@@ -1,12 +1,13 @@
 import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-
 from src.routers.availability_router import availability_router
 from src.routers.auth_router import auth_router
 from src.routers.events_router import events_router
 from src.routers.common_router import common_router
 from src.db.custom_log_handler import CustomLogHandler
+from src.models import Base
+from src.db.session import DB_URL, get_engine
 
 from settings import settings
 
@@ -35,6 +36,13 @@ webserver_log_handler.setLevel(WEBSERVER_LOG_LEVEL)
 for logger_name in ("uvicorn", "uvicorn.error", "uvicorn.access", "fastapi"):
   lg = logging.getLogger(logger_name)
   lg.addHandler(webserver_log_handler)
+  
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Db
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  
+# create all database tables on startup
+Base.metadata.create_all(get_engine(DB_URL))
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Web server
