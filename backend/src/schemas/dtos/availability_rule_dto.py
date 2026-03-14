@@ -2,18 +2,17 @@ from typing import Optional
 from datetime import datetime, time
 from dataclasses import dataclass
 from uuid import UUID
-  
+
 
 @dataclass
 class AvailabilityRuleDTO:
+  """  
+  DTO for communicating an availability rule.  
   """
-  
-  DTO for communicating an availability rule.
-  
-  """
-  uuid: str
+  id: int
+  uuid: UUID
   name: str
-  created_by_user_uuid: str
+  user_id: str
   iana_timezone: str
   prevents_booking: bool = None
   weekdays: Optional[list[int]] = None
@@ -21,3 +20,5 @@ class AvailabilityRuleDTO:
   end_time: Optional[time] = None
   start_datetime: Optional[datetime] = None
   end_datetime: Optional[datetime] = None
+  created_at: Optional[datetime] = None
+  updated_at: Optional[datetime] = None

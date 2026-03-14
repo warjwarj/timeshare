@@ -1,11 +1,9 @@
 import logging
 
-from sqlalchemy import select
 
-from src.models.organisation_user_model import OrganisationUserModel
+from src.schemas.dtos.organisation_user_dto import OrganisationUserDTO
+from src.schemas.dtos.organisation_dto import OrganisationDTO
 from src.models.organisation_model import OrganisationModel
-from src.models.user_model import UserModel
-from src.schemas.dtos.user_dto import UserDTO
 from src.repositories.repository import Repository
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -15,21 +13,14 @@ from src.repositories.repository import Repository
 logger = logging.getLogger(__name__)
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# UserRepository
+# OrganisationRepository
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-class OrganisationRepository(Repository[UserModel, UserDTO]):
+
+class OrganisationRepository(Repository[OrganisationModel, OrganisationDTO]):
   """
-  
-  Repository for managing user records
-  
+
+  Repository for managing organisation records
+
   """
-  model_class=OrganisationModel
-  
-  def get_orgs_for_user(user_uuid: str):
-    stmt = (
-      select(OrganisationModel, OrganisationUserModel)
-      .join(OrganisationModel.id)
-      .where(OrganisationModel.id == OrganisationUserModel.org_id)      
-    )
-    
+  model_class = OrganisationModel

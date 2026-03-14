@@ -7,13 +7,12 @@ from uuid import UUID
 @dataclass
 class UserDTO:
   """
-  
-  DTO for communicating information pertaining to a user.
-  
+  DTO for communicating information pertaining to a user.  
   """
+  id: int
+  uuid: UUID
   name: str
   email: str
-  uuid: Optional[UUID] = None
   role: Optional[str] = None
   password: Optional[str] = None
   created_at: Optional[datetime] = None

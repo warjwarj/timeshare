@@ -11,6 +11,7 @@ const RegisterForm: React.FC = () => {
   const navigate = useNavigate();
 
   // states
+  const [orgName, setOrgName] = useState<string>("");
   const [name, setName] = useState<string>("");
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
@@ -23,9 +24,10 @@ const RegisterForm: React.FC = () => {
       return;
     }
     try {
-      await dispatch(register({ 
-        name: null, 
-        email, 
+      await dispatch(register({
+        org_name: orgName,
+        name,
+        email,
         password
       })).unwrap();
       navigate('/login');
@@ -60,6 +62,17 @@ const RegisterForm: React.FC = () => {
               </a>
             </div>
             <form onSubmit={submit} className="space-y-4 sm:space-y-6" action="#">
+              <div>
+                <label htmlFor="email" className="block mb-2 font-medium text-light-primary-text dark:text-dark-primary-text">Organisation Name</label>
+                <input
+                  id="organisation name"
+                  value={orgName}
+                  onChange={(e) => setOrgName(e.target.value)}
+                  placeholder="My Company Ltd"
+                  className="bg-[#F5F5F5] border border-light-border text-light-primary-text rounded-lg focus:ring-light-accent focus:border-light-accent block w-full p-2.5 dark:bg-[#2A2A2A] dark:border-dark-border dark:placeholder-dark-secondary-text dark:text-dark-primary-text dark:focus:ring-dark-accent dark:focus:border-dark-accent"
+                  required
+                />
+              </div>
               <div>
                 <label htmlFor="email" className="block mb-2 font-medium text-light-primary-text dark:text-dark-primary-text">Name</label>
                 <input

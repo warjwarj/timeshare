@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from pydantic import BaseModel
 
+
 @dataclass
 class LoginResponse():
   """
@@ -12,13 +13,6 @@ class LoginResponse():
   name: str
   email: str
 
-@dataclass
-class RegisterResponse():
-  """
-  Pydantic class for responding to a register request.
-  """
-  name: str
-  email: str
 
 @dataclass
 class UpdateAccountResponse():
@@ -26,6 +20,6 @@ class UpdateAccountResponse():
   Pydantic class for responding to an account update request.
   """
   success: bool
+  updated_at: str
   name: str
   email: str
-  updated_at: str

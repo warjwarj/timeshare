@@ -2,15 +2,15 @@ from typing import Optional
 from datetime import datetime, time
 from dataclasses import dataclass
 from pydantic_extra_types.timezone_name import TimeZoneName
-  
+
 
 @dataclass
 class SafeAvailabilityRuleDTO:
   """
-  
+
   DTO for communicating an availability rule.
   Omits sensitive data.
-  
+
   """
   uuid: str
   name: str
@@ -21,3 +21,5 @@ class SafeAvailabilityRuleDTO:
   end_time: Optional[time] = None
   start_datetime: Optional[datetime] = None
   end_datetime: Optional[datetime] = None
+  created_at: Optional[datetime] = None
+  updated_at: Optional[datetime] = None

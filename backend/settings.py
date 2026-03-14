@@ -1,12 +1,16 @@
+from __future__ import annotations
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from pathlib import Path
 import logging
 import os
+
+BASE_DIR = Path(__file__).parent
 
 logger = logging.getLogger(__name__)
 
 class Settings(BaseSettings):
   model_config = SettingsConfigDict(
-      env_file="./.env.dev", env_file_encoding="utf-8", case_sensitive=True
+      env_file=str(BASE_DIR / ".env.dev"), env_file_encoding="utf-8", case_sensitive=True
   )
 
   API_VERSION: str
@@ -27,28 +31,28 @@ class Settings(BaseSettings):
 
 class ContainerDevSettings(Settings):
   model_config = SettingsConfigDict(
-    env_file="./.env.dev", env_file_encoding="utf-8", case_sensitive=True
+    env_file=str(BASE_DIR / ".env.dev"), env_file_encoding="utf-8", case_sensitive=True
   )
   ENV: str = "dev"
 
 
 class ContainerTestSettings(Settings):
   model_config = SettingsConfigDict(
-    env_file="./.env.test", env_file_encoding="utf-8", case_sensitive=True
+    env_file=str(BASE_DIR / ".env.test"), env_file_encoding="utf-8", case_sensitive=True
   )
   ENV: str = "test"
 
 
 class LocalTestSettings(Settings):
   model_config = SettingsConfigDict(
-    env_file="./.env.test.local", env_file_encoding="utf-8", case_sensitive=True
+    env_file=str(BASE_DIR / ".env.test.local"), env_file_encoding="utf-8", case_sensitive=True
   )
   ENV: str = "test"
 
 
 class LocalDevSettings(Settings):
   model_config = SettingsConfigDict(
-    env_file="./.env.local", env_file_encoding="utf-8", case_sensitive=True
+    env_file=str(BASE_DIR / ".env.local"), env_file_encoding="utf-8", case_sensitive=True
   )
   ENV: str = "local"
 

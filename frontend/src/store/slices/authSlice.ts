@@ -47,11 +47,12 @@ const login = createAsyncThunk(
 const register = createAsyncThunk(
   'auth/register',
   async (
-    { name, email, password }: { name: string | null, email: string, password: string },
+    { org_name, name, email, password }: { org_name: string, name: string | null, email: string, password: string },
     { signal, rejectWithValue }
   ) => {
     try {
       const res = await apiClient.post("/auth/register", {
+        org_name,
         name,
         email,
         password
@@ -159,7 +160,6 @@ export const authSlice = createSlice({
         }
         state.name = name
         state.email = email
-        console.log(action.payload)
         localStorage.setItem("auth_state", JSON.stringify({ ...state }))
         toastService.showSuccess("Account updated successfully")
       })

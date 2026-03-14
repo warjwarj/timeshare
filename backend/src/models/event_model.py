@@ -1,4 +1,4 @@
-from sqlalchemy import UUID, String, Integer, Index, DateTime, ForeignKey
+from sqlalchemy import UUID, String, Integer, Index, DateTime, ForeignKey, inspect
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from datetime import datetime
 
@@ -51,13 +51,7 @@ class EventModel(Base, TimestampMixin, UUIDMixin):
   )
 
   def map_to_dto(self):
-    return EventDTO(
-      start=self.start,
-      end=self.end,
-      iana_timezone=self.iana_timezone,
-      name=self.name,
-      colour=self.colour,
-      created_at=self.created_at,
-      updated_at=self.updated_at,
-      uuid=self.uuid,
-    )
+    return EventDTO(**{
+      column.key: getattr(self, column.key)
+      for column in inspect(self).mapper.column_attrs
+    })

@@ -4,15 +4,18 @@ from pydantic import BeforeValidator, Field, field_serializer, field_validator, 
 from pydantic_extra_types.timezone_name import TimeZoneName
 from datetime import datetime, time
 
+
 def empty_str_to_none(val):
-    if val is None:
-        return None
-    if isinstance(val, str) and (val == "" or val.isspace()):
-        return None
-    return val
+  if val is None:
+    return None
+  if isinstance(val, str) and (val == "" or val.isspace()):
+    return None
+  return val
+
 
 OptionalTime = Annotated[time | None, BeforeValidator(empty_str_to_none)]
 OptionalDatetime = Annotated[datetime | None, BeforeValidator(empty_str_to_none)]
+
 
 class CreateAvailabilityRuleRequest(BaseModel):
   """
@@ -91,10 +94,3 @@ class UpdateAvailabilityRuleRequest(BaseModel):
       if self.end_datetime <= self.start_datetime:
         raise ValueError('End date must be after start date')
     return self
-
-
-class CreateMultipleAvailabilityRulesRequest(BaseModel):
-  """
-  Multiple availability rule requests in one go
-  """
-  rules: list[CreateAvailabilityRuleRequest]

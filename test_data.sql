@@ -56,21 +56,21 @@ INSERT INTO availability_rules (id, uuid, user_id, name, prevents_booking, weekd
 -- ============================================================
 INSERT INTO organisation_users (org_id, user_id, created_at, updated_at, role) VALUES
 (1, 1, NOW() + (INTERVAL '1 day' * (floor(random() * 21) - 10)),
-         NOW() + (INTERVAL '1 day' * (floor(random() * 21) - 10)), 'admin'),
+         NOW() + (INTERVAL '1 day' * (floor(random() * 21) - 10)), 100),
 (1, 4, NOW() + (INTERVAL '1 day' * (floor(random() * 21) - 10)),
-         NOW() + (INTERVAL '1 day' * (floor(random() * 21) - 10)), 'admin'),
+         NOW() + (INTERVAL '1 day' * (floor(random() * 21) - 10)), 100),
 (2, 1, NOW() + (INTERVAL '1 day' * (floor(random() * 21) - 10)),
-         NOW() + (INTERVAL '1 day' * (floor(random() * 21) - 10)), 'user'),
+         NOW() + (INTERVAL '1 day' * (floor(random() * 21) - 10)), 100),
 (2, 2, NOW() + (INTERVAL '1 day' * (floor(random() * 21) - 10)),
-         NOW() + (INTERVAL '1 day' * (floor(random() * 21) - 10)), 'admin'),
+         NOW() + (INTERVAL '1 day' * (floor(random() * 21) - 10)), 100),
 (2, 3, NOW() + (INTERVAL '1 day' * (floor(random() * 21) - 10)),
-         NOW() + (INTERVAL '1 day' * (floor(random() * 21) - 10)), 'user'),
+         NOW() + (INTERVAL '1 day' * (floor(random() * 21) - 10)), 100),
 (3, 4, NOW() + (INTERVAL '1 day' * (floor(random() * 21) - 10)),
-         NOW() + (INTERVAL '1 day' * (floor(random() * 21) - 10)), 'user'),
+         NOW() + (INTERVAL '1 day' * (floor(random() * 21) - 10)), 100),
 (3, 5, NOW() + (INTERVAL '1 day' * (floor(random() * 21) - 10)),
-         NOW() + (INTERVAL '1 day' * (floor(random() * 21) - 10)), 'user'),
+         NOW() + (INTERVAL '1 day' * (floor(random() * 21) - 10)), 100),
 (4, 5, NOW() + (INTERVAL '1 day' * (floor(random() * 21) - 10)),
-         NOW() + (INTERVAL '1 day' * (floor(random() * 21) - 10)), 'manager');
+         NOW() + (INTERVAL '1 day' * (floor(random() * 21) - 10)), 100);
 
 
 -- ============================================================

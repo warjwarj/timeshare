@@ -2,19 +2,17 @@ import logging
 from http import HTTPStatus
 from fastapi import APIRouter
 
-from src.services.auth_service import register_user, create_token, encode_token, login_user, update_user_account
+from src.services.auth_service import register_orguser, login_user, update_user_account
 from src.schemas.requests.auth_requests import LoginRequest, RegisterRequest, UpdateAccountRequest
-from src.schemas.responses.auth_responses import LoginResponse, RegisterResponse, UpdateAccountResponse
-from src.schemas.dtos.user_dto import UserDTO
-from src.dependancies.auth_deps import IsAuthedDep
+from src.dependancies.auth import RequestContextDep
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Module vars
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 auth_router = APIRouter(
-  prefix="/auth", 
-  tags=["auth"]
+    prefix="/auth",
+    tags=["auth"]
 )
 
 logger = logging.getLogger(__name__)
@@ -23,18 +21,15 @@ logger = logging.getLogger(__name__)
 # Routes
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+
 @auth_router.post("/register", status_code=HTTPStatus.CREATED)
 async def register(req: RegisterRequest):
   """
   Handle a registration request
   """
-  
-  # organisation_uuid is hardcoded for now, will update when necessary
-  req.organisation_uuid = "019c4ea9-deba-7e4f-8334-e2f7ace5e4e1"
-  
-  return register_user(req)
-    
-  
+  return register_orguser(req)
+
+
 @auth_router.post("/login", status_code=HTTPStatus.OK)
 async def login(req: LoginRequest):
   """  
@@ -42,9 +37,10 @@ async def login(req: LoginRequest):
   """
   return login_user(req)
 
+
 @auth_router.put("/account", status_code=HTTPStatus.OK)
-async def update_account(jwt_payload: IsAuthedDep, req: UpdateAccountRequest):
+async def update_account(ctx: RequestContextDep, req: UpdateAccountRequest):
   """
   Protected route, handle a user account update request
   """
-  return update_user_account(jwt_payload["user_uuid"], req)
+  return update_user_account(ctx.user.uuid, req)

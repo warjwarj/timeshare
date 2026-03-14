@@ -1,6 +1,7 @@
 from typing import Optional
 from datetime import datetime
 from dataclasses import dataclass
+from uuid import UUID
 from pydantic import BaseModel
 
 
@@ -11,7 +12,7 @@ class SafeEventDTO(BaseModel):
   Omits sensitive data.
 
   """
-  uuid: str
+  uuid: UUID
   start: datetime
   end: datetime
   iana_timezone: str

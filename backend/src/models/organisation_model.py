@@ -1,6 +1,7 @@
-from sqlalchemy import String, ForeignKey, Integer
+from sqlalchemy import String, ForeignKey, Integer, inspect
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from src.schemas.dtos.organisation_dto import OrganisationDTO
 from src.models import Base
 from src.models.mixins import TimestampMixin, UUIDMixin
 
@@ -19,6 +20,12 @@ class OrganisationModel(Base, UUIDMixin, TimestampMixin):
     Integer,
     nullable=False,
     primary_key=True
+  )
+  
+  name: Mapped[str] = mapped_column(
+    String(255),
+    nullable=False,
+    comment="Name of the organisation."
   )
 
   parent_id: Mapped[int | None] = mapped_column(
@@ -42,8 +49,8 @@ class OrganisationModel(Base, UUIDMixin, TimestampMixin):
     foreign_keys=[parent_id]
   )
 
-  name: Mapped[str] = mapped_column(
-    String(255),
-    nullable=False,
-    comment="Name of the organisation."
-  )
+  def map_to_dto(self):
+    return OrganisationDTO(**{
+      column.key: getattr(self, column.key)
+      for column in inspect(self).mapper.column_attrs
+    })

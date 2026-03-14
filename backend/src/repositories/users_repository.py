@@ -1,5 +1,9 @@
 import logging
+from uuid import UUID
 
+from src.repositories.organisation_repository import OrganisationRepository
+from src.utils.organisation_user_role import OrganisationUserRole
+from src.repositories.organisation_user_repository import OrganisationUserRepository
 from src.models.user_model import UserModel
 from src.schemas.dtos.user_dto import UserDTO
 from src.repositories.repository import Repository
@@ -10,6 +14,9 @@ from src.repositories.repository import Repository
 
 logger = logging.getLogger(__name__)
 
+org_user_rep = OrganisationUserRepository()
+org_rep = OrganisationRepository()
+
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # UserRepository
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -17,17 +24,15 @@ logger = logging.getLogger(__name__)
 
 class UserRepository(Repository[UserModel, UserDTO]):
   """
-  
+
   Repository for managing user records
-  
+
   """
-  model_class=UserModel
-  
-  def register_user(self, **kwargs):
+  model_class = UserModel
+
+  def get_default_org_user(self, user_uuid: str) -> UserDTO | None:
     """
-    Register a user.
-    
-    We need to also create the OrganisationUser relationship.
+    Given org and user uuids, get orguser relationship
     """
-    user_model = {k:v for k, v in kwargs if k != "organisation_uuid"}
-    organisation_user_
+    user = super().get_record(uuid=user_uuid)
+    return org_user_rep.get_record(user_id=user.id, is_default=True)

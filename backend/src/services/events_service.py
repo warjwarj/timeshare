@@ -4,8 +4,7 @@ from datetime import datetime
 
 from src.repositories.events_repository import EventsRepository
 from src.schemas.dtos.event_dto import EventDTO
-from src.models.event_model import EventModel
-from src.schemas.requests.event_requests import CreateEventRequest, UpdateEventRequest, CreateMultipleEventsRequest
+from src.schemas.requests.event_requests import CreateEventRequest, UpdateEventRequest
 from src.schemas.responses.events_responses import SafeEventDTO
 
 
@@ -15,13 +14,17 @@ from src.schemas.responses.events_responses import SafeEventDTO
 
 logger = logging.getLogger(__name__)
 
+events_repo = EventsRepository()
+
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Helpers
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+
 def sanitiseEvent(ev: EventDTO) -> SafeEventDTO:
-  sev = {k: v for k, v in asdict(ev).items() if k != "created_by_user_uuid"}
+  sev = {k: v for k, v in asdict(ev).items() if k != "id"}
   return SafeEventDTO(**sev)
+
 
 def sanitiseEvents(evs: list[EventDTO]) -> list[SafeEventDTO]:
   return [sanitiseEvent(ev) for ev in evs]
@@ -30,53 +33,56 @@ def sanitiseEvents(evs: list[EventDTO]) -> list[SafeEventDTO]:
 # Services
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-def create_event(event: CreateEventRequest) -> SafeEventDTO:
-  """
-  Add an event
-  """ 
-  events_repo = EventsRepository()  
-  rec = events_repo.add_record(**vars(event))
-  if rec is not None:
-    return sanitiseEvent(rec)
 
-def update_event(uuid: str, event: UpdateEventRequest) -> SafeEventDTO:
+def create_event(user_id: int, event: CreateEventRequest) -> SafeEventDTO | None:
   """
-  Add an event
-  """  
-  events_repo = EventsRepository()  
-  rec = events_repo.update_record(uuid, **vars(event))
-  if rec is not None:
-    return sanitiseEvent(rec)
+  Create an event
 
-def create_multiple_events(user_uuid: str, req: CreateMultipleEventsRequest) -> list[SafeEventDTO]:
+  Args:
+    user_uuid (str): uuid of the user creating the event
+    event (CreateEventRequest): args describing the event to be created
+
+  Returns:
+    SafeEventDTO | None: the event, if created else None
   """
-  Add multiple events
-  """  
-  events_repo = EventsRepository()
-  objs = [
-    { **o.model_dump(), "created_by_user_uuid": user_uuid }
-    for o in req.events
-  ]  
-  models = [EventModel(**o) for o in objs]  
-  evs = events_repo.add_multiple_records(models)
-  if evs:
-    return sanitiseEvents(evs)
-  
-def get_all_events(user_uuid: str, start: datetime, end: datetime) -> list[SafeEventDTO]:
+  rec = events_repo.add_record(user_id, **vars(event))
+  return sanitiseEvent(rec) if rec else None
+
+
+def update_event(event_uuid: str, event: UpdateEventRequest) -> SafeEventDTO | None:
+  """
+  Update an event
+
+  Args:
+    event_uuid (str): uuid of the event to be updated
+    event (CreateEventRequest): args describing the update params
+
+  Returns:
+    SafeEventDTO | None: the event, if created else None
+  """
+  rec = events_repo.update_record(lookup={"uuid": event_uuid}, **vars(event))
+  return sanitiseEvent(rec) if rec else None
+
+
+def get_all_events(user_id: str, start: datetime, end: datetime) -> list[SafeEventDTO]:
   """
   Get all events visible to user
 
-  :param user_id: requesters user_id
-  :type user_id: str
-  """
-  events_repo = EventsRepository()
-  evs = events_repo.get_events_by_datetimes(user_uuid=user_uuid, start=start, end=end)
-  return sanitiseEvents(evs)
+  Args:
+    user_uuid (str): uuid of the user making the request
+    start (datetime): start of timespan
+    end (datetime): end of timespan
 
-def delete_event(event_uuid: str) -> dict:
+  Returns:
+    list[SafeEventDTO]: events matching filter params
+  """
+  evs = events_repo.get_events_by_datetimes(user_id=user_id, start=start, end=end)
+  return sanitiseEvents(evs) if evs else []
+
+
+def delete_event(event_uuid: str) -> SafeEventDTO | None:
   """
   Delete an event
   """
-  events_repo = EventsRepository()  
-  events_repo.delete_record(event_uuid)  
-  return {"success": True}
+  rec = events_repo.delete_record(uuid=event_uuid)
+  return sanitiseEvent(rec) if rec else None

@@ -4,14 +4,16 @@ import logging
 from typing import Optional
 from argon2 import PasswordHasher
 from argon2.exceptions import VerificationError, VerifyMismatchError, InvalidHashError
-from fastapi import HTTPException
+from fastapi import HTTPException, Response
 from http import HTTPStatus
 import jwt
 
-from src.schemas.responses.auth_responses import LoginResponse, RegisterResponse, UpdateAccountResponse
+from src.repositories.organisation_user_repository import OrganisationUserRepository
+from src.utils.organisation_user_role import OrganisationUserRole
+from src.repositories.organisation_repository import OrganisationRepository
+from src.schemas.responses.auth_responses import LoginResponse, UpdateAccountResponse
 from src.schemas.requests.auth_requests import LoginRequest, RegisterRequest, UpdateAccountRequest
 from src.repositories.users_repository import UserRepository
-from src.schemas.dtos.user_dto import UserDTO
 from src.utils.utils import getUnixEpoch, getUtcDatetimeNow
 
 from settings import settings
@@ -24,133 +26,170 @@ logger = logging.getLogger(__name__)
 
 passhasher = PasswordHasher()
 
+users_repo = UserRepository()
+orgs_repo = OrganisationRepository()
+org_users_repo = OrganisationUserRepository()
+
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Services
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    
+
+
 def hash_password(password: str) -> str:
   """    
-  Hash a password for storage    
-  """      
-  return passhasher.hash(password)  
+  Hash a password for storage
+  """
+  return passhasher.hash(password)
+
 
 def verify_password(hashed_password: str, plain_password: str) -> None:
   """    
   Verify a password against a hash    
-  """  
+  """
   try:
-    return passhasher.verify(hashed_password, plain_password)  
+    return passhasher.verify(hashed_password, plain_password)
   except (VerifyMismatchError or VerificationError or InvalidHashError):
     raise HTTPException(
-      status_code=HTTPStatus.UNAUTHORIZED,
-      detail="Invalid password."
+        status_code=HTTPStatus.UNAUTHORIZED,
+        detail="Invalid password."
     )
 
-def create_token(uuid: str, expires_delta: Optional[timedelta] = None) -> dict:
+
+def create_token(org_uuid: str, user_uuid: str, expires_delta: Optional[timedelta] = None) -> dict:
   """    
   Create a JWT access token    
-  """  
+  """
   if expires_delta:
     expires = datetime.now(timezone.utc) + expires_delta
   else:
     expires = datetime.now(timezone.utc) + timedelta(minutes=15)
   jwt_payload = {
-    "user_uuid": str(uuid),
-    "expires_at": str(expires), # this can be iso string
-    "iat": getUnixEpoch() # jwt needs an int for iat
+      "org_uuid": str(org_uuid),
+      "user_uuid": str(user_uuid),
+      "expires_at": str(expires),  # this can be iso string
+      "iat": getUnixEpoch()  # jwt needs an int for iat
   }
   return jwt_payload
+
 
 def encode_token(jwt_payload: dict) -> str:
   """
   Encode an access token
-  """  
+  """
   try:
     return jwt.encode(jwt_payload, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
   except Exception:
     raise HTTPException(
-      status_code=HTTPStatus.BAD_REQUEST
-    ) 
+        status_code=HTTPStatus.BAD_REQUEST
+    )
+
 
 def decode_token(encoded_token: str) -> dict:
   """    
   Verify a access token   
   """
-  users_repo = UserRepository()  
-  try:    
+  try:
     payload = jwt.decode(encoded_token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
     if datetime.fromisoformat(payload["expires_at"]) < datetime.now(timezone.utc):
       raise HTTPException(
-        status_code=HTTPStatus.UNAUTHORIZED,
-        detail="Token expired"
+          status_code=HTTPStatus.UNAUTHORIZED,
+          detail="Token expired"
       )
-    user = users_repo.get_record(uuid=payload['user_uuid'])  
-    if not user:
-      raise HTTPException(
-        status_code=HTTPStatus.UNAUTHORIZED,
-        detail="Valid token, but no user record to match. How did this happen..."
-      )    
-    return payload    
+    return payload
   except jwt.ExpiredSignatureError as e:
     raise HTTPException(
-      status_code=HTTPStatus.FORBIDDEN,
-      detail=e
+        status_code=HTTPStatus.FORBIDDEN,
+        detail=e
     )
   except jwt.InvalidTokenError as e:
     raise HTTPException(
-      status_code=HTTPStatus.UNAUTHORIZED,
-      detail=e
+        status_code=HTTPStatus.UNAUTHORIZED,
+        detail=e
     )
 
-def register_user(req: RegisterRequest) -> RegisterResponse:
+
+def register_orguser(req: RegisterRequest) -> Response:
   """    
   Initial registration of a new user.
-  """  
-  users_repo = UserRepository()  
-  if users_repo.get_record(email=req.email):
-    raise HTTPException(
-      status_code=HTTPStatus.FORBIDDEN,
-      detail="Email already registered."
+  """
+  try:
+
+    if users_repo.get_record(email=req.email):
+      raise HTTPException(
+          status_code=HTTPStatus.FORBIDDEN,
+          detail="Email already registered."
+      )
+    if orgs_repo.get_record(name=req.org_name):
+      raise HTTPException(
+          status_code=HTTPStatus.FORBIDDEN,
+          detail="Organisation alrady registered"
+      )
+
+    user_data = {k: v for k, v in req if k != "org_name"}
+    org_data = {"name": req.org_name}
+
+    hashed_password = hash_password(req.password)
+    user_data["password"] = hashed_password
+
+    user = users_repo.add_record(**user_data)
+    org = orgs_repo.add_record(**org_data)
+    org_user = org_users_repo.add_record(
+        org_id=org.id,
+        user_id=user.id,
+        role=OrganisationUserRole.org_admin,
+        **{"is_default": True},
     )
 
-  hashed_password = hash_password(req.password)
-  fields = vars(req)
-  fields["password"] = hashed_password
-  
-  rec = users_repo.register_user(**fields)  
-  if rec is not None:
-    return RegisterResponse(name=rec.name, email=rec.email)
-  else:    
-    logger.error("REGISTER_USER: Could not register user, repository add_record returned None.")
+  except HTTPException:
+    raise
+  except Exception as ex:
+    logger.error(f"Error during register: {ex}")
     raise HTTPException(
-      status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
-      detail="Failed to register user."
-    )    
+        status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
+        detail=f"Error during register: {str(ex)}"
+    )
+
+  return Response(status_code=HTTPStatus.CREATED)
+
 
 def login_user(req: LoginRequest) -> LoginResponse:
   """    
-  Authenticate a login attempt.
+  Authenticate a user. Logs them into the organisation which
+  the OrganisationUser record specifies as the default.
   """
-  users_repo = UserRepository()
+
   if req.name:
     search_term = {"name": req.name}
   else:
     search_term = {"email": req.email}
-  rec = users_repo.get_record(**search_term)
-  print(rec)
-  if not rec:
+  user = users_repo.get_record(**search_term)
+  if not user:
     raise HTTPException(
-      status_code=HTTPStatus.UNAUTHORIZED,
-      detail="Invalid user."
+        status_code=HTTPStatus.UNAUTHORIZED,
+        detail="Invalid user."
     )
-  verify_password(rec.password, req.password)
-  encoded_token = encode_token(create_token(rec.uuid, timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)))
+  verify_password(user.password, req.password)
+
+  org_user = org_users_repo.get_record(user_id=user.id, is_default=True)
+  if not org_user:
+    raise HTTPException(
+        status_code=HTTPStatus.UNAUTHORIZED,
+        detail="Could not find default organisation association for user."
+    )
+  org = orgs_repo.get_record(id=org_user.org_id)
+  if not org:
+    raise HTTPException(
+        status_code=HTTPStatus.UNAUTHORIZED,
+        detail="Could not find organisation from id in organisation user record"
+    )
+
+  encoded_token = encode_token(create_token(org.uuid, user.uuid, timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)))
   return LoginResponse(
-    success=True,
-    access_token=encoded_token,
-    token_type="bearer",
-    name=rec.name,
-    email=rec.email
+      success=True,
+      access_token=encoded_token,
+      token_type="bearer",
+      name=user.name,
+      email=user.email
   )
 
 
@@ -158,24 +197,23 @@ def update_user_account(user_uuid: str, req: UpdateAccountRequest) -> UpdateAcco
   """
   Update user account information (name and/or email)
   """
-  users_repo = UserRepository()
   if req.email:
     existing_user = users_repo.get_record(email=req.email)
     if existing_user and existing_user.uuid != user_uuid:
       raise HTTPException(
-        status_code=HTTPStatus.UNAUTHORIZED,
-        detail="Email already in use."
-      )      
+          status_code=HTTPStatus.UNAUTHORIZED,
+          detail="Email already in use."
+      )
   update_data = {}
   if req.name is not None:
     update_data['name'] = req.name
   if req.email is not None:
-    update_data['email'] = req.email    
+    update_data['email'] = req.email
   update_data['updated_at'] = getUtcDatetimeNow()
-  rec = users_repo.update_record(user_uuid, **update_data)
+  rec = users_repo.update_record(lookup={"uuid": user_uuid}, **update_data)
   return UpdateAccountResponse(
-    success=True,
-    updated_at=str(rec.updated_at),
-    name=rec.name,
-    email=rec.email
+      success=True,
+      updated_at=str(rec.updated_at),
+      name=rec.name,
+      email=rec.email
   )

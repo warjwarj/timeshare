@@ -1,4 +1,4 @@
-from sqlalchemy import Integer, String, Index, Text
+from sqlalchemy import Integer, String, Index, Text, inspect
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.schemas.dtos.user_dto import UserDTO
@@ -29,12 +29,7 @@ class UserModel(Base, TimestampMixin, UUIDMixin):
   )
   
   def map_to_dto(self):
-    return UserDTO(
-      name=self.name,
-      email=self.email,
-      password=self.password,
-      role=self.role,
-      created_at=self.created_at,
-      updated_at=self.updated_at,
-      uuid=self.uuid
-    )
+    return UserDTO(**{
+      column.key: getattr(self, column.key)
+      for column in inspect(self).mapper.column_attrs
+    })

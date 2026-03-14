@@ -1,5 +1,5 @@
 from datetime import datetime, time
-from sqlalchemy import ARRAY, Boolean, DateTime, ForeignKey, Integer, String, Time
+from sqlalchemy import ARRAY, Boolean, DateTime, ForeignKey, Integer, String, Time, inspect
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.models import Base
@@ -38,18 +38,7 @@ class AvailabilityRuleModel(Base, TimestampMixin, UUIDMixin):
   iana_timezone: Mapped[str | None] = mapped_column(String(64), nullable=True, comment="IANA timezone standard string.")
 
   def map_to_dto(self):
-    return AvailabilityRuleDTO(
-      uuid=self.uuid,
-      name=self.name,
-      created_by_user_uuid=self.user.uuid,
-      prevents_booking=self.prevents_booking,
-      weekdays=self.weekdays,
-      start_time=self.start_time,
-      end_time=self.end_time,
-      start_datetime=self.start_datetime,
-      end_datetime=self.end_datetime,
-      iana_timezone=self.iana_timezone
-    )
-
-
-
+    return AvailabilityRuleDTO(**{
+      column.key: getattr(self, column.key)
+      for column in inspect(self).mapper.column_attrs
+    })

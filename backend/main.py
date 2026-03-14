@@ -1,4 +1,5 @@
 import logging
+from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from src.routers.availability_router import availability_router
@@ -15,6 +16,8 @@ from settings import settings
 # Logging
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+BASE_DIR = Path(__file__).parent
+
 ROOT_LOG_LEVEL = logging.DEBUG
 APP_LOG_LEVEL = logging.DEBUG
 WEBSERVER_LOG_LEVEL = logging.DEBUG
@@ -24,23 +27,23 @@ root_logger = logging.getLogger()
 root_logger.setLevel(ROOT_LOG_LEVEL)
 
 # logging for application code
-app_handler = CustomLogHandler(db_path="logs/app_log.db")
+app_handler = CustomLogHandler(db_path=f"{BASE_DIR}/logs/app_log.db")
 app_handler.setLevel(APP_LOG_LEVEL)
 root_logger.addHandler(app_handler)
 
 # logging for uvicorn / fastapi stuff
-webserver_log_handler = CustomLogHandler(db_path="logs/webserver_log.db")
+webserver_log_handler = CustomLogHandler(db_path=f"{BASE_DIR}/logs/webserver_log.db")
 webserver_log_handler.setLevel(WEBSERVER_LOG_LEVEL)
 
 # intercept uvicorn/fastapi loggers
 for logger_name in ("uvicorn", "uvicorn.error", "uvicorn.access", "fastapi"):
   lg = logging.getLogger(logger_name)
   lg.addHandler(webserver_log_handler)
-  
+
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Db
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  
+
 # create all database tables on startup
 Base.metadata.create_all(get_engine(DB_URL))
 
@@ -53,14 +56,14 @@ app = FastAPI()
 
 # CORS
 allowed_origins = [
-  "*"
+    "*"
 ]
 app.add_middleware(
-  CORSMiddleware,
-  allow_origins=allowed_origins,
-  allow_credentials=True,
-  allow_methods=['*'],
-  allow_headers=['*'],
+    CORSMiddleware,
+    allow_origins=allowed_origins,
+    allow_credentials=True,
+    allow_methods=['*'],
+    allow_headers=['*'],
 )
 
 # routers
