@@ -36,15 +36,15 @@ org_users_repo = OrganisationUserRepository()
 
 
 def hash_password(password: str) -> str:
-  """    
+  """
   Hash a password for storage
   """
   return passhasher.hash(password)
 
 
 def verify_password(hashed_password: str, plain_password: str) -> None:
-  """    
-  Verify a password against a hash    
+  """
+  Verify a password against a hash
   """
   try:
     return passhasher.verify(hashed_password, plain_password)
@@ -55,19 +55,16 @@ def verify_password(hashed_password: str, plain_password: str) -> None:
     )
 
 
-def create_token(org_uuid: str, user_uuid: str, expires_delta: Optional[timedelta] = None) -> dict:
-  """    
-  Create a JWT access token    
+def create_token(org_uuid: str, user_uuid: str, expires_delta: Optional[timedelta] = timedelta(minutes=15)) -> dict:
   """
-  if expires_delta:
-    expires = datetime.now(timezone.utc) + expires_delta
-  else:
-    expires = datetime.now(timezone.utc) + timedelta(minutes=15)
+  Create a JWT access token
+  """
+  expires = getUtcDatetimeNow() + expires_delta
   jwt_payload = {
       "org_uuid": str(org_uuid),
       "user_uuid": str(user_uuid),
       "expires_at": str(expires),  # this can be iso string
-      "iat": getUnixEpoch()  # jwt needs an int for iat
+      "iat": getUnixEpoch()
   }
   return jwt_payload
 
@@ -85,12 +82,12 @@ def encode_token(jwt_payload: dict) -> str:
 
 
 def decode_token(encoded_token: str) -> dict:
-  """    
-  Verify a access token   
+  """
+  Verify a access token
   """
   try:
     payload = jwt.decode(encoded_token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
-    if datetime.fromisoformat(payload["expires_at"]) < datetime.now(timezone.utc):
+    if datetime.fromisoformat(payload["expires_at"]) < getUtcDatetimeNow():
       raise HTTPException(
           status_code=HTTPStatus.UNAUTHORIZED,
           detail="Token expired"
@@ -98,7 +95,7 @@ def decode_token(encoded_token: str) -> dict:
     return payload
   except jwt.ExpiredSignatureError as e:
     raise HTTPException(
-        status_code=HTTPStatus.FORBIDDEN,
+        status_code=HTTPStatus.UNAUTHORIZED,
         detail=e
     )
   except jwt.InvalidTokenError as e:
@@ -109,7 +106,7 @@ def decode_token(encoded_token: str) -> dict:
 
 
 def register_orguser(req: RegisterRequest) -> Response:
-  """    
+  """
   Initial registration of a new user.
   """
   try:
@@ -133,7 +130,7 @@ def register_orguser(req: RegisterRequest) -> Response:
 
     user = users_repo.add_record(**user_data)
     org = orgs_repo.add_record(**org_data)
-    org_user = org_users_repo.add_record(
+    org_users_repo.add_record(
         org_id=org.id,
         user_id=user.id,
         role=OrganisationUserRole.org_admin,
@@ -153,7 +150,7 @@ def register_orguser(req: RegisterRequest) -> Response:
 
 
 def login_user(req: LoginRequest) -> LoginResponse:
-  """    
+  """
   Authenticate a user. Logs them into the organisation which
   the OrganisationUser record specifies as the default.
   """
@@ -169,7 +166,6 @@ def login_user(req: LoginRequest) -> LoginResponse:
         detail="Invalid user."
     )
   verify_password(user.password, req.password)
-
   org_user = org_users_repo.get_record(user_id=user.id, is_default=True)
   if not org_user:
     raise HTTPException(
@@ -197,19 +193,23 @@ def update_user_account(user_uuid: str, req: UpdateAccountRequest) -> UpdateAcco
   """
   Update user account information (name and/or email)
   """
-  if req.email:
+  if not req.name and not req.email:
+    raise HTTPException(
+        HTTPStatus.BAD_REQUEST,
+        detail="no fields provided in update request"
+    )
+  update_data = {}
+  if req.email is not None:
     existing_user = users_repo.get_record(email=req.email)
     if existing_user and existing_user.uuid != user_uuid:
       raise HTTPException(
           status_code=HTTPStatus.UNAUTHORIZED,
           detail="Email already in use."
       )
-  update_data = {}
+    update_data['email'] = req.email
   if req.name is not None:
     update_data['name'] = req.name
-  if req.email is not None:
-    update_data['email'] = req.email
-  update_data['updated_at'] = getUtcDatetimeNow()
+  update_data['updated_at'] = str(getUtcDatetimeNow())
   rec = users_repo.update_record(lookup={"uuid": user_uuid}, **update_data)
   return UpdateAccountResponse(
       success=True,

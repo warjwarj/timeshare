@@ -48,7 +48,7 @@ async def update(uuid: str, _: RequestContextDep, event: UpdateEventRequest):
 
 
 @events_router.delete("/{uuid}", status_code=HTTPStatus.OK)
-async def delete(uuid: str, ctx: RequestContextDep):
+async def delete(uuid: str, _: RequestContextDep):
   """
   Delete an event.
   """
