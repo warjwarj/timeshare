@@ -2,24 +2,46 @@ import { useEffect, useState } from 'react';
 import { ViewBody } from '../components/ViewBody.tsx';
 import { ViewHeader } from '../components/ViewHeader.tsx';
 import {
-  getAvailabilityRules,
-  selectProcessedAvailabilityRules,
-  createAvailabilityRule
+  getAvailabilityRules, createAvailabilityRule,
+  updateAvailabilityRule,
+  deleteAvailabilityRule, selectProcessedAvailabilityRules
 } from '../store/slices/availabilitySlice.ts';
 import { ourUseDispatch, ourUseSelector } from '../store/hooks.ts';
 import { Modal } from '../components/Modal.tsx';
 import type { AvailabilityRuleDTO } from '../types/AvailabilityRuleDTO';
-import { AvailabilityRuleListItem } from '../components/availability/AvailabilityRuleListItem.tsx';
 import { AvailabilityRuleModalContent } from '../components/availability/AvailabilityRuleModalContent.tsx';
 import { createPortal } from 'react-dom';
+import z from 'zod';
+import { GenericFilterSortGrid } from '../components/GenericFilterSortGrid.tsx';
 
+// this is the shape of the data in the grid (zod object)
+const AvailabilityRuleSchema = z.object({
+  uuid: z.string().nullable(),
+  name: z.string().nullable(),
+  prevents_booking: z.boolean().nullable(),
+  weekdays: z.array(z.number()).nullable(),
+  start_datetime: z.string().nullable(),
+  end_datetime: z.string().nullable(),
+  start_time: z.string().nullable(),
+  end_time: z.string().nullable(),
+  iana_timezone: z.string().nullable()
+})
+// this is ts type representation of the above
+type AvailabilityRuleSchemaType = z.infer<typeof AvailabilityRuleSchema>
 
+/**
+ * Availabilkty Rule View page. Tabulated representation of the rules visible to the user.
+ */
 const AvailabilityView: React.FC = () => {
+  // dispatch
   const dispatch = ourUseDispatch();
+  // selectors
   const rules = ourUseSelector(selectProcessedAvailabilityRules);
+  // state
+  const [showAddModal, setShowAddModal] = useState<boolean>(false);
+  const [selectedRule, setSelectedRule] = useState<AvailabilityRuleSchemaType | null>(null);
 
-  const [showModal, setShowModal] = useState<boolean>(false);
-
+  // get rules on load
   useEffect(() => {
     const promise = dispatch(getAvailabilityRules());
     return () => promise.abort();
@@ -28,15 +50,20 @@ const AvailabilityView: React.FC = () => {
   const onAdd = async (rule: AvailabilityRuleDTO) => {
     await dispatch(createAvailabilityRule(rule));
   };
+  const onUpdate = async (ev: AvailabilityRuleDTO) => {
+    await dispatch(updateAvailabilityRule(ev));
+  };
+  const onDelete = async (uuid: string) => {
+    await dispatch(deleteAvailabilityRule(uuid));
+  };
 
   return (
     <ViewBody id={"AvailabilityView"}>
-
       <ViewHeader>
         {/* Add button */}
         <div className="flex ml-auto items-center">
           <button
-            onClick={() => setShowModal(true)}
+            onClick={() => setShowAddModal(true)}
             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"
           >
             Add Rule
@@ -44,36 +71,40 @@ const AvailabilityView: React.FC = () => {
         </div>
       </ViewHeader>
 
-      {/* Existing rules. sort by allows/prevents */}
-      <div className="flex-1 overflow-y-auto p-4">
-        {rules.length === 0 && (
-          <div className="text-center text-light-secondary-text dark:text-dark-secondary-text py-8">
-            No availability rules yet. Click "Add Rule" to create one.
-          </div>
-        )}        
-        <div className="flex flex-col gap-2">
-          {rules
-            .filter((rule): rule is AvailabilityRuleDTO & { uuid: string } => !!rule.uuid)
-            .sort(rule => rule.prevents_booking ? -1 : 1)
-            .map(rule => (
-              <AvailabilityRuleListItem rule={rule} />
-            ))}
-        </div>
-      </div>
+      {/* This is the generic filter grid */}
+      <GenericFilterSortGrid schema={AvailabilityRuleSchema} data={rules} rowClickedCallback={(rule: AvailabilityRuleSchemaType) => setSelectedRule(rule)} />
 
-      {/* This is the add modal */}
-      {showModal && createPortal(
+      {/* Add modal */}
+      {showAddModal && createPortal(
         <Modal
           label="Add availability rule"
-          isOpen={showModal}
-          onClose={() => setShowModal(false)}
+          isOpen={showAddModal}
+          onClose={() => setShowAddModal(false)}
         >
           <AvailabilityRuleModalContent
             rule={{} as AvailabilityRuleDTO}
             editing={false}
-            onClose={() => setShowModal(false)}
-            onDelete={() => {}}
+            onClose={() => setShowAddModal(false)}
+            onDelete={() => { }}
             onSave={onAdd}
+          />
+        </Modal>,
+        document.body
+      )}
+
+      {/* Update modal */}
+      {selectedRule && createPortal(
+        <Modal
+          label="Edit availability rule"
+          isOpen={!!selectedRule}
+          onClose={() => setSelectedRule(null)}
+        >
+          <AvailabilityRuleModalContent
+            rule={selectedRule}
+            editing={true}
+            onClose={() => setSelectedRule(null)}
+            onDelete={onDelete}
+            onSave={onUpdate}
           />
         </Modal>,
         document.body

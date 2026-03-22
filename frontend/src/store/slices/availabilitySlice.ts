@@ -287,6 +287,20 @@ export const selectProcessedAvailabilityRules = createSelector(
   }
 );
 
+// // export selector for processed availability rules
+// export const selectProcessedAvailabilityRulesAsDate = createSelector(
+//   [
+//     selectAvailabilityRules,
+//   ],
+//   (rules): AvailabilityRuleDTO[] => {
+//     return rules.map(r => ({
+//       ...r,
+//       start_datetime: r.start_datetime && r.iana_timezone ? toZonedTime(r.start_datetime, r.iana_timezone) : null,
+//       end_datetime: r.end_datetime && r.iana_timezone ? toZonedTime(r.end_datetime, r.iana_timezone) : null
+//     }))
+//   }
+// );
+
 // thunks
 export {
   getAvailabilityRules,
