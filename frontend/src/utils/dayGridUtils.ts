@@ -1,6 +1,6 @@
 import { TZDate } from "@date-fns/tz";
 import { type TimeSpan, WeekDayEnum, MonthEnum } from "../types/dateTypes";
-import type { EventDTO } from "../types/EventDTO";
+import type { ProcessedEventDTO } from "../types/EventDTO";
 import type { EventBarProps, EventBarStyle } from "../components/calendar/EventBar";
 import { getTimeSpanInMinutes } from "./utils";
 
@@ -81,12 +81,12 @@ function getMinutesSinceMidnight(dt: Date): number {
 }
 
 // Check if two events overlap in time
-function eventsOverlap(ev1: EventDTO & { start: Date, end: Date }, ev2: EventDTO & { start: Date, end: Date }): boolean {
+function eventsOverlap(ev1: ProcessedEventDTO, ev2: ProcessedEventDTO): boolean {
   return ev1.start < ev2.end && ev2.start < ev1.end;
 }
 
 type OverlapGroup = {
-  events: (EventDTO & { uuid: string, start: Date, end: Date, iana_timezone: string, colour: string })[];
+  events: ProcessedEventDTO[];
   columnAssignments: Map<string, number>;
   maxColumns: number;
 };
@@ -123,7 +123,7 @@ function assignColumns(group: OverlapGroup): void {
 }
 
 // Find groups of overlapping events
-function findOverlapGroups(events: (EventDTO & { uuid: string, start: Date, end: Date, iana_timezone: string, colour: string })[]): OverlapGroup[] {
+function findOverlapGroups(events: ProcessedEventDTO[]): OverlapGroup[] {
   if (events.length === 0) return [];
 
   const sortedEvents = [...events].sort((a, b) => a.start.getTime() - b.start.getTime());
@@ -165,7 +165,7 @@ function findOverlapGroups(events: (EventDTO & { uuid: string, start: Date, end:
  * Calculate positions for day view events.
  */
 export function setDayEventPositions(
-  events: (EventDTO & { uuid: string, start: Date, end: Date, iana_timezone: string, colour: string })[],
+  events: ProcessedEventDTO[],
   config: DayGridConfig,
   gridHeight: number,
   gridWidth: number,

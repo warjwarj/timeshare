@@ -1,7 +1,7 @@
 import { TZDate } from "@date-fns/tz";
 import type { EventBarProps, EventBarStyle } from "../components/calendar/EventBar";
 import { MonthEnum } from "../types/dateTypes";
-import type { EventDTO } from "../types/EventDTO";
+import type { ProcessedEventDTO } from "../types/EventDTO";
 import { getPreviousMonday } from "./utils";
 import { differenceInMilliseconds } from "date-fns";
 
@@ -26,7 +26,7 @@ function getCellIndexFromDate(gridStart: TZDate, dt: Date, evtz: string): number
     gridStart.getMinutes(),
     gridStart.getSeconds(),
     evtz
-  );  
+  );
   const dtInEvtz = new TZDate(
     dt.getFullYear(),
     dt.getMonth(),
@@ -53,7 +53,7 @@ function getCellIndexFromDate(gridStart: TZDate, dt: Date, evtz: string): number
  * @returns 
  */
 export function setEventPositions(
-  evDtos: (EventDTO & { uuid: string, start: Date, end: Date, iana_timezone: string })[],
+  evDtos: ProcessedEventDTO[],
   cellLaneEvents: Map<number, Map<number, string>>,
   gridRowWidth: number,
   start: TZDate,
@@ -186,7 +186,7 @@ const monthNames = Object.values(MonthEnum)
 export function getMonthGridConfig(newMonth: TZDate, prevCfg: MonthGridConfig | null): MonthGridConfig | null {
 
   // skip rerender if not needed
-  if (prevCfg != null && newMonth === prevCfg.monthStart ) {
+  if (prevCfg != null && newMonth === prevCfg.monthStart) {
     return prevCfg;
   }
 

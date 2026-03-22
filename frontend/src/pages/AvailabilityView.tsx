@@ -1,14 +1,14 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ViewBody } from '../components/ViewBody.tsx';
 import { ViewHeader } from '../components/ViewHeader.tsx';
 import {
   getAvailabilityRules, createAvailabilityRule,
   updateAvailabilityRule,
-  deleteAvailabilityRule, selectProcessedAvailabilityRules
+  deleteAvailabilityRule, makeAvailabilityRuleSelectors
 } from '../store/slices/availabilitySlice.ts';
 import { ourUseDispatch, ourUseSelector } from '../store/hooks.ts';
 import { Modal } from '../components/Modal.tsx';
-import type { AvailabilityRuleDTO } from '../types/AvailabilityRuleDTO';
+import type { AvailabilityRuleDTO, ProcessedAvailabilityRuleDTO } from '../types/AvailabilityRuleDTO';
 import { AvailabilityRuleModalContent } from '../components/availability/AvailabilityRuleModalContent.tsx';
 import { createPortal } from 'react-dom';
 import z from 'zod';
@@ -16,15 +16,15 @@ import { GenericFilterSortGrid } from '../components/GenericFilterSortGrid.tsx';
 
 // this is the shape of the data in the grid (zod object)
 const AvailabilityRuleSchema = z.object({
-  uuid: z.string().nullable(),
-  name: z.string().nullable(),
-  prevents_booking: z.boolean().nullable(),
-  weekdays: z.array(z.number()).nullable(),
-  start_datetime: z.string().nullable(),
-  end_datetime: z.string().nullable(),
-  start_time: z.string().nullable(),
-  end_time: z.string().nullable(),
-  iana_timezone: z.string().nullable()
+  uuid: z.string(),
+  name: z.string(),
+  iana_timezone: z.string(),
+  prevents_booking: z.boolean().optional(),
+  weekdays: z.array(z.number()).optional(),
+  start_datetime: z.date().optional(),
+  end_datetime: z.date().optional(),
+  start_time: z.string().optional(),
+  end_time: z.string().optional(),
 })
 // this is ts type representation of the above
 type AvailabilityRuleSchemaType = z.infer<typeof AvailabilityRuleSchema>
@@ -36,10 +36,11 @@ const AvailabilityView: React.FC = () => {
   // dispatch
   const dispatch = ourUseDispatch();
   // selectors
-  const rules = ourUseSelector(selectProcessedAvailabilityRules);
+  const { selectProcessedRulesAsDate } = useMemo(() => makeAvailabilityRuleSelectors(), []);
+  const rules = ourUseSelector(selectProcessedRulesAsDate);
   // state
   const [showAddModal, setShowAddModal] = useState<boolean>(false);
-  const [selectedRule, setSelectedRule] = useState<AvailabilityRuleSchemaType | null>(null);
+  const [selectedRule, setSelectedRule] = useState<ProcessedAvailabilityRuleDTO | null>(null);
 
   // get rules on load
   useEffect(() => {
@@ -72,7 +73,7 @@ const AvailabilityView: React.FC = () => {
       </ViewHeader>
 
       {/* This is the generic filter grid */}
-      <GenericFilterSortGrid schema={AvailabilityRuleSchema} data={rules} rowClickedCallback={(rule: AvailabilityRuleSchemaType) => setSelectedRule(rule)} />
+      <GenericFilterSortGrid schema={AvailabilityRuleSchema} data={rules} rowClickedCallback={(rule: ProcessedAvailabilityRuleDTO) => setSelectedRule(rule)} />
 
       {/* Add modal */}
       {showAddModal && createPortal(
@@ -82,7 +83,7 @@ const AvailabilityView: React.FC = () => {
           onClose={() => setShowAddModal(false)}
         >
           <AvailabilityRuleModalContent
-            rule={{} as AvailabilityRuleDTO}
+            rule={{ uuid: "", name: "", iana_timezone: "" }}
             editing={false}
             onClose={() => setShowAddModal(false)}
             onDelete={() => { }}

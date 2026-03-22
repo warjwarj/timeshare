@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk, createSelector } from '@reduxjs/toolkit';
 
-import type { EventDTO } from '../../types/EventDTO';
+import type { EventDTO, ProcessedEventDTO } from '../../types/EventDTO';
 import { apiClient } from "../../utils/apiClient";
 import axios, { HttpStatusCode } from 'axios';
 import { toastService } from '../../toastService';
@@ -49,10 +49,8 @@ const updateEvent = createAsyncThunk(
   async (event: EventDTO, { signal, rejectWithValue }) => {
     try {
       // format to utc+0 time on outbound
-      if (event.iana_timezone && event.start && event.end) {
-        event.start = fromZonedTime(event.start, event.iana_timezone).toISOString()
-        event.end = fromZonedTime(event.end, event.iana_timezone).toISOString()
-      }
+      event.start = fromZonedTime(event.start, event.iana_timezone).toISOString()
+      event.end = fromZonedTime(event.end, event.iana_timezone).toISOString()
 
       const res = await apiClient.put(
         `/events/${event.uuid}`,
@@ -86,10 +84,8 @@ const addEvent = createAsyncThunk(
   async (event: Omit<EventDTO, 'uuid'>, { signal, rejectWithValue }) => {
     try {
       // format to utc+0 time on outbound
-      if (event.iana_timezone && event.start && event.end) {
-        event.start = fromZonedTime(event.start, event.iana_timezone).toISOString()
-        event.end = fromZonedTime(event.end, event.iana_timezone).toISOString()
-      }
+      event.start = fromZonedTime(event.start, event.iana_timezone).toISOString()
+      event.end = fromZonedTime(event.end, event.iana_timezone).toISOString()
 
       const res = await apiClient.post(
         "/events",
@@ -247,16 +243,13 @@ export const makeEventSelectors = () => {
     [
       selectEvents
     ],
-    (events: EventDTO[]): (EventDTO & { uuid: string, start: Date, end: Date, iana_timezone: string })[] => {
+    (events: EventDTO[]): ProcessedEventDTO[] => {
       return [...events]
         .map(ev => ({
           ...ev,
-          start: ev.start && ev.iana_timezone ? toZonedTime(ev.start, ev.iana_timezone) : null,
-          end: ev.end && ev.iana_timezone ? toZonedTime(ev.end, ev.iana_timezone) : null
+          start: toZonedTime(ev.start, ev.iana_timezone),
+          end: toZonedTime(ev.end, ev.iana_timezone),
         }))
-        .filter((ev): ev is typeof ev & { uuid: string, start: Date, end: Date, iana_timezone: string } =>
-          ev.start !== null && ev.end !== null
-        )
         .sort((a, b) => a.start.getTime() - b.start.getTime())
     }
   );
@@ -266,7 +259,7 @@ export const makeEventSelectors = () => {
     [
       selectProcessedEventsAsDate
     ],
-    (events: (EventDTO & { uuid: string, start: Date, end: Date, iana_timezone: string })[]): (EventDTO & { uuid: string, start: string, end: string, iana_timezone: string })[] => {
+    (events: ProcessedEventDTO[]): EventDTO[] => {
       return [...events]
         .map(ev => ({
           ...ev,
@@ -282,7 +275,7 @@ export const makeEventSelectors = () => {
       selectProcessedEventsAsDate,
       (_: unknown, date: TZDate) => date,
     ],
-    (events, date): (EventDTO & { uuid: string, start: Date, end: Date, iana_timezone: string })[] => {
+    (events, date): ProcessedEventDTO[] => {
       const tz = date.timeZone;
       const dayStart = new TZDate(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0, 0, tz);
       const dayEnd = new TZDate(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59, 999, tz);
@@ -298,7 +291,7 @@ export const makeEventSelectors = () => {
       selectProcessedEventsAsDate,
       (_: unknown, start: TZDate, end: TZDate) => ({ start, end }),
     ],
-    (events, { start, end }): (EventDTO & { uuid: string, start: Date, end: Date, iana_timezone: string })[] => {
+    (events, { start, end }): ProcessedEventDTO[] => {
       const tz = start.timeZone;
       const rangeStart = new TZDate(start.getFullYear(), start.getMonth(), start.getDate(), 0, 0, 0, 0, tz);
       const rangeEnd = new TZDate(end.getFullYear(), end.getMonth(), end.getDate(), 23, 59, 59, 999, tz);

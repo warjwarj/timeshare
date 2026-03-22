@@ -4,7 +4,7 @@ import { useState } from 'react';
 // react types
 
 // types
-import type { EventDTO } from '../../types/EventDTO';
+import type { EventDTO, ProcessedEventDTO } from '../../types/EventDTO';
 
 // utils
 
@@ -24,7 +24,7 @@ const labelClass = "block text-sm font-medium text-light-primary-text dark:text-
 */
 
 type EventModalContentProps = {
-  event: EventDTO & { start: Date, end: Date } | null;
+  event: ProcessedEventDTO | null;
   editing: boolean;
   onSave: (updatedEvent: EventDTO) => void;
   onDelete: (uuid: string) => void;
@@ -51,7 +51,7 @@ const EventModalContent: React.FC<EventModalContentProps> = ({ event, editing, o
     const outgoingState: EventDTO = {
       ...formData,
       ...{ iana_timezone: editing ? formData.iana_timezone : tz },
-      ...{ uuid: editing && event ? event.uuid : null },
+      ...{ uuid: editing && event ? event.uuid : "" },
     }
     onSave(outgoingState)
     onClose();

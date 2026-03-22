@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import '../../../index.css';
 import { deleteEvent, updateEvent } from '../../store/slices/eventsSlice';
-import type { EventDTO } from '../../types/EventDTO';
+import type { EventDTO, ProcessedEventDTO } from '../../types/EventDTO';
 import { ourUseDispatch } from '../../store/hooks';
 import { createPortal } from 'react-dom';
 import { EventModalContent } from './EventModalContent';
@@ -10,7 +10,7 @@ import React from 'react';
 import { formatDate } from '../../utils/utils';
 
 type EventListItemProps = {
-  event: EventDTO & { uuid: string; start: Date; end: Date }
+  event: ProcessedEventDTO
 }
 
 const EventListItem: React.FC<EventListItemProps> = ({ event }) => {

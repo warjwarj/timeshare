@@ -4,7 +4,7 @@ import { apiClient } from "../../utils/apiClient";
 import axios, { HttpStatusCode } from 'axios';
 import { toastService } from '../../toastService';
 import { tryParseAxiosErrorMessage, tryParseAxiosMessage } from '../../utils/utils';
-import { type AvailabilityRuleDTO } from '../../types/AvailabilityRuleDTO';
+import { type AvailabilityRuleDTO, type ProcessedAvailabilityRuleDTO } from '../../types/AvailabilityRuleDTO';
 import { fromZonedTime, toZonedTime } from 'date-fns-tz';
 
 const getAvailabilityRules = createAsyncThunk(
@@ -273,33 +273,25 @@ export const availabilitySlice = createSlice({
 // internal selector
 const selectAvailabilityRules = (state: { availability: AvailabilityState }) => state.availability.availabilityRules;
 
-// export selector for processed availability rules
-export const selectProcessedAvailabilityRules = createSelector(
-  [
-    selectAvailabilityRules,
-  ],
-  (rules): AvailabilityRuleDTO[] => {
-    return rules.map(r => ({
-      ...r,
-      start_datetime: r.start_datetime && r.iana_timezone ? toZonedTime(r.start_datetime, r.iana_timezone).toISOString() : null,
-      end_datetime: r.end_datetime && r.iana_timezone ? toZonedTime(r.end_datetime, r.iana_timezone).toISOString() : null
-    }))
-  }
-);
+// function which returns availability rule selectors
+export const makeAvailabilityRuleSelectors = () => {
 
-// // export selector for processed availability rules
-// export const selectProcessedAvailabilityRulesAsDate = createSelector(
-//   [
-//     selectAvailabilityRules,
-//   ],
-//   (rules): AvailabilityRuleDTO[] => {
-//     return rules.map(r => ({
-//       ...r,
-//       start_datetime: r.start_datetime && r.iana_timezone ? toZonedTime(r.start_datetime, r.iana_timezone) : null,
-//       end_datetime: r.end_datetime && r.iana_timezone ? toZonedTime(r.end_datetime, r.iana_timezone) : null
-//     }))
-//   }
-// );
+  // select all rules with start/end datetimes as Date objects
+  const selectProcessedRulesAsDate = createSelector(
+    [selectAvailabilityRules],
+    (rules): ProcessedAvailabilityRuleDTO[] => {
+      return rules.map(r => ({
+        ...r,
+        start_datetime: r.start_datetime && r.iana_timezone
+          ? toZonedTime(r.start_datetime, r.iana_timezone) : undefined,
+        end_datetime: r.end_datetime && r.iana_timezone
+          ? toZonedTime(r.end_datetime, r.iana_timezone) : undefined,
+      }));
+    }
+  );
+
+  return { selectProcessedRulesAsDate };
+};
 
 // thunks
 export {

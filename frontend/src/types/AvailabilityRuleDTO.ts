@@ -1,11 +1,18 @@
+// basic dto with primative types
 export type AvailabilityRuleDTO = {
-  uuid: string | null;
-  name: string | null;
-  prevents_booking: boolean | null
-  weekdays: number[] | null;
-  start_datetime: string | null;
-  end_datetime: string | null;
-  start_time: string | null;
-  end_time: string | null;
-  iana_timezone: string | null;
-}
+  uuid: string;
+  name: string;
+  iana_timezone: string;
+  prevents_booking?: boolean;
+  weekdays?: number[];
+  start_datetime?: string;
+  end_datetime?: string;
+  start_time?: string;
+  end_time?: string;
+};
+
+// dto with string dates processed into Date objects
+export type ProcessedAvailabilityRuleDTO = Omit<AvailabilityRuleDTO, 'start_datetime' | 'end_datetime'> & {
+  start_datetime?: Date;
+  end_datetime?: Date;
+};

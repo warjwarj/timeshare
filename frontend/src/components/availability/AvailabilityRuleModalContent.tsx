@@ -48,7 +48,7 @@ const AvailabilityRuleModalContent: React.FC<AvailabilityRuleModalContentProps> 
     const outgoingState: AvailabilityRuleDTO = {
       ...formData,
       ...{ iana_timezone: editing ? formData.iana_timezone : tz },
-      ...{ uuid: editing && rule.uuid ? rule.uuid : null }
+      ...{ uuid: editing && rule.uuid ? rule.uuid : "" }
     }
     onSave(outgoingState);
     onClose()

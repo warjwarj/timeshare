@@ -1,8 +1,15 @@
+// basic dto with primative types
 export type EventDTO = {
-  uuid: string | null;
-  name: string | null;
-  start: string | Date | null
-  end: string | Date | null;
-  iana_timezone: string | null;
-  colour: string | null;
+  uuid: string;
+  name: string;
+  start: string;
+  end: string;
+  iana_timezone: string;
+  colour: string;
+};
+
+// dto with string dates processed into Date objects
+export type ProcessedEventDTO = Omit<EventDTO, 'start' | 'end'> & {
+  start: Date;
+  end: Date;
 };

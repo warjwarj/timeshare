@@ -7,7 +7,7 @@ import { Modal } from '../Modal';
 import { EventModalContent } from '../events/EventModalContent';
 
 // types
-import { type EventDTO } from '../../types/EventDTO';
+import { type EventDTO, type ProcessedEventDTO } from '../../types/EventDTO';
 
 // css
 import '../../../index.css';
@@ -24,7 +24,7 @@ type EventBarStyle = {
   top?: number; // Optional: direct top position in pixels (used by DayGrid)
 }
 type EventBarProps = {
-  readonly eventDTO: EventDTO & { start: Date, end: Date }
+  readonly eventDTO: ProcessedEventDTO
   evStyle: EventBarStyle
   key: string
 };
@@ -96,7 +96,7 @@ const EventBar: React.FC<{
             {eventProps.eventDTO.name}
           </span>
         </span>
-        {showHover && eventProps.eventDTO.start && eventProps.eventDTO.end && createPortal(
+        {showHover && createPortal(
           <div
             className="fixed z-50 pointer-events-none px-3 py-2 bg-gray-900 text-white text-sm rounded-lg shadow-lg max-w-xs"
             style={{
@@ -106,8 +106,8 @@ const EventBar: React.FC<{
           >
             <div className="font-semibold mb-1">{eventProps.eventDTO.name}</div>
             <div className="text-gray-300 text-xs">
-              <div>{formatDate(eventProps.eventDTO.start, eventProps.eventDTO.iana_timezone ?? undefined)}</div>
-              <div>to {formatDate(eventProps.eventDTO.end, eventProps.eventDTO.iana_timezone ?? undefined)}</div>
+              <div>{formatDate(eventProps.eventDTO.start, eventProps.eventDTO.iana_timezone)}</div>
+              <div>to {formatDate(eventProps.eventDTO.end, eventProps.eventDTO.iana_timezone)}</div>
             </div>
           </div>,
           document.body

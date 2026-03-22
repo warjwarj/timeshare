@@ -7,7 +7,7 @@ import { Modal } from '../Modal';
 
 // types
 import type { EventBarProps } from './EventBar';
-import type { EventDTO } from '../../types/EventDTO';
+import type { ProcessedEventDTO } from '../../types/EventDTO';
 import { addHours } from "date-fns";
 
 // css
@@ -18,7 +18,7 @@ import { formatDate } from '../../utils/utils';
 type CellInfoModalContentProps = {
   eventsInCell: EventBarProps[];
   cellDate: Date;
-  onAddEvent: (newEvent: Omit<EventDTO, 'key' | 'uuid'>) => void;
+  onAddEvent: (newEvent: Omit<ProcessedEventDTO, 'uuid'>) => void;
 };
 const CellInfoModalContent: React.FC<CellInfoModalContentProps> = ({ eventsInCell, cellDate, onAddEvent }) => {
   const [showAddEventModal, setShowAddEventModal] = useState(false);
@@ -29,15 +29,15 @@ const CellInfoModalContent: React.FC<CellInfoModalContentProps> = ({ eventsInCel
         return (
           <div className="bg-light-background dark:bg-dark-background text-light-primary-text dark:text-dark-primary-text" key={ev.key + "cell-modal-content"}>
             <h3 style={{
-              backgroundColor: ev.eventDTO.colour ?? ""
+              backgroundColor: ev.eventDTO.colour
             }}>
               <strong>{ev.eventDTO.name}</strong>
             </h3>
             <div>
               <div> id: {ev.eventDTO.uuid}</div>
               <div> Lane: {ev.evStyle.lane}</div>
-              <div> Start: {formatDate(ev.eventDTO.start, ev.eventDTO.iana_timezone ?? undefined)}</div>
-              <div> End: {formatDate(ev.eventDTO.end, ev.eventDTO.iana_timezone ?? undefined)}</div>
+              <div> Start: {formatDate(ev.eventDTO.start, ev.eventDTO.iana_timezone)}</div>
+              <div> End: {formatDate(ev.eventDTO.end, ev.eventDTO.iana_timezone)}</div>
             </div>
           </div>
         )
@@ -50,11 +50,11 @@ const CellInfoModalContent: React.FC<CellInfoModalContentProps> = ({ eventsInCel
           onClose={() => setShowAddEventModal(false)}
         >
           <EventModalContent
-            event={{ start: cellDate, end: addHours(cellDate, 1) } as EventDTO & { start: Date, end: Date }}
+            event={{ start: cellDate, end: addHours(cellDate, 1), uuid: "", name: "", iana_timezone: "", colour: "#525252" }}
             editing={false}
             onSave={onAddEvent}
             onClose={() => setShowAddEventModal(false)}
-            onDelete={() => {}}
+            onDelete={() => { }}
           />
         </Modal>,
         document.body

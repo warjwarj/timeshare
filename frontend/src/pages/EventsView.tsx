@@ -10,7 +10,7 @@ import {
 } from '../store/slices/eventsSlice.ts';
 import { ourUseDispatch, ourUseSelector } from '../store/hooks.ts';
 import { Modal } from '../components/Modal.tsx';
-import type { EventDTO } from '../types/EventDTO';
+import type { EventDTO, ProcessedEventDTO } from '../types/EventDTO';
 import { EventModalContent } from '../components/events/EventModalContent.tsx';
 import { createPortal } from 'react-dom';
 import { selectCurrentDatetime } from '../store/slices/appSlice.ts';
@@ -21,15 +21,15 @@ import { GenericFilterSortGrid } from '../components/GenericFilterSortGrid.tsx';
 
 // this is the shape of the data in the grid (zod object)
 const EventSchema = z.object({
-  uuid: z.string().nullable(),
-  name: z.string().nullable(),
+  uuid: z.string(),
+  name: z.string(),
   start: z.date(),
   end: z.date(),
   iana_timezone: z.string(),
-  colour: z.string().nullable()
+  colour: z.string()
 })
 // this is ts type representation of the above
-type EventSchemaType = z.Infer<typeof EventSchema>
+type EventSchemaType = z.infer<typeof EventSchema>
 
 /**
  * Events View page. Tabulated representation of the events visible to the user.
@@ -91,7 +91,7 @@ const EventsView: React.FC = () => {
           onClose={() => setShowAddModal(false)}
         >
           <EventModalContent
-            event={{ start: new Date(currentDate), end: addHours(new Date(currentDate), 1) } as EventDTO & { start: Date, end: Date }}
+            event={{ start: new Date(currentDate), end: addHours(new Date(currentDate), 1), uuid: "", name: "", iana_timezone: "", colour: "#525252" }}
             editing={false}
             onClose={() => setShowAddModal(false)}
             onDelete={() => { }}
@@ -184,7 +184,7 @@ export { EventsView };
 //           onClose={() => setShowModal(false)}
 //         >
 //           <EventModalContent
-//             event={{ start: new Date(currentDate), end: addHours(new Date(currentDate), 1) } as EventDTO & { start: Date, end: Date }}
+//             event={{ start: new Date(currentDate), end: addHours(new Date(currentDate), 1), uuid: "", name: "", iana_timezone: "", colour: "#525252" }}
 //             editing={false}
 //             onClose={() => setShowModal(false)}
 //             onDelete={() => { }}
