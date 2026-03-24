@@ -7,8 +7,8 @@ export type AvailabilityRuleDTO = {
   weekdays?: number[];
   start_datetime?: string;
   end_datetime?: string;
-  start_time?: string;
-  end_time?: string;
+  start_time: string | null;
+  end_time: string | null;
 };
 
 // dto with string dates processed into Date objects

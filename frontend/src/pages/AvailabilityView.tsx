@@ -23,14 +23,15 @@ const AvailabilityRuleSchema = z.object({
   weekdays: z.array(z.number()).optional(),
   start_datetime: z.date().optional(),
   end_datetime: z.date().optional(),
-  start_time: z.string().optional(),
-  end_time: z.string().optional(),
+  start_time: z.string().nullable(),
+  end_time: z.string().nullable(),
 })
+
 // this is ts type representation of the above
-type AvailabilityRuleSchemaType = z.infer<typeof AvailabilityRuleSchema>
+// type AvailabilityRuleSchemaType = z.infer<typeof AvailabilityRuleSchema>
 
 /**
- * Availabilkty Rule View page. Tabulated representation of the rules visible to the user.
+ * Availability Rule View page. Tabulated representation of the rules visible to the user.
  */
 const AvailabilityView: React.FC = () => {
   // dispatch
@@ -83,7 +84,7 @@ const AvailabilityView: React.FC = () => {
           onClose={() => setShowAddModal(false)}
         >
           <AvailabilityRuleModalContent
-            rule={{ uuid: "", name: "", iana_timezone: "" }}
+            rule={{ uuid: "", name: "", iana_timezone: "", start_time: null, end_time: null }}
             editing={false}
             onClose={() => setShowAddModal(false)}
             onDelete={() => { }}
