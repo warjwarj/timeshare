@@ -27,9 +27,6 @@ const AvailabilityRuleSchema = z.object({
   end_time: z.string().nullable(),
 })
 
-// this is ts type representation of the above
-// type AvailabilityRuleSchemaType = z.infer<typeof AvailabilityRuleSchema>
-
 /**
  * Availability Rule View page. Tabulated representation of the rules visible to the user.
  */

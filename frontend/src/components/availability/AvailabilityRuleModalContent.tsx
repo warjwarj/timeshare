@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import '../../../index.css';
-import type { AvailabilityRuleDTO } from '../../types/AvailabilityRuleDTO';
+import type { AvailabilityRuleDTO, ProcessedAvailabilityRuleDTO } from '../../types/AvailabilityRuleDTO';
 import { WeekDayEnum } from '../../types/dateTypes';
 import { SaveButton } from '../SaveButton';
 import { selectSelectedIanaTimezone } from "../../store/slices/appSlice";
@@ -13,7 +13,7 @@ const inputClass = "w-full px-4 py-2 bg-[#F5F5F5] dark:bg-[#2A2A2A] border borde
 const labelClass = "block text-sm font-medium text-light-primary-text dark:text-dark-primary-text mb-2";
 
 type AvailabilityRuleModalContentProps = {
-  rule: AvailabilityRuleDTO
+  rule: ProcessedAvailabilityRuleDTO
   editing: boolean
   onDelete: (uuid: string) => void
   onSave: (rule: AvailabilityRuleDTO, uuid?: string) => void;
@@ -29,8 +29,8 @@ const AvailabilityRuleModalContent: React.FC<AvailabilityRuleModalContentProps> 
     prevents_booking: rule.prevents_booking || false,
     iana_timezone: rule.iana_timezone || tz,
     weekdays: rule.weekdays || [],
-    start_datetime: rule.start_datetime?.slice(0, 16) || "",
-    end_datetime: rule.end_datetime?.slice(0, 16) || "",
+    start_datetime: rule.start_datetime?.toISOString().slice(0, 16) || "",
+    end_datetime: rule.end_datetime?.toISOString().slice(0, 16) || "",
     start_time: rule.start_time || "",
     end_time: rule.end_time || "",
   })
