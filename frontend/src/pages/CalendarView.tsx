@@ -93,7 +93,7 @@ const CalendarView: React.FC = () => {
     [dateForDayGrid]
   );
   dayGridConfigRef.current = dayGridConfig;
-  
+
   // handler for when a month is clicked in year view
   const handleMonthSelect = useCallback((month: number) => {
     const tz = currentDate.timeZone;

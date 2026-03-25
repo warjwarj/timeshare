@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { ourUseDispatch, ourUseSelector } from '../../store/hooks';
 import { selectCurrentDatetimeAsTzDate, selectSelectedDateAsTzDate, selectSelectedMonthAsTzDate, setSelectedMonth } from '../../store/slices/appSlice';
 import { addEvent, deleteEvent, getEvents, makeEventSelectors, updateEvent } from '../../store/slices/eventsSlice';
@@ -39,6 +39,9 @@ const MonthGrid: React.FC<MonthGridProps> = ({ gridStyle, gridConfig, colHeaders
   const selectedDate = ourUseSelector(selectSelectedDateAsTzDate);
   const selectedMonth = ourUseSelector(selectSelectedMonthAsTzDate);
 
+  // event bar props state
+  const [eventProps, setEventProps] = useState<EventBarProps[][]>();
+
   // fetch events when date range changes
   useEffect(() => {
     const tz = startDate.timeZone;
@@ -54,7 +57,6 @@ const MonthGrid: React.FC<MonthGridProps> = ({ gridStyle, gridConfig, colHeaders
   const cellLaneEvents = useRef(new Map<number, Map<number, string>>());
   const gridRowWidthRef = useRef<HTMLDivElement>(null);
   const [gridRowWidth, setGridRowWidth] = useState(0);
-  const [eventProps, setEventProps] = useState<EventBarProps[][]>();
 
   // measure container width on mount and resize
   useEffect(() => {
@@ -77,7 +79,7 @@ const MonthGrid: React.FC<MonthGridProps> = ({ gridStyle, gridConfig, colHeaders
       events, cellLaneEvents.current, gridRowWidth, startDate,
       cellCount, colCount, eventStyle
     ));
-  }, [events, startDate, gridRowWidth, cellCount, colCount, eventStyle]);
+  }, [events, startDate, endDate, gridRowWidth, cellCount, colCount, eventStyle]);
 
   // month navigation handler
   const navigateMonth = (delta: number) => {
@@ -108,7 +110,7 @@ const MonthGrid: React.FC<MonthGridProps> = ({ gridStyle, gridConfig, colHeaders
   const numRows = Math.ceil(cellCount / colCount);
 
   return (
-    <div id="calendar-grid-container" className="w-full h-full flex flex-col gap-4 p-4 box-border">
+    <div ref={gridRowWidthRef} id="calendar-grid-container" className="w-full h-full flex flex-col gap-4 p-4 box-border">
       {/* Month navigation */}
       <div className="flex items-center justify-center w-full h-10 mt-3">
         <div className="flex-1 flex justify-end">
@@ -153,7 +155,7 @@ const MonthGrid: React.FC<MonthGridProps> = ({ gridStyle, gridConfig, colHeaders
         const cellsInRow = rowEnd - rowStart + 1;
 
         return (
-          <div ref={gridRowWidthRef} key={rowIndex} className="relative">
+          <div key={rowIndex} className="relative">
             <div
               className="grid gap-0 border-light-border dark:border-dark-border"
               style={{ gridTemplateColumns: `repeat(${colCount}, minmax(0, 1fr))` }}
