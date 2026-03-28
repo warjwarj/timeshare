@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { ourUseDispatch, ourUseSelector } from '../../store/hooks';
-import { selectSelectedDateAsTzDate, setSelectedDate } from '../../store/slices/appSlice';
+import { setSelectedDate } from '../../store/slices/appSlice';
 import { deleteEvent, makeEventSelectors, updateEvent } from '../../store/slices/eventsSlice';
 import type { DayGridConfig } from "../../utils/dayGridUtils";
 import { setDayEventPositions } from "../../utils/dayGridUtils";
@@ -31,16 +31,16 @@ const DayGrid: React.FC<DayGridProps> = ({ gridStyle, gridConfig }) => {
   const events = ourUseSelector(state => selectEventsSpanningDate(state, selectedDate));
 
   // refs and state for grid measurement
-  const containerRef = useRef<HTMLDivElement>(null);
   const gridRef = useRef<HTMLDivElement>(null);
   const [containerHeight, setContainerHeight] = useState(0);
   const [eventProps, setEventProps] = useState<EventBarProps[]>([]);
 
   // measure container height on mount and resize
   useEffect(() => {
-    const container = containerRef.current;
+    const container = gridRef.current;
     if (!container) return;
-    const updateHeight = () => setContainerHeight(container.getBoundingClientRect().height);
+    const height = container.scrollHeight;
+    const updateHeight = () => setContainerHeight(height);
     updateHeight();
     const resizeObserver = new ResizeObserver(updateHeight);
     resizeObserver.observe(container);
@@ -66,7 +66,10 @@ const DayGrid: React.FC<DayGridProps> = ({ gridStyle, gridConfig }) => {
   };
 
   return (
-    <div className="w-full h-[calc(95%-2.5rem)]">
+    <div
+      id="day-grid-container"
+      className="w-full h-full flex flex-col p-4 box-border"
+    >
       {/* Day navigation */}
       <div className="flex items-center justify-center w-full h-10 mt-3">
         <div className="flex-1 flex justify-end">
@@ -92,55 +95,37 @@ const DayGrid: React.FC<DayGridProps> = ({ gridStyle, gridConfig }) => {
         </div>
       </div>
 
-      <div
-        ref={containerRef}
-        id="day-grid-container"
-        className="w-full h-full flex p-4 box-border"
-      >
-        {/* Time labels column */}
-        <div
-          className="flex flex-col flex-shrink-0 whitespace-nowrap w-fit overflow-hidden"
-          style={{ height: containerHeight }}
-        >
+      {/* Events grid */}
+      <div className="flex-1 relative" >
+
+        {/* time slot lines and labls */}
+        <div className="absolute inset-0 flex flex-col">
           {timeLabels.map((label, index) => (
             <div
-              key={`label-${index}`}
-              className="flex-1 text-sm text-light-secondary-text dark:text-dark-secondary-text text-right pr-2 flex items-end justify-end"
+              key={`slot-${index}`}
+              className="flex-1 flex items-center"
             >
-              {label}
+              <div
+                key={`label-${index}`}
+                className="flex-1 text-sm text-light-secondary-text dark:text-dark-secondary-text text-right pr-2 flex items-end justify-end"
+              >
+                {label}
+              </div>
+              <hr className="w-full border-light-border dark:border-dark-border" />
             </div>
           ))}
         </div>
 
-        {/* Events grid */}
-        <div className="flex-1 relative" style={{ height: containerHeight }}>
-          {/* Background slot lines */}
-          <div className="absolute inset-0 flex flex-col">
-            {Array.from({ length: totalSlots }).map((_, index) => (
-              <div
-                key={`slot-${index}`}
-                className="flex-1 flex items-center"
-              >
-                <hr className="w-full border-light-border dark:border-dark-border" />
-              </div>
-            ))}
-          </div>
-
-          {/* Events layer */}
-          <div
-            ref={gridRef}
-            className="absolute inset-0 ml-2 mr-2 mb-2"
-            style={{ height: containerHeight }}
-          >
-            {eventProps.map((evp) => (
-              <EventBar
-                key={evp.key}
-                eventProps={evp}
-                updateEvent={(ev) => dispatch(updateEvent(ev))}
-                deleteEvent={(uuid) => dispatch(deleteEvent(uuid))}
-              />
-            ))}
-          </div>
+        {/* Events layer */}
+        <div ref={gridRef} className="absolute inset-0 ml-15 mr-2 mb-2">
+          {eventProps.map((evp) => (
+            <EventBar
+              key={evp.key}
+              eventProps={evp}
+              updateEvent={(ev) => dispatch(updateEvent(ev))}
+              deleteEvent={(uuid) => dispatch(deleteEvent(uuid))}
+            />
+          ))}
         </div>
       </div>
     </div>

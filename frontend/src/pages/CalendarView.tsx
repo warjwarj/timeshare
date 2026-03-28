@@ -165,7 +165,7 @@ const CalendarView: React.FC = () => {
           </div>
         )}
         {dayViewOn && dayGridConfig && (
-          <div className="w-full max-h-[calc(100dvh-6rem)] overflow-hidden">
+          <div className="w-full max-h-[calc(100dvh-6rem)] overflow-y-auto">
             <DayGrid
               gridStyle={dayGridStyle}
               gridConfig={dayGridConfig}

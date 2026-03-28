@@ -110,7 +110,7 @@ const MonthGrid: React.FC<MonthGridProps> = ({ gridStyle, gridConfig, colHeaders
   const numRows = Math.ceil(cellCount / colCount);
 
   return (
-    <div ref={gridRowWidthRef} id="calendar-grid-container" className="w-full h-full flex flex-col gap-4 p-4 box-border">
+    <div id="calendar-grid-container" className="w-full h-full flex flex-col gap-4 p-4 box-border">
       {/* Month navigation */}
       <div className="flex items-center justify-center w-full h-10 mt-3">
         <div className="flex-1 flex justify-end">
@@ -137,7 +137,7 @@ const MonthGrid: React.FC<MonthGridProps> = ({ gridStyle, gridConfig, colHeaders
       </div>
 
       {/* Column headers */}
-      <div className="grid gap-0" style={{ gridTemplateColumns: `repeat(${colCount}, minmax(0, 1fr))` }}>
+      <div ref={gridRowWidthRef} className="grid gap-0" style={{ gridTemplateColumns: `repeat(${colCount}, minmax(0, 1fr))` }}>
         {colHeaders.map((header, i) => (
           <div
             key={i}
