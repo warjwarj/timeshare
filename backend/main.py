@@ -36,7 +36,7 @@ webserver_log_handler = CustomLogHandler(db_path=f"{BASE_DIR}/logs/webserver_log
 webserver_log_handler.setLevel(WEBSERVER_LOG_LEVEL)
 
 # intercept uvicorn/fastapi loggers
-for logger_name in ("uvicorn", "uvicorn.error", "uvicorn.access", "fastapi"):
+for logger_name in ("uvicorn", "uvicorn.error", "uvicorn.access", "fastapi", "httpx", "asyncio"):
   lg = logging.getLogger(logger_name)
   lg.addHandler(webserver_log_handler)
 

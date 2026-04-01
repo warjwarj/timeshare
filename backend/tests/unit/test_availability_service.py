@@ -4,11 +4,14 @@ Unit tests for availability_service.py.
 All repository interactions are mocked — no database required.
 Run with: cd backend && pytest tests/unit -v
 """
+from datetime import datetime
+
 import pytest
 from uuid import uuid4, UUID
 
 from src.schemas.dtos.user_dto import UserDTO
 from src.services.availability_service import (
+    calculate_day_availability,
     create_availability_rule,
     get_availability_rules_for_user,
     get_availability_rule,
@@ -20,6 +23,7 @@ from src.schemas.dtos.availability_rule_dto import AvailabilityRuleDTO
 from src.schemas.responses.availability_responses import SafeAvailabilityRuleDTO
 from src.schemas.requests.availability_requests import (
     CreateAvailabilityRuleRequest,
+    GetAvailabilityRequest,
     UpdateAvailabilityRuleRequest,
 )
 
@@ -31,11 +35,6 @@ USER_ID = 42
 # ---------------------------------------------------------------------------
 # helpers
 # ---------------------------------------------------------------------------
-# NOTE: The service instantiates `availability_repo` and `user_repo` at module
-# scope (singletons). Patching the class has no effect on those already-created
-# instances, so every test patches the module-level objects directly:
-#   mocker.patch("src.services.availability_service.user_repo")
-#   mocker.patch("src.services.availability_service.availability_repo")
 
 
 def make_user_dto() -> UserDTO:
@@ -52,9 +51,11 @@ def make_rule_dto() -> AvailabilityRuleDTO:
       id=1,
       uuid=uuid4(),
       name="Test Rule",
+      start_datetime=datetime(2026, 2, 28, 0, 0, 0),
+      end_datetime=datetime(2026, 3, 3, 23, 59, 59),
       user_id=USER_ID,
       iana_timezone="Europe/London",
-      prevents_booking=True,
+      prevents_booking=False,
   )
 
 
@@ -73,9 +74,16 @@ def make_update_request() -> UpdateAvailabilityRuleRequest:
   )
 
 
-# ---------------------------------------------------------------------------
-# create_availability_rule
-# ---------------------------------------------------------------------------
+def make_get_availability_request() -> GetAvailabilityRequest:
+  return GetAvailabilityRequest(
+      user_uuid=USER_UUID,
+      start_datetime=datetime(2026, 3, 1, 23, 59, 59),
+      end_datetime=datetime(2026, 3, 4, 23, 59, 59)
+  )
+  # ---------------------------------------------------------------------------
+  # create_availability_rule
+  # ---------------------------------------------------------------------------
+
 
 def test_create_rule_returns_safe_dto(mocker):
   mock_user_repo = mocker.patch("src.services.availability_service.user_repo")
@@ -114,7 +122,7 @@ def test_get_rules_returns_empty_when_none(mocker):
   mock_avail_repo = mocker.patch("src.services.availability_service.availability_repo")
   mock_avail_repo.get_record.return_value = None
 
-  result = get_availability_rules_for_user(USER_UUID)
+  result = get_availability_rules_for_user(user_uuid=USER_UUID)
 
   assert result == []
 
@@ -126,7 +134,7 @@ def test_get_rules_returns_sanitised_list(mocker):
   mock_avail_repo = mocker.patch("src.services.availability_service.availability_repo")
   mock_avail_repo.get_record.return_value = [make_rule_dto(), make_rule_dto()]
 
-  result = get_availability_rules_for_user(USER_UUID)
+  result = get_availability_rules_for_user(user_uuid=USER_UUID)
 
   assert isinstance(result, list)
   assert all(isinstance(r, SafeAvailabilityRuleDTO) for r in result)
@@ -200,3 +208,53 @@ def test_sanitise_rule_strips_user_id_and_id():
   assert isinstance(result, SafeAvailabilityRuleDTO)
   assert not hasattr(result, "user_id")
   assert not hasattr(result, "id")
+
+
+# ---------------------------------------------
+# calculate availability
+# ---------------------------------------------
+
+def test_calculate_day_availability(mocker):
+  req = make_get_availability_request()
+  dto1 = AvailabilityRuleDTO(
+      id=1,
+      uuid=uuid4(),
+      name="Test Rule1",
+      start_datetime=datetime(2026, 2, 28, 0, 0, 0),
+      end_datetime=datetime(2026, 3, 3, 23, 59, 59),
+      user_id=USER_ID,
+      iana_timezone="Europe/London",
+      prevents_booking=False,
+  )
+  dto2 = AvailabilityRuleDTO(
+      id=2,
+      uuid=uuid4(),
+      name="Test Rule2",
+      start_datetime=datetime(2026, 2, 28, 0, 0, 0),
+      end_datetime=datetime(2026, 3, 3, 23, 59, 59),
+      user_id=USER_ID,
+      iana_timezone="Europe/London",
+      prevents_booking=False,
+  )
+  dto3 = AvailabilityRuleDTO(
+      id=3,
+      uuid=uuid4(),
+      name="Test Rule3",
+      start_datetime=datetime(2026, 3, 6, 0, 0, 0),
+      end_datetime=datetime(2026, 3, 20, 23, 59, 59),
+      user_id=USER_ID,
+      iana_timezone="Europe/London",
+      prevents_booking=False,
+  )
+  dto4 = AvailabilityRuleDTO(
+      id=3,
+      uuid=uuid4(),
+      name="Test Rule4",
+      start_datetime=datetime(2026, 3, 15, 0, 0, 0),
+      end_datetime=datetime(2026, 3, 25, 23, 59, 59),
+      user_id=USER_ID,
+      iana_timezone="Europe/London",
+      prevents_booking=False,
+  )
+  res = calculate_day_availability(req, [dto1, dto2, dto3, dto4])
+  assert True

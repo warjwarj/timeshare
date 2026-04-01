@@ -1,9 +1,9 @@
 import { TZDate } from "@date-fns/tz";
+import { differenceInMilliseconds } from "date-fns";
 import type { EventBarProps, EventBarStyle } from "../components/calendar/EventBar";
 import { MonthEnum } from "../types/dateTypes";
 import type { ProcessedEventDTO } from "../types/EventDTO";
 import { getPreviousMonday } from "./utils";
-import { differenceInMilliseconds } from "date-fns";
 
 const msPerDay = 24 * 60 * 60 * 1000;
 

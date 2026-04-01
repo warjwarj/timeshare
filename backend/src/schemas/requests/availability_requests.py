@@ -1,4 +1,5 @@
 from typing import Annotated, Optional
+from uuid import UUID
 from zoneinfo import ZoneInfo
 from pydantic import BeforeValidator, Field, field_serializer, field_validator, model_validator, BaseModel
 from pydantic_extra_types.timezone_name import TimeZoneName
@@ -89,6 +90,23 @@ class UpdateAvailabilityRuleRequest(BaseModel):
 
   @model_validator(mode='after')
   def validate_date_range(self) -> 'UpdateAvailabilityRuleRequest':
+    """Ensure end_datetime is after start_datetime if both are provided"""
+    if self.start_datetime is not None and self.end_datetime is not None:
+      if self.end_datetime <= self.start_datetime:
+        raise ValueError('End date must be after start date')
+    return self
+
+
+class GetAvailabilityRequest(BaseModel):
+  """
+  Request schema for getting availability given a date range
+  """
+  user_uuid: UUID = Field(default=None)
+  start_datetime: OptionalDatetime = Field(default=None)
+  end_datetime: OptionalDatetime = Field(default=None)
+
+  @model_validator(mode='after')
+  def validate_date_range(self) -> 'GetAvailabilityRequest':
     """Ensure end_datetime is after start_datetime if both are provided"""
     if self.start_datetime is not None and self.end_datetime is not None:
       if self.end_datetime <= self.start_datetime:

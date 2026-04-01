@@ -3,6 +3,8 @@ from datetime import datetime, time
 from dataclasses import dataclass
 from pydantic_extra_types.timezone_name import TimeZoneName
 
+from src.schemas.dtos.day_availability import DayAvailability
+
 
 @dataclass
 class SafeAvailabilityRuleDTO:
@@ -23,3 +25,14 @@ class SafeAvailabilityRuleDTO:
   end_datetime: Optional[datetime] = None
   created_at: Optional[datetime] = None
   updated_at: Optional[datetime] = None
+
+
+@dataclass
+class GetAvailabilityResponse:
+  """
+
+  DTO for communicating a users availability.
+
+  """
+  user_uuid: str
+  list[DayAvailability]
