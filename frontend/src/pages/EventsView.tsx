@@ -1,21 +1,22 @@
+import { addHours } from 'date-fns';
 import { useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
+import { EventModalContent } from '../components/events/EventModalContent.tsx';
+import { Modal } from '../components/Modal.tsx';
 import { ViewBody } from '../components/ViewBody.tsx';
 import { ViewHeader } from '../components/ViewHeader.tsx';
+import { ourUseDispatch, ourUseSelector } from '../store/hooks.ts';
+import { selectCurrentDatetimeAsTzDate } from '../store/slices/appSlice.ts';
 import {
+  addEvent,
+  deleteEvent,
   getEvents,
   makeEventSelectors,
-  addEvent,
-  updateEvent,
-  deleteEvent
+  updateEvent
 } from '../store/slices/eventsSlice.ts';
-import { ourUseDispatch, ourUseSelector } from '../store/hooks.ts';
-import { Modal } from '../components/Modal.tsx';
-import type { EventDTO, ProcessedEventDTO } from '../types/EventDTO';
-import { EventModalContent } from '../components/events/EventModalContent.tsx';
-import { createPortal } from 'react-dom';
-import { selectCurrentDatetime } from '../store/slices/appSlice.ts';
-import { addHours } from 'date-fns';
+import type { ProcessedEventDTO } from '../types/EventDTO';
 
+import { TZDate } from '@date-fns/tz';
 import { z } from 'zod';
 import { GenericFilterSortGrid } from '../components/GenericFilterSortGrid.tsx';
 
@@ -41,7 +42,7 @@ const EventsView: React.FC = () => {
   // selectors
   const { selectProcessedEventsAsDate } = useMemo(() => makeEventSelectors(), []);
   const events = ourUseSelector(selectProcessedEventsAsDate);
-  const currentDate = ourUseSelector(selectCurrentDatetime);
+  const currentDate = ourUseSelector(selectCurrentDatetimeAsTzDate);
   // state
   const [showAddModal, setShowAddModal] = useState<boolean>(false);
   const [selectedEvent, setSelectedEvent] = useState<EventSchemaType | null>(null);
@@ -56,10 +57,10 @@ const EventsView: React.FC = () => {
   }, [dispatch]);
 
   // callbacks
-  const onAdd = async (event: EventDTO) => {
+  const onAdd = async (event: ProcessedEventDTO) => {
     await dispatch(addEvent(event));
   };
-  const onUpdate = async (ev: EventDTO) => {
+  const onUpdate = async (ev: ProcessedEventDTO) => {
     await dispatch(updateEvent(ev));
   };
   const onDelete = async (uuid: string) => {
@@ -91,7 +92,7 @@ const EventsView: React.FC = () => {
           onClose={() => setShowAddModal(false)}
         >
           <EventModalContent
-            event={{ start: new Date(currentDate), end: addHours(new Date(currentDate), 1), uuid: "", name: "", iana_timezone: "", colour: "#525252" }}
+            event={{ start: new TZDate(currentDate), end: addHours(new TZDate(currentDate), 1), uuid: "", name: "", iana_timezone: "", colour: "#525252" }}
             editing={false}
             onClose={() => setShowAddModal(false)}
             onDelete={() => { }}
@@ -109,7 +110,11 @@ const EventsView: React.FC = () => {
           onClose={() => setSelectedEvent(null)}
         >
           <EventModalContent
-            event={selectedEvent}
+            event={{
+              ...selectedEvent,
+              start: new TZDate(selectedEvent.start, selectedEvent.iana_timezone),
+              end: new TZDate(selectedEvent.end, selectedEvent.iana_timezone),
+            } as ProcessedEventDTO}
             editing={true}
             onClose={() => setSelectedEvent(null)}
             onDelete={onDelete}

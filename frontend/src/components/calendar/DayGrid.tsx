@@ -96,7 +96,7 @@ const DayGrid: React.FC<DayGridProps> = ({ gridStyle, gridConfig }) => {
       </div>
 
       {/* Events grid */}
-      <div ref={gridRef} className="flex-1 relative" >
+      <div className="flex-1 relative" >
 
         {/* time slot lines and labls */}
         <div className="absolute inset-0 flex flex-col">
@@ -115,7 +115,7 @@ const DayGrid: React.FC<DayGridProps> = ({ gridStyle, gridConfig }) => {
         </div>
 
         {/* Events layer */}
-        <div className="absolute inset-0 ml-15">
+        <div ref={gridRef} className="absolute inset-0 ml-15">
           {eventProps.map((evp) => (
             <EventBar
               key={evp.key}

@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { ourUseDispatch, ourUseSelector } from '../../store/hooks';
-import { selectCurrentDatetimeAsTzDate, selectSelectedDateAsTzDate, selectSelectedIanaTimezone, selectSelectedMonthAsTzDate, setSelectedMonth, setSelectedTimezone } from '../../store/slices/appSlice';
+import { selectCurrentDatetimeAsTzDate, selectSelectedDateAsTzDate, selectSelectedIanaTimezone, selectSelectedMonthAsTzDate, setSelectedMonth } from '../../store/slices/appSlice';
 import { addEvent, deleteEvent, getEvents, makeEventSelectors, updateEvent } from '../../store/slices/eventsSlice';
 import type { MonthGridConfig } from "../../utils/monthGridUtils";
 import { setEventPositions } from "../../utils/monthGridUtils";
@@ -11,11 +11,10 @@ import { Cell } from "./Cell";
 import type { EventBarProps, EventBarStyle } from "./EventBar";
 import { EventBar } from './EventBar';
 
-import '../../../index.css';
-import { TimeSpanEnum } from "../../types/dateTypes";
 import { TZDate } from "@date-fns/tz";
+import '../../../index.css';
 import { getDayAvailabilitys, makeDayAvailabilitySelectors } from "../../store/slices/availabilitySlice";
-import { getTime } from "date-fns";
+import { TimeSpanEnum } from "../../types/dateTypes";
 
 type MonthGridStyle = {
   eventStyle: EventBarStyle;
@@ -91,10 +90,10 @@ const MonthGrid: React.FC<MonthGridProps> = ({ gridStyle, gridConfig, colHeaders
       return;
     }
     setEventProps(setEventPositions(
-      events, cellLaneEvents.current, gridRowWidth, startDate,
+      events, selectedTz, cellLaneEvents.current, gridRowWidth, startDate,
       cellCount, colCount, eventStyle
     ));
-  }, [events, startDate, endDate, gridRowWidth, cellCount, colCount, eventStyle]);
+  }, [events, selectedTz, startDate, endDate, gridRowWidth, cellCount, colCount, eventStyle]);
 
   // month navigation handler
   const navigateMonth = (delta: number) => {

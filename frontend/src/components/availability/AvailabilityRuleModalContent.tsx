@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import '../../../index.css';
-import type { AvailabilityRuleDTO, ProcessedAvailabilityRuleDTO } from '../../types/AvailabilityRuleDTO';
-import { WeekDayEnum } from '../../types/dateTypes';
-import { SaveButton } from '../SaveButton';
-import { selectSelectedIanaTimezone } from "../../store/slices/appSlice";
 import { ourUseSelector } from '../../store/hooks';
+import { selectSelectedIanaTimezone } from "../../store/slices/appSlice";
 import { toastService } from '../../toastService';
+import type { ProcessedAvailabilityRuleDTO } from '../../types/AvailabilityRuleDTO';
+import { WeekDayEnum } from '../../types/dateTypes';
+import { naiveIsoStrToTzDate, tzdateToWallClockInDatesTimezone } from '../../utils/utils';
+import { SaveButton } from '../SaveButton';
 
 // consts
 const WEEKDAY_NAMES = Object.values(WeekDayEnum).map(wd => wd.substring(0, 3));
@@ -16,7 +17,7 @@ type AvailabilityRuleModalContentProps = {
   rule: ProcessedAvailabilityRuleDTO
   editing: boolean
   onDelete: (uuid: string) => void
-  onSave: (rule: AvailabilityRuleDTO, uuid?: string) => void;
+  onSave: (rule: ProcessedAvailabilityRuleDTO, uuid?: string) => void;
   onClose: () => void;
 }
 
@@ -29,8 +30,8 @@ const AvailabilityRuleModalContent: React.FC<AvailabilityRuleModalContentProps> 
     prevents_booking: rule.prevents_booking || false,
     iana_timezone: rule.iana_timezone || tz,
     weekdays: rule.weekdays || [],
-    start_datetime: rule.start_datetime?.toISOString().slice(0, 16) || "",
-    end_datetime: rule.end_datetime?.toISOString().slice(0, 16) || "",
+    start_datetime: rule.start_datetime ? tzdateToWallClockInDatesTimezone(rule.start_datetime) : "",
+    end_datetime: rule.end_datetime ? tzdateToWallClockInDatesTimezone(rule.end_datetime) : "",
     start_time: rule.start_time || "",
     end_time: rule.end_time || "",
   })
@@ -45,8 +46,10 @@ const AvailabilityRuleModalContent: React.FC<AvailabilityRuleModalContentProps> 
   };
 
   const internalSave = () => {
-    const outgoingState: AvailabilityRuleDTO = {
+    const outgoingState: ProcessedAvailabilityRuleDTO = {
       ...formData,
+      start_datetime: naiveIsoStrToTzDate(formData.start_datetime, editing ? formData.iana_timezone : tz),
+      end_datetime: naiveIsoStrToTzDate(formData.end_datetime, editing ? formData.iana_timezone : tz),
       ...{ iana_timezone: editing ? formData.iana_timezone : tz },
       ...{ uuid: editing && rule.uuid ? rule.uuid : "" }
     }
@@ -212,4 +215,5 @@ const AvailabilityRuleModalContent: React.FC<AvailabilityRuleModalContentProps> 
 };
 
 export { AvailabilityRuleModalContent };
-export type { AvailabilityRuleModalContentProps }
+export type { AvailabilityRuleModalContentProps };
+

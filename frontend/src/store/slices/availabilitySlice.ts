@@ -1,13 +1,12 @@
-import { createSlice, createAsyncThunk, createSelector } from '@reduxjs/toolkit';
+import { createAsyncThunk, createSelector, createSlice } from '@reduxjs/toolkit';
 
-import { apiClient } from "../../utils/apiClient";
+import { TZDate } from '@date-fns/tz';
 import axios, { HttpStatusCode } from 'axios';
 import { toastService } from '../../toastService';
-import { tryParseAxiosErrorMessage, tryParseAxiosMessage } from '../../utils/utils';
 import { type AvailabilityRuleDTO, type ProcessedAvailabilityRuleDTO } from '../../types/AvailabilityRuleDTO';
-import { fromZonedTime, toZonedTime } from 'date-fns-tz';
 import type { DayAvailabilityDTO, ProcessedDayAvailabilityDTO } from '../../types/DayAvailabilityDTO';
-import { TZDate } from '@date-fns/tz';
+import { apiClient } from "../../utils/apiClient";
+import { definitelyUtcButNaiveIsoStrToTzDate, tryParseAxiosErrorMessage, tryParseAxiosMessage, tzdateToUtcString } from '../../utils/utils';
 
 const getDayAvailabilitys = createAsyncThunk(
   'getDayAvailabilitys',
@@ -105,15 +104,15 @@ const getAvailabilityRule = createAsyncThunk(
 
 const createAvailabilityRule = createAsyncThunk(
   'createAvailabilityRule',
-  async (rule: AvailabilityRuleDTO, { signal, rejectWithValue }) => {
+  async (rule: Omit<ProcessedAvailabilityRuleDTO, "uuid">, { signal, rejectWithValue }) => {
     try {
       // format to utc+0 time on outbound
-      if (rule.iana_timezone && rule.start_datetime && rule.end_datetime) {
-        rule.start_datetime = fromZonedTime(rule.start_datetime, rule.iana_timezone).toISOString()
-        rule.end_datetime = fromZonedTime(rule.end_datetime, rule.iana_timezone).toISOString()
+      const normalisedRuleDTO: Omit<AvailabilityRuleDTO, 'uuid'> = {
+        ...rule,
+        start_datetime: rule.start_datetime?.toISOString(),
+        end_datetime: rule.end_datetime?.toISOString(),
       }
-
-      const res = await apiClient.post("/availability", rule, {
+      const res = await apiClient.post("/availability", normalisedRuleDTO, {
         signal,
         validateStatus: status => status < 500,
       });
@@ -141,17 +140,15 @@ const createAvailabilityRule = createAsyncThunk(
 
 const updateAvailabilityRule = createAsyncThunk(
   'updateAvailabilityRule',
-  async (rule: AvailabilityRuleDTO, { signal, rejectWithValue }) => {
+  async (rule: ProcessedAvailabilityRuleDTO, { signal, rejectWithValue }) => {
     try {
       // format to utc+0 time on outbound
-      if (rule.iana_timezone && rule.start_datetime && rule.end_datetime) {
-        rule.start_datetime = fromZonedTime(rule.start_datetime, rule.iana_timezone).toISOString()
-        rule.end_datetime = fromZonedTime(rule.end_datetime, rule.iana_timezone).toISOString()
+      const normalisedRuleDTO: AvailabilityRuleDTO = {
+        ...rule,
+        start_datetime: rule.start_datetime ? tzdateToUtcString(rule.start_datetime) : undefined,
+        end_datetime: rule.end_datetime ? tzdateToUtcString(rule.end_datetime) : undefined
       }
-
-      const res = await apiClient.put(
-        `/availability/${rule.uuid}`,
-        rule, {
+      const res = await apiClient.put(`/availability/${rule.uuid}`, normalisedRuleDTO, {
         signal,
         validateStatus: status => status < 500,
       });
@@ -335,10 +332,8 @@ export const makeAvailabilityRuleSelectors = () => {
     (rules): ProcessedAvailabilityRuleDTO[] => {
       return rules.map(r => ({
         ...r,
-        start_datetime: r.start_datetime && r.iana_timezone
-          ? toZonedTime(r.start_datetime, r.iana_timezone) : undefined,
-        end_datetime: r.end_datetime && r.iana_timezone
-          ? toZonedTime(r.end_datetime, r.iana_timezone) : undefined,
+        start_datetime: r.start_datetime ? definitelyUtcButNaiveIsoStrToTzDate(r.start_datetime, r.iana_timezone) : undefined,
+        end_datetime: r.end_datetime ? definitelyUtcButNaiveIsoStrToTzDate(r.end_datetime, r.iana_timezone) : undefined,
       }));
     }
   );
@@ -389,12 +384,7 @@ export const makeDayAvailabilitySelectors = () => {
 
 // thunks
 export {
-  getAvailabilityRules,
-  getAvailabilityRule,
-  createAvailabilityRule,
-  updateAvailabilityRule,
-  deleteAvailabilityRule,
-  getDayAvailabilitys
+  createAvailabilityRule, deleteAvailabilityRule, getAvailabilityRule, getAvailabilityRules, getDayAvailabilitys, updateAvailabilityRule
 };
 
 export default availabilitySlice.reducer;

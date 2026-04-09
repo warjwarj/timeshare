@@ -14,14 +14,18 @@ import { addHours } from "date-fns";
 import '../../../index.css';
 import { EventModalContent } from '../events/EventModalContent';
 import { formatDate } from '../../utils/utils';
+import { TZDate } from '@date-fns/tz';
+import { ourUseSelector } from '../../store/hooks';
+import { selectCurrentDatetimeAsTzDate } from '../../store/slices/appSlice';
 
 type CellInfoModalContentProps = {
   eventsInCell: EventBarProps[];
   cellDate: Date;
   onAddEvent: (newEvent: Omit<ProcessedEventDTO, 'uuid'>) => void;
 };
-const CellInfoModalContent: React.FC<CellInfoModalContentProps> = ({ eventsInCell, cellDate, onAddEvent }) => {
+const CellInfoModalContent: React.FC<CellInfoModalContentProps> = ({ eventsInCell, onAddEvent }) => {
   const [showAddEventModal, setShowAddEventModal] = useState(false);
+  const currentDate = ourUseSelector(selectCurrentDatetimeAsTzDate);
 
   return (
     <>
@@ -45,16 +49,16 @@ const CellInfoModalContent: React.FC<CellInfoModalContentProps> = ({ eventsInCel
 
       {showAddEventModal && createPortal(
         <Modal
-          label="Add Event"
+          label="Add event"
           isOpen={showAddEventModal}
           onClose={() => setShowAddEventModal(false)}
         >
           <EventModalContent
-            event={{ start: cellDate, end: addHours(cellDate, 1), uuid: "", name: "", iana_timezone: "", colour: "#525252" }}
+            event={{ start: new TZDate(currentDate), end: addHours(new TZDate(currentDate), 1), uuid: "", name: "", iana_timezone: "", colour: "#525252" }}
             editing={false}
-            onSave={onAddEvent}
             onClose={() => setShowAddEventModal(false)}
             onDelete={() => { }}
+            onSave={onAddEvent}
           />
         </Modal>,
         document.body

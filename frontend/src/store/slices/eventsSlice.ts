@@ -1,12 +1,11 @@
-import { createSlice, createAsyncThunk, createSelector } from '@reduxjs/toolkit';
+import { createAsyncThunk, createSelector, createSlice } from '@reduxjs/toolkit';
 
-import type { EventDTO, ProcessedEventDTO } from '../../types/EventDTO';
-import { apiClient } from "../../utils/apiClient";
+import { TZDate } from '@date-fns/tz';
 import axios, { HttpStatusCode } from 'axios';
 import { toastService } from '../../toastService';
-import { tryParseAxiosErrorMessage, tryParseAxiosMessage } from '../../utils/utils';
-import { TZDate } from '@date-fns/tz';
-import { fromZonedTime, toZonedTime } from 'date-fns-tz';
+import type { EventDTO, ProcessedEventDTO } from '../../types/EventDTO';
+import { apiClient } from "../../utils/apiClient";
+import { definitelyUtcButNaiveIsoStrToTzDate, tryParseAxiosErrorMessage, tryParseAxiosMessage, tzdateToUtcString } from '../../utils/utils';
 
 const getEvents = createAsyncThunk(
   'getEvents',
@@ -20,13 +19,11 @@ const getEvents = createAsyncThunk(
         signal,
         validateStatus: status => status < 500,
       })
-
       if (res.status !== HttpStatusCode.Ok) {
         const errMsg = tryParseAxiosMessage(res);
         toastService.showError("Couldn't get events", errMsg);
         return rejectWithValue(errMsg);
       }
-
       return res.data as EventDTO[];
     } catch (error: unknown) {
       if (axios.isCancel(error)) {
@@ -44,52 +41,19 @@ const getEvents = createAsyncThunk(
   }
 );
 
-const updateEvent = createAsyncThunk(
-  'updateEvent',
-  async (event: EventDTO, { signal, rejectWithValue }) => {
-    try {
-      // format to utc+0 time on outbound
-      event.start = fromZonedTime(event.start, event.iana_timezone).toISOString()
-      event.end = fromZonedTime(event.end, event.iana_timezone).toISOString()
-
-      const res = await apiClient.put(
-        `/events/${event.uuid}`,
-        event,
-        { signal, validateStatus: status => status < 500 }
-      )
-      if (res.status !== HttpStatusCode.Ok) {
-        const errMsg = tryParseAxiosMessage(res);
-        toastService.showError("Couldn't update event", errMsg);
-        return rejectWithValue(errMsg);
-      }
-      return res.data as EventDTO;
-    } catch (error: unknown) {
-      if (axios.isCancel(error)) {
-        return rejectWithValue('Request cancelled');
-      }
-      if (axios.isAxiosError(error)) {
-        const errMsg = tryParseAxiosErrorMessage(error);
-        toastService.showError("Couldn't update event", errMsg);
-        return rejectWithValue(errMsg);
-      }
-      const err = error instanceof Error ? error.message : 'Unknown error';
-      toastService.showError("Couldn't update event", err);
-      return rejectWithValue(err);
-    }
-  }
-);
-
 const addEvent = createAsyncThunk(
   'addEvent',
-  async (event: Omit<EventDTO, 'uuid'>, { signal, rejectWithValue }) => {
+  async (event: Omit<ProcessedEventDTO, "uuid">, { signal, rejectWithValue }) => {
     try {
       // format to utc+0 time on outbound
-      event.start = fromZonedTime(event.start, event.iana_timezone).toISOString()
-      event.end = fromZonedTime(event.end, event.iana_timezone).toISOString()
-
+      const normalisedEventDTO: Omit<EventDTO, 'uuid'> = {
+        ...event,
+        start: event.start.toISOString(),
+        end: event.end.toISOString(),
+      }
       const res = await apiClient.post(
         "/events",
-        event,
+        normalisedEventDTO,
         { signal, validateStatus: status => status < 500 }
       )
       if (res.status !== HttpStatusCode.Created) {
@@ -109,6 +73,45 @@ const addEvent = createAsyncThunk(
       }
       const err = error instanceof Error ? error.message : 'Unknown error';
       toastService.showError("Couldn't add event", err);
+      return rejectWithValue(err);
+    }
+  }
+);
+
+const updateEvent = createAsyncThunk(
+  'updateEvent',
+  async (event: ProcessedEventDTO, { signal, rejectWithValue }) => {
+    try {
+      console.log(event)
+      // format to utc+0 time on outbound
+      const normalisedEventDTO: EventDTO = {
+        ...event,
+        start: tzdateToUtcString(event.start),
+        end: tzdateToUtcString(event.end)
+      }
+      console.log(normalisedEventDTO)
+      const res = await apiClient.put(
+        `/events/${event.uuid}`,
+        normalisedEventDTO,
+        { signal, validateStatus: status => status < 500 }
+      )
+      if (res.status !== HttpStatusCode.Ok) {
+        const errMsg = tryParseAxiosMessage(res);
+        toastService.showError("Couldn't update event", errMsg);
+        return rejectWithValue(errMsg);
+      }
+      return res.data as EventDTO;
+    } catch (error: unknown) {
+      if (axios.isCancel(error)) {
+        return rejectWithValue('Request cancelled');
+      }
+      if (axios.isAxiosError(error)) {
+        const errMsg = tryParseAxiosErrorMessage(error);
+        toastService.showError("Couldn't update event", errMsg);
+        return rejectWithValue(errMsg);
+      }
+      const err = error instanceof Error ? error.message : 'Unknown error';
+      toastService.showError("Couldn't update event", err);
       return rejectWithValue(err);
     }
   }
@@ -247,8 +250,8 @@ export const makeEventSelectors = () => {
       return [...events]
         .map(ev => ({
           ...ev,
-          start: toZonedTime(ev.start, ev.iana_timezone),
-          end: toZonedTime(ev.end, ev.iana_timezone),
+          start: definitelyUtcButNaiveIsoStrToTzDate(ev.start, ev.iana_timezone),
+          end: definitelyUtcButNaiveIsoStrToTzDate(ev.end, ev.iana_timezone),
         }))
         .sort((a, b) => a.start.getTime() - b.start.getTime())
     }
@@ -309,7 +312,7 @@ export const makeEventSelectors = () => {
 };
 
 // api calls
-export { getEvents, updateEvent, addEvent, deleteEvent }
+export { addEvent, deleteEvent, getEvents, updateEvent };
 
 // reducer
 export default eventsSlice.reducer;

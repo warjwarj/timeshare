@@ -2,7 +2,7 @@ import { TZDate } from "@date-fns/tz";
 import { type TimeSpan, WeekDayEnum, MonthEnum } from "../types/dateTypes";
 import type { ProcessedEventDTO } from "../types/EventDTO";
 import type { EventBarProps, EventBarStyle } from "../components/calendar/EventBar";
-import { getTimeSpanInMinutes } from "./utils";
+import { getTimeSpanInMinutes, tzdateToTzdate } from "./utils";
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -162,6 +162,7 @@ export function setDayEventPositions(
   const { selectedDate, timeStart, timeEnd } = config;
   if (events.length === 0) return [];
 
+  const tz = selectedDate.timeZone
   const dayStart = new TZDate(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate(), timeStart, 0, 0, 0, tz);
   const dayEnd = new TZDate(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate(), timeEnd, 0, 0, 0, tz);
 
@@ -172,13 +173,16 @@ export function setDayEventPositions(
 
   for (const group of overlapGroups) {
     for (const event of group.events) {
-      const eventStart: TZDate = event.start < dayStart ? dayStart : event.start;
-      const eventEnd: TZDate = event.end > dayEnd ? dayEnd : event.end;
+      const evStartInGridTz = tzdateToTzdate(event.start, tz ?? Intl.DateTimeFormat().resolvedOptions().timeZone)
+      const evEndInGridTz = tzdateToTzdate(event.end, tz ?? Intl.DateTimeFormat().resolvedOptions().timeZone)
+      const eventStart: TZDate = evStartInGridTz < dayStart ? dayStart : evStartInGridTz;
+      const eventEnd: TZDate = evEndInGridTz > dayEnd ? dayEnd : evEndInGridTz;
       if (eventStart >= dayEnd || eventEnd <= dayStart) continue;
 
       const eventStartMinutes = getMinutesSinceMidnight(eventStart) - (timeStart * 60);
       const eventDurationMinutes = (eventEnd.getTime() - eventStart.getTime()) / 60000;
 
+      // debugger;
       const top = (eventStartMinutes / totalMinutes) * gridHeight
       const height = (eventDurationMinutes / totalMinutes) * gridHeight;
 

@@ -4,6 +4,7 @@ import { TimeSpanEnum, type TimeSpan } from "../types/dateTypes";
 import axios, { AxiosError, type AxiosResponse } from 'axios'
 import type { MainLayoutContext } from "../MainLayout";
 import { TZDate } from "@date-fns/tz";
+import { format } from "date-fns-tz";
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -64,6 +65,82 @@ export function isNullOrWhitespace(input: string) {
   Date utils
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
+
+/**
+ * This is designed to take a naive (definitely already UTC) iso string like the ones we store in the database, and convert it into a TZDate.
+ * 
+ * @param naive naive iso string like '2026-04-09T14:26:35'
+ * @param tz like 'Europe/London'
+ * @returns a TZDate in the specified timezone
+ */
+export function definitelyUtcButNaiveIsoStrToTzDate(naive: string, tz: string): TZDate {
+  // the "Z" is important - causes the TZDate constructor to recognise the date as UTC and apply the timezone offset.
+  // without it I think it would just add the timezone info, assuming that the datetime is already localised.
+  return new TZDate(naive + "Z", tz)
+}
+
+/**
+ * This is designed to take a naive, already wall clock iso string, and convert it into a TZDate.
+ * 
+ * @param naive naive iso string like '2026-04-09T14:26:35'
+ * @param tz like 'Europe/London'
+ * @returns a TZDate in the specified timezone
+ */
+export function naiveIsoStrToTzDate(naive: string, tz: string): TZDate {
+  // Get the UTC offset for this timezone at the given date by creating a
+  // reference point and formatting its offset. We use a Date with "Z" (UTC) so
+  // the reference is unambiguous, then extract the offset string (e.g. "+01:00", "-10:00").
+
+  // 1. new Date(naive + "Z") — creates a plain Date at that UTC instant (the Z just gives it an unambiguous reference point)                                                                                               
+  // 2. format(..., "xxx", { timeZone: tz }) — asks date-fns-tz: "what is the UTC offset in timezone tz at this moment in time?" 
+  // The "xxx" format token outputs the offset as +HH:mm or -HH:mm (e.g. "-10:00" for Tahiti, "+01:00" for BST)
+  const offset = format(new Date(naive + "Z"), "xxx", { timeZone: tz })
+  // Append the offset so the parser treats the naive string as wall-clock
+  // time in the target timezone, not the browser's local timezone.
+  return new TZDate(naive + offset, tz)
+}
+
+/**
+ * Get a naive iso string representing the wall clock time in the dates timezone.
+ * 
+ * @param tzdt timezone aware date.
+ * @returns an ISO string like 2026-04-09T14:26:35 in the TZDates timezone
+ */
+export function tzdateToWallClockInDatesTimezone(tzdt: TZDate): string {
+  return format(tzdt, "yyyy-MM-dd'T'HH:mm", { timeZone: tzdt.timeZone })
+}
+
+/**
+ * Get a naive iso string representing the utc time of this date, accounting for utc offset.
+ * 
+ * @param tzdt timezone aware date.
+ * @returns an ISO string like 2026-04-09T14:26:35 in the TZDates timezone
+ */
+export function tzdateToWallClockTimeInAnotherTimezone(tzdt: TZDate, iana_timezone: string): string {
+  const inTargetTz = new TZDate(tzdt.getTime(), iana_timezone);
+  return format(inTargetTz, "yyyy-MM-dd'T'HH:mm")
+}
+
+/**
+ * Get an iso string representing the utc tiem of the utc date, accounting for the dates utc offset.
+ * 
+ * @param tzdt timezone aware date.
+ * @returns an ISO string like 2026-04-09T14:26:35 in the TZDates timezone
+ */
+export function tzdateToUtcString(tzdt: TZDate): string {
+  return new Date(tzdt.getTime()).toISOString()
+}
+
+/**
+ * Convert a TZDate to a new TZDate representing the same instant in a different timezone.
+ *
+ * @param tzdt timezone aware date.
+ * @param tz target IANA timezone like 'Pacific/Tahiti'
+ * @returns a new TZDate in the target timezone representing the same instant
+ */
+export function tzdateToTzdate(tzdt: TZDate, tz: string): TZDate {
+  return new TZDate(tzdt.getTime(), tz)
+}
 
 // Get TimeSpan duration in minutes
 export function getTimeSpanInMinutes(timeSpan: TimeSpan): number {

@@ -3,7 +3,7 @@ import { differenceInMilliseconds } from "date-fns";
 import type { EventBarProps, EventBarStyle } from "../components/calendar/EventBar";
 import { MonthEnum } from "../types/dateTypes";
 import type { ProcessedEventDTO } from "../types/EventDTO";
-import { getPreviousMonday } from "./utils";
+import { getPreviousMonday, tzdateToTzdate } from "./utils";
 
 const msPerDay = 24 * 60 * 60 * 1000;
 
@@ -17,26 +17,9 @@ const msPerDay = 24 * 60 * 60 * 1000;
  * @param tz          event's timezone
  * @returns           1 based index of the cell within the grid.
  */
-function getCellIndexFromDate(gridStart: TZDate, dt: Date, evtz: string): number {
-  const gridStartInEvtz = new TZDate(
-    gridStart.getFullYear(),
-    gridStart.getMonth(),
-    gridStart.getDate(),
-    gridStart.getHours(),
-    gridStart.getMinutes(),
-    gridStart.getSeconds(),
-    evtz
-  );
-  const dtInEvtz = new TZDate(
-    dt.getFullYear(),
-    dt.getMonth(),
-    dt.getDate(),
-    dt.getHours(),
-    dt.getMinutes(),
-    dt.getSeconds(),
-    evtz
-  );
-  const diffMs = differenceInMilliseconds(dtInEvtz, gridStartInEvtz);
+function getCellIndexFromDate(gridStart: TZDate, evTzDate: TZDate): number {
+  const evDT = tzdateToTzdate(evTzDate, gridStart.timeZone ?? Intl.DateTimeFormat().resolvedOptions().timeZone);
+  const diffMs = differenceInMilliseconds(evDT, gridStart);
   return Math.floor(diffMs / msPerDay) + 1;
 }
 
@@ -54,6 +37,7 @@ function getCellIndexFromDate(gridStart: TZDate, dt: Date, evtz: string): number
  */
 export function setEventPositions(
   evDtos: ProcessedEventDTO[],
+  monthGridIanaTz: string,
   cellLaneEvents: Map<number, Map<number, string>>,
   gridRowWidth: number,
   start: TZDate,
@@ -79,8 +63,8 @@ export function setEventPositions(
   // Iterate through sorted events
   sortedEvents.forEach((ev) => {
 
-    let cellStartIndex = getCellIndexFromDate(start, ev.start, ev.iana_timezone);
-    let cellEndIndex = getCellIndexFromDate(start, ev.end, ev.iana_timezone);
+    let cellStartIndex = getCellIndexFromDate(start, ev.start, monthGridIanaTz);
+    let cellEndIndex = getCellIndexFromDate(start, ev.end, monthGridIanaTz);
 
     // Safety checks for grid boundaries (1-based: valid range is 1 to cellCount)
     if (cellStartIndex < 1) cellStartIndex = 1;

@@ -1,3 +1,5 @@
+import type { TZDate } from "@date-fns/tz";
+
 // basic dto with primative types
 export type AvailabilityRuleDTO = {
   uuid: string;
@@ -13,6 +15,6 @@ export type AvailabilityRuleDTO = {
 
 // dto with string dates processed into Date objects
 export type ProcessedAvailabilityRuleDTO = Omit<AvailabilityRuleDTO, 'start_datetime' | 'end_datetime'> & {
-  start_datetime?: Date;
-  end_datetime?: Date;
+  start_datetime?: TZDate;
+  end_datetime?: TZDate;
 };

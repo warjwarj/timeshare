@@ -7,7 +7,7 @@ import { Modal } from '../Modal';
 import { CellInfoModalContent } from './CellInfoModalContent';
 
 // types
-import type { EventDTO } from '../../types/EventDTO';
+import type { ProcessedEventDTO } from '../../types/EventDTO';
 import type { EventBarProps } from './EventBar';
 
 // css
@@ -30,7 +30,7 @@ type CellProps = {
   cellDate: Date;
   availability: ProcessedDayAvailabilityDTO | undefined;
   getEvents: (cellIndex: number) => EventBarProps[];
-  onAddEvent: (newEvent: Omit<EventDTO, 'key' | 'uuid'>) => void;
+  onAddEvent: (newEvent: Omit<ProcessedEventDTO, 'key' | 'uuid'>) => void;
   isOutsideMonth?: boolean;
   isSelected?: boolean;
   isHighlighted?: boolean;
@@ -119,3 +119,4 @@ const Cell: React.FC<CellProps> = (props: CellProps) => {
 
 export { Cell };
 export type { CellStyle };
+

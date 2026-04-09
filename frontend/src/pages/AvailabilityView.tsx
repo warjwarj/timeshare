@@ -1,18 +1,21 @@
+import { TZDate } from '@date-fns/tz';
 import { useEffect, useMemo, useState } from 'react';
-import { ViewBody } from '../components/ViewBody.tsx';
-import { ViewHeader } from '../components/ViewHeader.tsx';
-import {
-  getAvailabilityRules, createAvailabilityRule,
-  updateAvailabilityRule,
-  deleteAvailabilityRule, makeAvailabilityRuleSelectors
-} from '../store/slices/availabilitySlice.ts';
-import { ourUseDispatch, ourUseSelector } from '../store/hooks.ts';
-import { Modal } from '../components/Modal.tsx';
-import type { AvailabilityRuleDTO, ProcessedAvailabilityRuleDTO } from '../types/AvailabilityRuleDTO';
-import { AvailabilityRuleModalContent } from '../components/availability/AvailabilityRuleModalContent.tsx';
 import { createPortal } from 'react-dom';
 import z from 'zod';
+import { AvailabilityRuleModalContent } from '../components/availability/AvailabilityRuleModalContent.tsx';
 import { GenericFilterSortGrid } from '../components/GenericFilterSortGrid.tsx';
+import { Modal } from '../components/Modal.tsx';
+import { ViewBody } from '../components/ViewBody.tsx';
+import { ViewHeader } from '../components/ViewHeader.tsx';
+import { ourUseDispatch, ourUseSelector } from '../store/hooks.ts';
+import {
+  createAvailabilityRule,
+  deleteAvailabilityRule,
+  getAvailabilityRules,
+  makeAvailabilityRuleSelectors,
+  updateAvailabilityRule
+} from '../store/slices/availabilitySlice.ts';
+import type { ProcessedAvailabilityRuleDTO } from '../types/AvailabilityRuleDTO';
 
 // this is the shape of the data in the grid (zod object)
 const AvailabilityRuleSchema = z.object({
@@ -26,6 +29,8 @@ const AvailabilityRuleSchema = z.object({
   start_time: z.string().nullable(),
   end_time: z.string().nullable(),
 })
+// this is ts type representation of the above
+type AvailabilityRuleSchemaType = z.infer<typeof AvailabilityRuleSchema>
 
 /**
  * Availability Rule View page. Tabulated representation of the rules visible to the user.
@@ -38,7 +43,7 @@ const AvailabilityView: React.FC = () => {
   const rules = ourUseSelector(selectProcessedRulesAsDate);
   // state
   const [showAddModal, setShowAddModal] = useState<boolean>(false);
-  const [selectedRule, setSelectedRule] = useState<ProcessedAvailabilityRuleDTO | null>(null);
+  const [selectedRule, setSelectedRule] = useState<AvailabilityRuleSchemaType | null>(null);
 
   // get rules on load
   useEffect(() => {
@@ -46,10 +51,10 @@ const AvailabilityView: React.FC = () => {
     return () => promise.abort();
   }, [dispatch]);
 
-  const onAdd = async (rule: AvailabilityRuleDTO) => {
+  const onAdd = async (rule: ProcessedAvailabilityRuleDTO) => {
     await dispatch(createAvailabilityRule(rule));
   };
-  const onUpdate = async (ev: AvailabilityRuleDTO) => {
+  const onUpdate = async (ev: ProcessedAvailabilityRuleDTO) => {
     await dispatch(updateAvailabilityRule(ev));
   };
   const onDelete = async (uuid: string) => {
@@ -71,7 +76,7 @@ const AvailabilityView: React.FC = () => {
       </ViewHeader>
 
       {/* This is the generic filter grid */}
-      <GenericFilterSortGrid schema={AvailabilityRuleSchema} data={rules} rowClickedCallback={(rule: ProcessedAvailabilityRuleDTO) => setSelectedRule(rule)} />
+      <GenericFilterSortGrid schema={AvailabilityRuleSchema} data={rules} rowClickedCallback={(rule: AvailabilityRuleSchemaType) => setSelectedRule(rule)} />
 
       {/* Add modal */}
       {showAddModal && createPortal(
@@ -99,7 +104,11 @@ const AvailabilityView: React.FC = () => {
           onClose={() => setSelectedRule(null)}
         >
           <AvailabilityRuleModalContent
-            rule={selectedRule}
+            rule={{
+              ...selectedRule,
+              start_datetime: selectedRule.start_datetime ? new TZDate(selectedRule.start_datetime, selectedRule.iana_timezone) : selectedRule.start_datetime,
+              end_datetime: selectedRule.end_datetime ? new TZDate(selectedRule.end_datetime, selectedRule.iana_timezone) : selectedRule.end_datetime,
+            } as ProcessedAvailabilityRuleDTO}
             editing={true}
             onClose={() => setSelectedRule(null)}
             onDelete={onDelete}
@@ -114,3 +123,4 @@ const AvailabilityView: React.FC = () => {
 };
 
 export { AvailabilityView };
+

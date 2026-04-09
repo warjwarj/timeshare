@@ -4,16 +4,17 @@ import { useState } from 'react';
 // react types
 
 // types
-import type { EventDTO, ProcessedEventDTO } from '../../types/EventDTO';
+import type { ProcessedEventDTO } from '../../types/EventDTO';
 
 // utils
 
 // css
 import '../../../index.css';
-import { SaveButton } from '../SaveButton';
 import { ourUseSelector } from '../../store/hooks';
 import { selectSelectedIanaTimezone } from '../../store/slices/appSlice';
 import { toastService } from '../../toastService';
+import { naiveIsoStrToTzDate, tzdateToWallClockInDatesTimezone } from '../../utils/utils';
+import { SaveButton } from '../SaveButton';
 
 const inputClass = "w-full px-4 py-2 bg-[#F5F5F5] dark:bg-[#2A2A2A] border border-light-border dark:border-dark-border text-light-primary-text dark:text-dark-primary-text rounded-lg focus:ring-2 focus:ring-light-accent dark:focus:ring-dark-accent focus:border-transparent";
 const labelClass = "block text-sm font-medium text-light-primary-text dark:text-dark-primary-text mb-2";
@@ -26,7 +27,7 @@ const labelClass = "block text-sm font-medium text-light-primary-text dark:text-
 type EventModalContentProps = {
   event: ProcessedEventDTO | null;
   editing: boolean;
-  onSave: (updatedEvent: EventDTO) => void;
+  onSave: (updatedEvent: ProcessedEventDTO) => void;
   onDelete: (uuid: string) => void;
   onClose: () => void;
 };
@@ -37,8 +38,8 @@ const EventModalContent: React.FC<EventModalContentProps> = ({ event, editing, o
   const [formData, setFormData] = useState({
     name: event?.name || "",
     iana_timezone: event?.iana_timezone || tz,
-    start: event?.start.toISOString().slice(0, 16) || "",
-    end: event?.end?.toISOString().slice(0, 16) || "",
+    start: event?.start ? tzdateToWallClockInDatesTimezone(event.start) : "",
+    end: event?.end ? tzdateToWallClockInDatesTimezone(event.end) : "",
     colour: event?.colour || "#525252"
   })
 
@@ -48,8 +49,11 @@ const EventModalContent: React.FC<EventModalContentProps> = ({ event, editing, o
       toastService.showError("Validation error", "Event name must not be empty.")
       return;
     }
-    const outgoingState: EventDTO = {
+    // can't edit the timezone atm
+    const outgoingState: ProcessedEventDTO = {
       ...formData,
+      start: naiveIsoStrToTzDate(formData.start, editing ? formData.iana_timezone : tz),
+      end: naiveIsoStrToTzDate(formData.end, editing ? formData.iana_timezone : tz),
       ...{ iana_timezone: editing ? formData.iana_timezone : tz },
       ...{ uuid: editing && event ? event.uuid : "" },
     }
@@ -162,3 +166,4 @@ const EventModalContent: React.FC<EventModalContentProps> = ({ event, editing, o
 };
 
 export { EventModalContent };
+

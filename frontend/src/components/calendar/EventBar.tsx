@@ -1,5 +1,5 @@
 // react
-import { useState, useRef } from 'react';
+import { useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 // components
@@ -7,7 +7,7 @@ import { Modal } from '../Modal';
 import { EventModalContent } from '../events/EventModalContent';
 
 // types
-import { type EventDTO, type ProcessedEventDTO } from '../../types/EventDTO';
+import { type ProcessedEventDTO } from '../../types/EventDTO';
 
 // css
 import '../../../index.css';
@@ -31,7 +31,7 @@ type EventBarProps = {
 
 const EventBar: React.FC<{
   eventProps: EventBarProps,
-  updateEvent: (updatedEvent: EventDTO) => void;
+  updateEvent: (updatedEvent: ProcessedEventDTO) => void;
   deleteEvent: (uuid: string) => void;
 }> = ({
   eventProps,
@@ -134,5 +134,4 @@ const EventBar: React.FC<{
 
 export { EventBar };
 
-export type { EventBarStyle }
-export type { EventBarProps }
+export type { EventBarProps, EventBarStyle };
