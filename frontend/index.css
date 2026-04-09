@@ -39,6 +39,7 @@ body {
 
 /* BORDERS */
 --color-dark-border:  #505050; /* slate-aligned border */
+--color-less-dark-border: #b8b6b6;
 --color-light-border: #8a8a8a;
 
 /* ACCENTS (cool slate greys) */

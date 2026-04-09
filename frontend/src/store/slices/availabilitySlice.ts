@@ -6,6 +6,42 @@ import { toastService } from '../../toastService';
 import { tryParseAxiosErrorMessage, tryParseAxiosMessage } from '../../utils/utils';
 import { type AvailabilityRuleDTO, type ProcessedAvailabilityRuleDTO } from '../../types/AvailabilityRuleDTO';
 import { fromZonedTime, toZonedTime } from 'date-fns-tz';
+import type { DayAvailabilityDTO, ProcessedDayAvailabilityDTO } from '../../types/DayAvailabilityDTO';
+import { TZDate } from '@date-fns/tz';
+
+const getDayAvailabilitys = createAsyncThunk(
+  'getDayAvailabilitys',
+  async ({ iana_timezone, start_datetime, end_datetime }: { iana_timezone: string, start_datetime: string, end_datetime: string }, { signal, rejectWithValue }) => {
+    try {
+      const res = await apiClient.post("/availability/getAvailability", {
+        iana_timezone,
+        start_datetime,
+        end_datetime
+      }, {
+        signal,
+        validateStatus: status => status < 500,
+      });
+      if (res.status !== HttpStatusCode.Ok) {
+        const errMsg = tryParseAxiosMessage(res);
+        toastService.showError("Couldn't get availability", errMsg);
+        return rejectWithValue(errMsg);
+      }
+      return res.data as DayAvailabilityDTO[];
+    } catch (error: unknown) {
+      if (axios.isCancel(error)) {
+        return rejectWithValue('Request cancelled');
+      }
+      if (axios.isAxiosError(error)) {
+        const errMsg = tryParseAxiosErrorMessage(error);
+        toastService.showError("Couldn't get availability", errMsg);
+        return rejectWithValue(errMsg);
+      }
+      const err = error instanceof Error ? error.message : 'Unknown error';
+      toastService.showError("Couldn't get availability", err);
+      return rejectWithValue(err);
+    }
+  }
+);
 
 const getAvailabilityRules = createAsyncThunk(
   'getAvailabilityRules',
@@ -173,6 +209,7 @@ const deleteAvailabilityRule = createAsyncThunk(
 
 interface AvailabilityState {
   availabilityRules: AvailabilityRuleDTO[];
+  dayAvailabilities: DayAvailabilityDTO[];
   pending: boolean;
   error: string | null;
 }
@@ -181,13 +218,14 @@ export const availabilitySlice = createSlice({
   name: "availability",
   initialState: {
     availabilityRules: [],
+    dayAvailabilities: [],
     pending: false,
     error: null
   } as AvailabilityState,
   reducers: {},
   extraReducers: (builder) => {
     builder
-      // get all rules
+      // GET ALL RULES
       .addCase(getAvailabilityRules.pending, (state) => {
         state.pending = true;
         state.error = null;
@@ -203,7 +241,7 @@ export const availabilitySlice = createSlice({
         state.pending = false;
         state.error = action.payload as string;
       })
-      // get single rule
+      // GET SINGLE RULE
       .addCase(getAvailabilityRule.pending, (state) => {
         state.pending = true;
         state.error = null;
@@ -222,7 +260,7 @@ export const availabilitySlice = createSlice({
         state.pending = false;
         state.error = action.payload as string;
       })
-      // create rule
+      // CREATE RULE
       .addCase(createAvailabilityRule.pending, (state) => {
         state.pending = true;
         state.error = null;
@@ -236,7 +274,7 @@ export const availabilitySlice = createSlice({
         state.pending = false;
         state.error = action.payload as string;
       })
-      // update rule
+      // UPDATE RULE
       .addCase(updateAvailabilityRule.pending, (state) => {
         state.pending = true;
         state.error = null;
@@ -253,7 +291,7 @@ export const availabilitySlice = createSlice({
         state.pending = false;
         state.error = action.payload as string;
       })
-      // delete rule
+      // DELETE RULE
       .addCase(deleteAvailabilityRule.pending, (state) => {
         state.pending = true;
         state.error = null;
@@ -266,12 +304,27 @@ export const availabilitySlice = createSlice({
       .addCase(deleteAvailabilityRule.rejected, (state, action) => {
         state.pending = false;
         state.error = action.payload as string;
+      })
+      // GET DAY AVAILABILITYS
+      .addCase(getDayAvailabilitys.pending, (state) => {
+        state.pending = true;
+        state.error = null;
+      })
+      .addCase(getDayAvailabilitys.fulfilled, (state, action) => {
+        state.pending = false;
+        if (!action.payload) return;
+        state.dayAvailabilities = action.payload;
+      })
+      .addCase(getDayAvailabilitys.rejected, (state, action) => {
+        state.pending = false;
+        state.error = action.payload as string;
       });
   }
 });
 
 // internal selector
 const selectAvailabilityRules = (state: { availability: AvailabilityState }) => state.availability.availabilityRules;
+const selectDayAvailabilitys = (state: { availability: AvailabilityState }) => state.availability.dayAvailabilities;
 
 // function which returns availability rule selectors
 export const makeAvailabilityRuleSelectors = () => {
@@ -293,13 +346,55 @@ export const makeAvailabilityRuleSelectors = () => {
   return { selectProcessedRulesAsDate };
 };
 
+// function which returns availability rule selectors
+export const makeDayAvailabilitySelectors = () => {
+
+  // when we send the request to the backend for day availabilities
+  // we specify the timezone of the req + res dates.
+  // this should mean that the day availabilities returned are in our timezone. 
+  const selectProcessedDayAvailabilitys = createSelector(
+    [
+      selectDayAvailabilitys,
+    ],
+    (dayAvailabilitys: DayAvailabilityDTO[]): ProcessedDayAvailabilityDTO[] => {
+      return [...dayAvailabilitys]
+        .map(dav => ({
+          ...dav,
+          date: new Date(dav.date)
+        }))
+    },
+  );
+
+  // day availabilities between dates
+  const selectProcessedDayAvailabilitysBetweenDates = createSelector(
+    [
+      selectProcessedDayAvailabilitys,
+      (_: unknown, start: TZDate, end: TZDate) => ({ start, end }),
+    ],
+    (dayAvailabilitys, { start, end }): ProcessedDayAvailabilityDTO[] => {
+      const tz = start.timeZone;
+      const rangeStart = new TZDate(start.getFullYear(), start.getMonth(), start.getDate(), 0, 0, 0, 0, tz);
+      const rangeEnd = new TZDate(end.getFullYear(), end.getMonth(), end.getDate(), 23, 59, 59, 999, tz);
+      return dayAvailabilitys
+        .filter(dav => dav.date >= rangeStart && dav.date <= rangeEnd)
+        .sort((a, b) => a.date.getUTCDate() - b.date.getUTCDate())
+    },
+  );
+
+  return {
+    selectProcessedDayAvailabilitys,
+    selectProcessedDayAvailabilitysBetweenDates
+  };
+};
+
 // thunks
 export {
   getAvailabilityRules,
   getAvailabilityRule,
   createAvailabilityRule,
   updateAvailabilityRule,
-  deleteAvailabilityRule
+  deleteAvailabilityRule,
+  getDayAvailabilitys
 };
 
 export default availabilitySlice.reducer;

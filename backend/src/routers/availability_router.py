@@ -64,9 +64,9 @@ async def delete(_: RequestContextDep, uuid: str):
   return delete_availability_rule(uuid)
 
 
-@availability_router.get("/getAvailability", status_code=HTTPStatus.OK)
-async def get_availability(_: RequestContextDep, req: GetAvailabilityRequest):
+@availability_router.post("/getAvailability", status_code=HTTPStatus.OK)
+async def get_availability(ctx: RequestContextDep, req: GetAvailabilityRequest):
   """
   Get availability for a user, within a set of dates.
   """
-  return get_availability_for_user(user_uuid=req.user_uuid)
+  return get_availability_for_user(ctx, req)

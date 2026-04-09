@@ -101,7 +101,8 @@ class GetAvailabilityRequest(BaseModel):
   """
   Request schema for getting availability given a date range
   """
-  user_uuid: UUID = Field(default=None)
+  # user_uuid: UUID = Field(default=None)
+  iana_timezone: str
   start_datetime: OptionalDatetime = Field(default=None)
   end_datetime: OptionalDatetime = Field(default=None)
 

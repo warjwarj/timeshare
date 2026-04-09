@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { ourUseDispatch, ourUseSelector } from '../../store/hooks';
-import { selectCurrentDatetimeAsTzDate, selectSelectedDateAsTzDate, selectSelectedMonthAsTzDate, setSelectedMonth } from '../../store/slices/appSlice';
+import { selectCurrentDatetimeAsTzDate, selectSelectedDateAsTzDate, selectSelectedIanaTimezone, selectSelectedMonthAsTzDate, setSelectedMonth, setSelectedTimezone } from '../../store/slices/appSlice';
 import { addEvent, deleteEvent, getEvents, makeEventSelectors, updateEvent } from '../../store/slices/eventsSlice';
 import type { MonthGridConfig } from "../../utils/monthGridUtils";
 import { setEventPositions } from "../../utils/monthGridUtils";
@@ -14,6 +14,8 @@ import { EventBar } from './EventBar';
 import '../../../index.css';
 import { TimeSpanEnum } from "../../types/dateTypes";
 import { TZDate } from "@date-fns/tz";
+import { getDayAvailabilitys, makeDayAvailabilitySelectors } from "../../store/slices/availabilitySlice";
+import { getTime } from "date-fns";
 
 type MonthGridStyle = {
   eventStyle: EventBarStyle;
@@ -32,26 +34,39 @@ const MonthGrid: React.FC<MonthGridProps> = ({ gridStyle, gridConfig, colHeaders
   const { colCount, eventStyle, cellStyle } = gridStyle;
   const dispatch = ourUseDispatch();
 
-  // selectors
-  const { selectEventsBetweenDates } = useMemo(() => makeEventSelectors(), []);
-  const events = ourUseSelector(state => selectEventsBetweenDates(state, startDate, endDate));
+  // common selectors
   const currentDate = ourUseSelector(selectCurrentDatetimeAsTzDate);
   const selectedDate = ourUseSelector(selectSelectedDateAsTzDate);
   const selectedMonth = ourUseSelector(selectSelectedMonthAsTzDate);
+  const selectedTz = ourUseSelector(selectSelectedIanaTimezone);
+
+  // event selectors
+  const { selectEventsBetweenDates } = useMemo(() => makeEventSelectors(), []);
+  const events = ourUseSelector(state => selectEventsBetweenDates(state, startDate, endDate));
+
+  // availability selectors
+  const { selectProcessedDayAvailabilitysBetweenDates } = useMemo(() => makeDayAvailabilitySelectors(), []);
+  const dayAvailabilitites = ourUseSelector(state => selectProcessedDayAvailabilitysBetweenDates(state, startDate, endDate));
 
   // event bar props state
   const [eventProps, setEventProps] = useState<EventBarProps[][]>();
 
-  // fetch events when date range changes
+  // fetch events and availability when date range changes
   useEffect(() => {
     const tz = startDate.timeZone;
     const startDateISO = new TZDate(startDate.getFullYear(), startDate.getMonth() - 1, startDate.getDate(), tz).toISOString();
     const endDateISO = new TZDate(endDate.getFullYear(), endDate.getMonth() + 1, endDate.getDate(), tz).toISOString();
-    const timeoutId = setTimeout(() => {
+    const timeoutId1 = setTimeout(() => {
       dispatch(getEvents({ start: startDateISO, end: endDateISO }));
     }, 300);
-    return () => clearTimeout(timeoutId);
-  }, [dispatch, startDate, endDate]);
+    const timeoutId2 = setTimeout(() => {
+      dispatch(getDayAvailabilitys({ iana_timezone: selectedTz, start_datetime: startDateISO, end_datetime: endDateISO }));
+    }, 300);
+    return () => {
+      clearTimeout(timeoutId1);
+      clearTimeout(timeoutId2);
+    }
+  }, [dispatch, startDate, endDate, selectedTz]);
 
   // refs and state for grid measurement
   const cellLaneEvents = useRef(new Map<number, Map<number, string>>());
@@ -107,6 +122,10 @@ const MonthGrid: React.FC<MonthGridProps> = ({ gridStyle, gridConfig, colHeaders
     return result;
   };
 
+  const toDateNum = (d: Date) => {
+    return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
+  }
+
   const numRows = Math.ceil(cellCount / colCount);
 
   return (
@@ -141,7 +160,7 @@ const MonthGrid: React.FC<MonthGridProps> = ({ gridStyle, gridConfig, colHeaders
         {colHeaders.map((header, i) => (
           <div
             key={i}
-            className="text-center text-xl py-2 border border-light-border dark:border-dark-border text-light-primary-text dark:text-dark-primary-text"
+            className="text-center text-xl py-2 border border-light-border dark:border-less-dark-border text-light-primary-text dark:text-dark-primary-text"
           >
             {header}
           </div>
@@ -157,12 +176,13 @@ const MonthGrid: React.FC<MonthGridProps> = ({ gridStyle, gridConfig, colHeaders
         return (
           <div key={rowIndex} className="relative">
             <div
-              className="grid gap-0 border-light-border dark:border-dark-border"
+              className="grid gap-0"
               style={{ gridTemplateColumns: `repeat(${colCount}, minmax(0, 1fr))` }}
             >
               {Array.from({ length: cellsInRow }, (_, i) => {
                 const cellIndex = rowStart + i;
                 const cellDate = getDateFromCellIndex(TimeSpanEnum.Day, startDate, cellIndex) ?? new Date();
+                const availabilityForDate = dayAvailabilitites.find(dav => toDateNum(dav.date) == toDateNum(cellDate))
                 return (
                   <Cell
                     key={cellIndex}
@@ -177,6 +197,7 @@ const MonthGrid: React.FC<MonthGridProps> = ({ gridStyle, gridConfig, colHeaders
                     isOutsideMonth={cellDate.getMonth() !== selectedMonth.getMonth()}
                     isSelected={isSameDay(cellDate, selectedDate)}
                     isHighlighted={isSameDay(cellDate, currentDate)}
+                    availability={availabilityForDate}
                   />
                 );
               })}

@@ -22,7 +22,7 @@ type DayGridProps = {
 };
 
 const DayGrid: React.FC<DayGridProps> = ({ gridStyle, gridConfig }) => {
-  const { selectedDate, totalSlots, timeLabels, gridLabel } = gridConfig;
+  const { selectedDate, timeLabels, gridLabel } = gridConfig;
   const { eventStyle } = gridStyle;
   const dispatch = ourUseDispatch();
 
@@ -96,28 +96,26 @@ const DayGrid: React.FC<DayGridProps> = ({ gridStyle, gridConfig }) => {
       </div>
 
       {/* Events grid */}
-      <div className="flex-1 relative" >
+      <div ref={gridRef} className="flex-1 relative" >
 
         {/* time slot lines and labls */}
         <div className="absolute inset-0 flex flex-col">
           {timeLabels.map((label, index) => (
-            <div
-              key={`slot-${index}`}
-              className="flex-1 flex items-center"
-            >
+            <>
+              <hr className="w-full self-start border-light-border dark:border-dark-border" />
               <div
-                key={`label-${index}`}
-                className="flex-1 text-sm text-light-secondary-text dark:text-dark-secondary-text text-right pr-2 flex items-end justify-end"
+                key={`slot-${index}`}
+                className="flex-1 self-start flex text-sm text-light-secondary-text dark:text-dark-secondary-text text-right pr-2"
               >
                 {label}
               </div>
-              <hr className="w-full border-light-border dark:border-dark-border" />
-            </div>
+            </>
           ))}
+          <hr className="w-full self-start border-light-border dark:border-dark-border" />
         </div>
 
         {/* Events layer */}
-        <div ref={gridRef} className="absolute inset-0 ml-15 mr-2 mb-2">
+        <div className="absolute inset-0 ml-15">
           {eventProps.map((evp) => (
             <EventBar
               key={evp.key}

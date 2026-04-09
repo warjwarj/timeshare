@@ -89,7 +89,7 @@ const CalendarView: React.FC = () => {
   const dateForDayGrid = isValidDate(selectedDate) ? selectedDate : currentDate;
   const dayGridConfigRef = useRef<DayGridConfig | null>(null)
   const dayGridConfig = useMemo<DayGridConfig | null>(
-    () => isValidDate(dateForDayGrid) ? getDayGridConfig(dateForDayGrid, 0, 24, TimeSpanEnum.Mins30, dayGridConfigRef.current) : null,
+    () => isValidDate(dateForDayGrid) ? getDayGridConfig(dateForDayGrid, 0, 23, TimeSpanEnum.Hour, dayGridConfigRef.current) : null,
     [dateForDayGrid]
   );
   dayGridConfigRef.current = dayGridConfig;

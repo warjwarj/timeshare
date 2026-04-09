@@ -1,9 +1,10 @@
-from datetime import datetime, time, timedelta
+from datetime import datetime, time, timedelta, timezone
 import logging
 from dataclasses import asdict
 from uuid import UUID
 from zoneinfo import ZoneInfo
 
+from src.dependancies.auth import RequestContextDep
 from src.schemas.dtos.day_availability import DayAvailability
 from src.repositories.users_repository import UserRepository
 from src.repositories.availability_repository import AvailabilityRepository
@@ -117,7 +118,7 @@ def delete_availability_rule(rule_uuid: str) -> SafeAvailabilityRuleDTO | None:
   return sanitise_availability_rule(rec) if rec else None
 
 
-def get_availability_for_user(req: GetAvailabilityRequest) -> GetAvailabilityResponse | None:
+def get_availability_for_user(ctx: RequestContextDep, req: GetAvailabilityRequest) -> GetAvailabilityResponse | None:
   """
   Get availability for the given user within the date range
 
@@ -127,8 +128,8 @@ def get_availability_for_user(req: GetAvailabilityRequest) -> GetAvailabilityRes
   Returns:
       GetAvailabilityResponse
   """
-  user = user_repo.get_record(uuid=req.user_uuid)
-  rules = get_availability_rules_for_user(user_id=user.id)
+  user = user_repo.get_record(uuid=ctx.user.uuid)
+  rules = get_availability_rules_for_user(id=user.id)
   return calculate_day_availability(req, rules)
 
 
@@ -142,72 +143,72 @@ def calculate_day_availability(req: GetAvailabilityRequest, rules: AvailabilityR
       GetAvailabilityResponse: Availability for days within date range
   """
 
-  # I think this is necessary
+  # make sure all rules use the same timezone
   for prev, curr in zip(rules, rules[1:]):
     if prev and prev.iana_timezone != curr.iana_timezone:
       raise RuntimeError("Can't use rules with different timezones")
 
-  # I think the strat is to get explicitly 'allowed' rules first then apply the blocking ones.
-  allowing_rules = [r for r in rules if not r.prevents_booking]
-  # blocking_rules = [r for r in rules if r.prevents_booking]
+  # request dates in request timezone
+  request_start = req.start_datetime.replace(tzinfo=timezone.utc).astimezone(ZoneInfo(req.iana_timezone))
+  request_end = req.end_datetime.replace(tzinfo=timezone.utc).astimezone(ZoneInfo(req.iana_timezone))
 
-  # allowing and blocking weekdays
-  allowing_weekdays = set().union(*(r.weekdays or [] for r in allowing_rules))
-  # blocking_weekdays = set().union(*(r.weekdays for r in blocking_rules))
+  # rule dates not None and timezone aware
+  for rule in rules:
+    rule.start_datetime = rule.start_datetime and rule.start_datetime.replace(tzinfo=timezone.utc).astimezone(ZoneInfo(rule.iana_timezone)) or datetime.min.replace(tzinfo=timezone.utc)
+    rule.end_datetime = rule.end_datetime and rule.end_datetime.replace(tzinfo=timezone.utc).astimezone(ZoneInfo(rule.iana_timezone)) or datetime.max.replace(tzinfo=timezone.utc)
+
+  # only handle allowing rules for the min
+  allowing_rules = [r for r in rules if not r.prevents_booking]
+
+  # # flatten rules by date range, ensuring no overlaps.
+  # flattened_rules: list[AvailabilityRuleDTO] = []
+  # for rule in sorted(allowing_rules, key=lambda rule: rule.start_datetime):
+  #   for fr in flattened_rules:
+  #     if fr.start_datetime <= rule.start_datetime and fr.end_datetime >= rule.end_datetime:
+  #       # rule is eclipsed or equal
+  #       break
+  #     elif fr.start_datetime > rule.start_datetime and fr.start_datetime < rule.end_datetime and fr.end_datetime > rule.end_datetime:
+  #       # rule start before, rule end within range
+  #       rule.start_datetime = rule.start_datetime
+  #       break
+  #     elif fr.start_datetime < rule.start_datetime and fr.end_datetime > rule.start_datetime and fr.end_datetime < rule.end_datetime:
+  #       # start within, end after
+  #       rule.end_datetime = rule.end_datetime
+  #       break
+  #   else:
+  #     flattened_rules.append(rule)
 
   # this is the list we'll return
   day_availabilitys = []
 
-  # filter out the weekdays we can't do
-  # allowed_weekdays = [wd for wd in allowing_weekdays if wd not in blocking_weekdays]
-
-  # flatten date ranges for no overlaps
-  ranges: list[list[datetime, datetime, time, time]] = []
-  for rule in sorted(allowing_rules, key=lambda rule: rule.start_datetime):
-    if not rule.start_datetime or not rule.end_datetime:
-      continue
-    for range in ranges:
-      if range[0] <= rule.start_datetime and range[1] >= rule.end_datetime:
-        # rule is eclipsed or equal
-        break
-      elif range[0] > rule.start_datetime and range[0] < rule.end_datetime and range[1] > rule.end_datetime:
-        # rule start before, rule end within range
-        range[0] = rule.start_datetime
-        break
-      elif range[0] < rule.start_datetime and range[1] > rule.start_datetime and range[1] < rule.end_datetime:
-        # start within, end after
-        range[1] = rule.end_datetime
-        break
-    else:
-      ranges.append([rule.start_datetime, rule.end_datetime, rule.start_time, rule.end_time])
-
-  for range in ranges:
-    # induvidual dates for each day in the range
-    range_dates = [
-        req.start_datetime.replace(tzinfo=ZoneInfo(rules[0].iana_timezone))
-        + timedelta(days=x)
-        for x in range(
-            (req.end_datetime - req.start_datetime).days + 1
+  for rule in allowing_rules:
+    bounded_rule_start = rule.start_datetime if rule.start_datetime > request_start else request_start
+    bounded_rule_end = rule.end_datetime if rule.end_datetime < request_end else request_end
+    rule_range_dates = [bounded_rule_start + timedelta(days=i) for i in range((bounded_rule_end - bounded_rule_start).days + 1)]
+    for rule_dt in rule_range_dates:
+      avail = next((da for da in day_availabilitys if da.date.date() == rule_dt.date()), None)
+      if not avail:
+        avail = DayAvailability(
+            date=rule_dt,
+            blocking=False,  # for now
+            brief="Full Day",
+            start_time=rule.start_time,
+            end_time=rule.end_time
         )
-    ]
-    # iter over the range dates
-    for rd in range_dates:
-      avail = DayAvailability(
-          date=rd,
-          brief="Full Day",
-          start_time=range[2],
-          end_time=range[3]
-      )
-      if (rd > req.end_datetime):
-        # outside of requested range
+      if (rule_dt > request_end):
         break
-      if (rd.weekday() not in allowing_weekdays):
-        # no booking on this weekday
+      if (rule.weekdays and rule_dt.weekday() not in rule.weekdays):
         avail.brief = "None"
       else:
-        # if the range datetime ends outside of the range time
-        if (req.start_datetime.time() < range[3]):
-          avail.brief = "Part Day"
+        avail.brief = "Full Day"
+        # rule dt starts after rule start time
+        if rule.start_datetime.date() == rule_dt.date():
+          if rule.start_time and rule.start_time < rule.start_datetime.time():
+            avail.brief = "Part Day"
+        # rule dt ends before rule end time
+        if rule.end_datetime.date() == rule_dt.date():
+          if rule.end_time and rule.end_time > rule.end_datetime.time():
+            avail.brief = "Part Day"
       day_availabilitys.append(avail)
 
   return day_availabilitys

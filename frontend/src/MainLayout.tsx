@@ -36,7 +36,7 @@ const MainLayout: React.FC = () => {
   };
 
   return (
-    <div id="MainLayout" className="flex w-full h-[calc(100dvh-5rem)] border-box overflow-x-hidden">
+    <div id="MainLayout" className="flex w-full h-[calc(100vh-5rem)] border-box overflow-x-hidden">
       {/* Backdrop overlay for phone view */}
       {isPhone && !isCollapsed && (
         <div
@@ -46,8 +46,8 @@ const MainLayout: React.FC = () => {
       )}
 
       {/* Sidebar */}
-      <div className={`${isPhone ? "fixed top-0 left-0 h-screen z-50" : "h-full"}`}>
-        <Sidebar links={sidebarLinks} isCollapsed={isCollapsed} setIsCollapsed={handleBackdropClick}/>
+      <div className={`${isPhone ? "fixed top-0 left-0 h-full z-50" : "h-full"}`}>
+        <Sidebar links={sidebarLinks} isCollapsed={isCollapsed} setIsCollapsed={handleBackdropClick} />
       </div>
 
       {/* Content to right of sidebar */}
