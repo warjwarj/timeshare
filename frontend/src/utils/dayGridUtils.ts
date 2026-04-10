@@ -50,7 +50,7 @@ export function getDayGridConfig(
 
   // Generate time labels
   const timeLabels: string[] = [];
-  for (let mins = 0; mins <= totalMinutes; mins += stepMinutes) {
+  for (let mins = 0; mins < totalMinutes; mins += stepMinutes) {
     const totalMins = timeStart * 60 + mins;
     const hour = Math.floor(totalMins / 60) % 24;
     const minute = totalMins % 60;
