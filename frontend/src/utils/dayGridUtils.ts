@@ -54,10 +54,10 @@ export function getDayGridConfig(
     const totalMins = timeStart * 60 + mins;
     const hour = Math.floor(totalMins / 60) % 24;
     const minute = totalMins % 60;
-    const h = hour % 12 || 12;
-    const ampm = hour < 12 ? 'am' : 'pm';
+    // const h = hour % 12 || 12;
+    // const ampm = hour < 12 ? 'am' : 'pm';
     const m = minute.toString().padStart(2, '0');
-    timeLabels.push(`${h}:${m}${ampm}`);
+    timeLabels.push(`${hour}:${m}`);
   }
 
   // Generate grid label

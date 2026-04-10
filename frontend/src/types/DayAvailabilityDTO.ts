@@ -1,3 +1,5 @@
+import type { TZDate } from "@date-fns/tz";
+
 export type DayAvailabilityDTO = {
   brief: "Full Day" | "Part Day" | "None";
   iana_timezone: string;
@@ -8,5 +10,5 @@ export type DayAvailabilityDTO = {
 }
 
 export type ProcessedDayAvailabilityDTO = Omit<DayAvailabilityDTO, 'date'> & {
-  date: Date;
+  date: TZDate;
 }

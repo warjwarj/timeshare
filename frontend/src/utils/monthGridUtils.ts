@@ -37,7 +37,6 @@ function getCellIndexFromDate(gridStart: TZDate, evTzDate: TZDate): number {
  */
 export function setEventPositions(
   evDtos: ProcessedEventDTO[],
-  monthGridIanaTz: string,
   cellLaneEvents: Map<number, Map<number, string>>,
   gridRowWidth: number,
   start: TZDate,
@@ -63,8 +62,8 @@ export function setEventPositions(
   // Iterate through sorted events
   sortedEvents.forEach((ev) => {
 
-    let cellStartIndex = getCellIndexFromDate(start, ev.start, monthGridIanaTz);
-    let cellEndIndex = getCellIndexFromDate(start, ev.end, monthGridIanaTz);
+    let cellStartIndex = getCellIndexFromDate(start, ev.start);
+    let cellEndIndex = getCellIndexFromDate(start, ev.end);
 
     // Safety checks for grid boundaries (1-based: valid range is 1 to cellCount)
     if (cellStartIndex < 1) cellStartIndex = 1;

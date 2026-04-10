@@ -4,13 +4,14 @@ import { setSelectedDate } from '../../store/slices/appSlice';
 import { deleteEvent, makeEventSelectors, updateEvent } from '../../store/slices/eventsSlice';
 import type { DayGridConfig } from "../../utils/dayGridUtils";
 import { setDayEventPositions } from "../../utils/dayGridUtils";
-import { isValidDate } from "../../utils/utils";
+import { isValidDate, parseTimeToMinutes, toDateNum } from "../../utils/utils";
 import { ChevronLeft, ChevronRight } from '../svgs/Chevrons';
 import type { EventBarProps, EventBarStyle } from "./EventBar";
 import { EventBar } from './EventBar';
 import { TZDate } from "@date-fns/tz";
 
 import '../../../index.css';
+import { makeDayAvailabilitySelectors } from "../../store/slices/availabilitySlice";
 
 type DayGridStyle = {
   eventStyle: EventBarStyle;
@@ -26,9 +27,14 @@ const DayGrid: React.FC<DayGridProps> = ({ gridStyle, gridConfig }) => {
   const { eventStyle } = gridStyle;
   const dispatch = ourUseDispatch();
 
-  // selectors
+  // event selectors
   const { selectEventsSpanningDate } = useMemo(() => makeEventSelectors(), []);
   const events = ourUseSelector(state => selectEventsSpanningDate(state, selectedDate));
+
+  // availability selectors
+  const { selectProcessedDayAvailabilitysBetweenDates } = useMemo(() => makeDayAvailabilitySelectors(), []);
+  const dayAvailabilitites = ourUseSelector(state => selectProcessedDayAvailabilitysBetweenDates(state, selectedDate, selectedDate));
+  const availabilityForDate = dayAvailabilitites.find(dav => toDateNum(dav.date) == toDateNum(selectedDate))
 
   // refs and state for grid measurement
   const gridRef = useRef<HTMLDivElement>(null);
@@ -64,6 +70,27 @@ const DayGrid: React.FC<DayGridProps> = ({ gridStyle, gridConfig }) => {
     const newDate = new TZDate(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate() + delta, tz);
     dispatch(setSelectedDate({ dateIsoStr: newDate.toISOString() }));
   };
+
+  const getSlotColourFromTimeLabel = (label: string): string => {
+    console.log(label)
+    if (!availabilityForDate?.start_time || !availabilityForDate.end_time) {
+      return "bg-red-200 dark:bg-red-900 text-red-900 dark:text-red-100";
+    }
+    // debugger;
+    const slotMins = parseTimeToMinutes(label);
+    const dayStartTimeMins = parseTimeToMinutes(availabilityForDate?.start_time);
+    const dayEndTimeMins = parseTimeToMinutes(availabilityForDate?.end_time);
+    if (slotMins === -1 || dayStartTimeMins === -1 || dayEndTimeMins === -1) {
+      return "";
+    } else if (slotMins > (dayStartTimeMins - 60) && slotMins < dayStartTimeMins || slotMins > (dayEndTimeMins - 60) && slotMins < dayEndTimeMins) {
+      return "bg-yellow-200 dark:bg-yellow-900 text-yellow-900 dark:text-yellow-100";
+    } else if (slotMins < dayStartTimeMins || slotMins >= dayEndTimeMins) {
+      return "bg-red-200 dark:bg-red-900 text-red-900 dark:text-red-100";
+    } else if (slotMins >= dayStartTimeMins && slotMins <= dayEndTimeMins) {
+      return "bg-green-200 dark:bg-green-800 text-green-900 dark:text-green-100";
+    }
+    return "";
+  }
 
   return (
     <div
@@ -105,7 +132,7 @@ const DayGrid: React.FC<DayGridProps> = ({ gridStyle, gridConfig }) => {
               <hr className="w-full self-start border-light-border dark:border-dark-border" />
               <div
                 key={`slot-${index}`}
-                className="flex-1 self-start flex text-sm text-light-secondary-text dark:text-dark-secondary-text text-right pr-2"
+                className={`flex-1 w-full self-start flex text-sm ${getSlotColourFromTimeLabel(label)} pr-2`}
               >
                 {label}
               </div>

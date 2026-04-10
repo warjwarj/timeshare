@@ -4,7 +4,7 @@ import { selectCurrentDatetimeAsTzDate, selectSelectedDateAsTzDate, selectSelect
 import { addEvent, deleteEvent, getEvents, makeEventSelectors, updateEvent } from '../../store/slices/eventsSlice';
 import type { MonthGridConfig } from "../../utils/monthGridUtils";
 import { setEventPositions } from "../../utils/monthGridUtils";
-import { getDateFromCellIndex, isSameDay, isValidDate } from "../../utils/utils";
+import { getDateFromCellIndex, isSameDay, isValidDate, toDateNum } from "../../utils/utils";
 import { ChevronLeft, ChevronRight } from '../svgs/Chevrons';
 import type { CellStyle } from "./Cell";
 import { Cell } from "./Cell";
@@ -90,7 +90,7 @@ const MonthGrid: React.FC<MonthGridProps> = ({ gridStyle, gridConfig, colHeaders
       return;
     }
     setEventProps(setEventPositions(
-      events, selectedTz, cellLaneEvents.current, gridRowWidth, startDate,
+      events, cellLaneEvents.current, gridRowWidth, startDate,
       cellCount, colCount, eventStyle
     ));
   }, [events, selectedTz, startDate, endDate, gridRowWidth, cellCount, colCount, eventStyle]);
@@ -120,10 +120,6 @@ const MonthGrid: React.FC<MonthGridProps> = ({ gridStyle, gridConfig, colHeaders
     });
     return result;
   };
-
-  const toDateNum = (d: Date) => {
-    return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
-  }
 
   const numRows = Math.ceil(cellCount / colCount);
 

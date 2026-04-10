@@ -199,6 +199,7 @@ def calculate_day_availability(req: GetAvailabilityRequest, rules: AvailabilityR
         break
       if (rule.weekdays and rule_dt.weekday() not in rule.weekdays):
         avail.brief = "None"
+        avail.start_time, avail.end_time = None, None
       else:
         avail.brief = "Full Day"
         # rule dt starts after rule start time

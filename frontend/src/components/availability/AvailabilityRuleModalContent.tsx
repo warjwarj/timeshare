@@ -48,8 +48,8 @@ const AvailabilityRuleModalContent: React.FC<AvailabilityRuleModalContentProps> 
   const internalSave = () => {
     const outgoingState: ProcessedAvailabilityRuleDTO = {
       ...formData,
-      start_datetime: naiveIsoStrToTzDate(formData.start_datetime, editing ? formData.iana_timezone : tz),
-      end_datetime: naiveIsoStrToTzDate(formData.end_datetime, editing ? formData.iana_timezone : tz),
+      start_datetime: formData.start_datetime ? naiveIsoStrToTzDate(formData.start_datetime, formData.iana_timezone) : undefined,
+      end_datetime: formData.end_datetime ? naiveIsoStrToTzDate(formData.end_datetime, formData.iana_timezone) : undefined,
       ...{ iana_timezone: editing ? formData.iana_timezone : tz },
       ...{ uuid: editing && rule.uuid ? rule.uuid : "" }
     }

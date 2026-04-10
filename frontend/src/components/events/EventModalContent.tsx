@@ -52,9 +52,8 @@ const EventModalContent: React.FC<EventModalContentProps> = ({ event, editing, o
     // can't edit the timezone atm
     const outgoingState: ProcessedEventDTO = {
       ...formData,
-      start: naiveIsoStrToTzDate(formData.start, editing ? formData.iana_timezone : tz),
-      end: naiveIsoStrToTzDate(formData.end, editing ? formData.iana_timezone : tz),
-      ...{ iana_timezone: editing ? formData.iana_timezone : tz },
+      start: naiveIsoStrToTzDate(formData.start, formData.iana_timezone),
+      end: naiveIsoStrToTzDate(formData.end, formData.iana_timezone),
       ...{ uuid: editing && event ? event.uuid : "" },
     }
     onSave(outgoingState)

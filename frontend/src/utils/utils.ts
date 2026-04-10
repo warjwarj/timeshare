@@ -66,6 +66,36 @@ export function isNullOrWhitespace(input: string) {
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
+
+/**
+ * Get minuites since midnight given a time label like 11:43am, or 23:43
+ * 
+ * @param time time label
+ * @returns minuites since midnight
+ */
+export function parseTimeToMinutes(time: string): number {
+  const match = time.match(/^(\d{1,2}):(\d{2})(?::\d{2})?\s*(am|pm)?$/i);
+  if (!match) return -1;
+
+  let hours = parseInt(match[1]);
+  const minutes = parseInt(match[2]);
+  const period = match[3]?.toLowerCase();
+
+  if (period === "am" && hours === 12) hours = 0;
+  if (period === "pm" && hours !== 12) hours += 12;
+  // no period → treat as 24h, hours stays as-is
+
+  return hours * 60 + minutes;
+}
+
+/**
+ * Get a number like 20240303 to match dates.
+ * 
+ */
+export function toDateNum(d: TZDate): number {
+  return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
+}
+
 /**
  * This is designed to take a naive (definitely already UTC) iso string like the ones we store in the database, and convert it into a TZDate.
  * 
