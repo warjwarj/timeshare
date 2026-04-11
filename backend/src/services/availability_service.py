@@ -160,24 +160,6 @@ def calculate_day_availability(req: GetAvailabilityRequest, rules: AvailabilityR
   # only handle allowing rules for the min
   allowing_rules = [r for r in rules if not r.prevents_booking]
 
-  # # flatten rules by date range, ensuring no overlaps.
-  # flattened_rules: list[AvailabilityRuleDTO] = []
-  # for rule in sorted(allowing_rules, key=lambda rule: rule.start_datetime):
-  #   for fr in flattened_rules:
-  #     if fr.start_datetime <= rule.start_datetime and fr.end_datetime >= rule.end_datetime:
-  #       # rule is eclipsed or equal
-  #       break
-  #     elif fr.start_datetime > rule.start_datetime and fr.start_datetime < rule.end_datetime and fr.end_datetime > rule.end_datetime:
-  #       # rule start before, rule end within range
-  #       rule.start_datetime = rule.start_datetime
-  #       break
-  #     elif fr.start_datetime < rule.start_datetime and fr.end_datetime > rule.start_datetime and fr.end_datetime < rule.end_datetime:
-  #       # start within, end after
-  #       rule.end_datetime = rule.end_datetime
-  #       break
-  #   else:
-  #     flattened_rules.append(rule)
-
   # this is the list we'll return
   day_availabilitys = []
 
@@ -206,10 +188,32 @@ def calculate_day_availability(req: GetAvailabilityRequest, rules: AvailabilityR
         if rule.start_datetime.date() == rule_dt.date():
           if rule.start_time and rule.start_time < rule.start_datetime.time():
             avail.brief = "Part Day"
+            avail.start_time = rule.start_datetime.time()
         # rule dt ends before rule end time
         if rule.end_datetime.date() == rule_dt.date():
           if rule.end_time and rule.end_time > rule.end_datetime.time():
             avail.brief = "Part Day"
+            avail.end_time = rule.end_datetime.time()
       day_availabilitys.append(avail)
 
   return day_availabilitys
+
+
+# NOT USED
+# # flatten rules by date range, ensuring no overlaps.
+# flattened_rules: list[AvailabilityRuleDTO] = []
+# for rule in sorted(allowing_rules, key=lambda rule: rule.start_datetime):
+#   for fr in flattened_rules:
+#     if fr.start_datetime <= rule.start_datetime and fr.end_datetime >= rule.end_datetime:
+#       # rule is eclipsed or equal
+#       break
+#     elif fr.start_datetime > rule.start_datetime and fr.start_datetime < rule.end_datetime and fr.end_datetime > rule.end_datetime:
+#       # rule start before, rule end within range
+#       rule.start_datetime = rule.start_datetime
+#       break
+#     elif fr.start_datetime < rule.start_datetime and fr.end_datetime > rule.start_datetime and fr.end_datetime < rule.end_datetime:
+#       # start within, end after
+#       rule.end_datetime = rule.end_datetime
+#       break
+#   else:
+#     flattened_rules.append(rule)

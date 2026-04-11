@@ -22,12 +22,12 @@ import { GenericFilterSortGrid } from '../components/GenericFilterSortGrid.tsx';
 
 // this is the shape of the data in the grid (zod object)
 const EventSchema = z.object({
-  uuid: z.string(),
   name: z.string(),
   start: z.date(),
   end: z.date(),
   iana_timezone: z.string(),
-  colour: z.string()
+  colour: z.string(),
+  uuid: z.string(),
 })
 // this is ts type representation of the above
 type EventSchemaType = z.infer<typeof EventSchema>

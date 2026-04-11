@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { ourUseDispatch, ourUseSelector } from '../../store/hooks';
-import { setSelectedDate } from '../../store/slices/appSlice';
+import { selectSelectedIanaTimezone, setSelectedDate } from '../../store/slices/appSlice';
 import { deleteEvent, makeEventSelectors, updateEvent } from '../../store/slices/eventsSlice';
 import type { DayGridConfig } from "../../utils/dayGridUtils";
 import { setDayEventPositions } from "../../utils/dayGridUtils";
@@ -27,6 +27,9 @@ const DayGrid: React.FC<DayGridProps> = ({ gridStyle, gridConfig }) => {
   const { eventStyle } = gridStyle;
   const dispatch = ourUseDispatch();
 
+  // select timezone so we can refresh grid on change
+  const selectedTz = ourUseSelector(selectSelectedIanaTimezone);
+
   // event selectors
   const { selectEventsSpanningDate } = useMemo(() => makeEventSelectors(), []);
   const events = ourUseSelector(state => selectEventsSpanningDate(state, selectedDate));
@@ -39,16 +42,15 @@ const DayGrid: React.FC<DayGridProps> = ({ gridStyle, gridConfig }) => {
   // refs and state for grid measurement
   const gridRef = useRef<HTMLDivElement>(null);
   const [containerHeight, setContainerHeight] = useState(0);
+  const [containerWidth, setContainerWidth] = useState(0);
   const [eventProps, setEventProps] = useState<EventBarProps[]>([]);
 
   // measure container height on mount and resize
   useEffect(() => {
     const container = gridRef.current;
     if (!container) return;
-    const height = container.scrollHeight;
-    const updateHeight = () => setContainerHeight(height);
-    updateHeight();
-    const resizeObserver = new ResizeObserver(updateHeight);
+    const updateDimensions = () => { setContainerWidth(container.getBoundingClientRect().width); setContainerHeight(container.scrollHeight); }
+    const resizeObserver = new ResizeObserver(updateDimensions);
     resizeObserver.observe(container);
     return () => resizeObserver.disconnect();
   }, []);
@@ -59,9 +61,8 @@ const DayGrid: React.FC<DayGridProps> = ({ gridStyle, gridConfig }) => {
       setEventProps([]);
       return;
     }
-    const gridWidth = gridRef.current.getBoundingClientRect().width;
-    setEventProps(setDayEventPositions(events, gridConfig, containerHeight, gridWidth, eventStyle));
-  }, [events, gridConfig, containerHeight, eventStyle, selectedDate]);
+    setEventProps(setDayEventPositions(events, gridConfig, containerHeight, containerWidth, eventStyle));
+  }, [events, gridConfig, containerHeight, containerWidth, eventStyle, selectedDate, selectedTz]);
 
   // day navigation handler
   const navigateDay = (delta: number) => {
@@ -72,11 +73,9 @@ const DayGrid: React.FC<DayGridProps> = ({ gridStyle, gridConfig }) => {
   };
 
   const getSlotColourFromTimeLabel = (label: string): string => {
-    console.log(label)
     if (!availabilityForDate?.start_time || !availabilityForDate.end_time) {
       return "bg-red-200 dark:bg-red-900 text-red-900 dark:text-red-100";
     }
-    // debugger;
     const slotMins = parseTimeToMinutes(label);
     const dayStartTimeMins = parseTimeToMinutes(availabilityForDate?.start_time);
     const dayEndTimeMins = parseTimeToMinutes(availabilityForDate?.end_time);
@@ -95,11 +94,14 @@ const DayGrid: React.FC<DayGridProps> = ({ gridStyle, gridConfig }) => {
   return (
     <div
       id="day-grid-container"
-      className="w-full h-full flex flex-col p-4 box-border"
+      className="w-full h-full flex flex-col p-4 box-border gap-4"
     >
-      {/* Day navigation */}
-      <div className="flex items-center justify-center w-full h-10 mt-3">
-        <div className="flex-1 flex justify-end">
+      {/* Month navigation */}
+      <div className="flex flex-col w-full mt-3">
+        <div className="px-4 py-1 text-center text-2xl font-bold text-light-primary-text dark:text-dark-primary-text rounded transition-colors">
+          {gridLabel}
+        </div>
+        <div className="flex justify-center">
           <button
             onClick={() => navigateDay(-1)}
             className="p-2 rounded-full hover:bg-light-accent dark:hover:bg-dark-accent transition-colors"
@@ -107,11 +109,6 @@ const DayGrid: React.FC<DayGridProps> = ({ gridStyle, gridConfig }) => {
           >
             <ChevronLeft classes="w-6 h-6 text-light-primary-text dark:text-dark-primary-text" />
           </button>
-        </div>
-        <div className="px-4 py-1 text-center text-2xl font-bold text-light-primary-text dark:text-dark-primary-text rounded transition-colors">
-          {gridLabel}
-        </div>
-        <div className="flex-1 flex justify-start">
           <button
             onClick={() => navigateDay(1)}
             className="p-2 rounded-full hover:bg-light-accent dark:hover:bg-dark-accent transition-colors"

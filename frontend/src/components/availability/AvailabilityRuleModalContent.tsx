@@ -136,7 +136,7 @@ const AvailabilityRuleModalContent: React.FC<AvailabilityRuleModalContentProps> 
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label htmlFor="start-date" className={labelClass}>
-            Rule start datetime (optional)
+            Rule start date (optional)
           </label>
           <input
             type="datetime-local"
@@ -149,7 +149,7 @@ const AvailabilityRuleModalContent: React.FC<AvailabilityRuleModalContentProps> 
         </div>
         <div>
           <label htmlFor="end-date" className={labelClass}>
-            Rule end datetime (optional)
+            Rule end date (optional)
           </label>
           <input
             type="datetime-local"

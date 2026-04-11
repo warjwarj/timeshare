@@ -9,7 +9,6 @@
 html {
   margin: 0;
   padding: 0;
-  font-size: 62.5%;
   font-family: var(--font-sans);
   max-width: 100%;
   max-height: 100%;
@@ -35,14 +34,14 @@ body {
 --color-light-primary-text:  #303030;
 
 --color-dark-secondary-text: #B5B5B5; /* softer slate contrast */
---color-light-secondary-text:#4A4A4A;
+--color-light-secondary-text: #4A4A4A;
 
 /* BORDERS */
 --color-dark-border:  #505050; /* slate-aligned border */
 --color-less-dark-border: #b8b6b6;
 --color-light-border: #8a8a8a;
 
-/* ACCENTS (cool slate greys) */
+/* ACCENTS */
 --color-v-dark-accent:  #2a2a2a; /* near-background slate */
 --color-dark-accent:    #3a3a3a; /* solid slate gray */
 --color-light-accent:   #b5b5b5;

@@ -19,15 +19,15 @@ import type { ProcessedAvailabilityRuleDTO } from '../types/AvailabilityRuleDTO'
 
 // this is the shape of the data in the grid (zod object)
 const AvailabilityRuleSchema = z.object({
-  uuid: z.string(),
   name: z.string(),
-  iana_timezone: z.string(),
-  prevents_booking: z.boolean().optional(),
-  weekdays: z.array(z.number()).optional(),
   start_datetime: z.date().optional(),
   end_datetime: z.date().optional(),
   start_time: z.string().nullable(),
   end_time: z.string().nullable(),
+  prevents_booking: z.boolean().optional(),
+  weekdays: z.array(z.number()).optional(),
+  iana_timezone: z.string(),
+  uuid: z.string(),
 })
 // this is ts type representation of the above
 type AvailabilityRuleSchemaType = z.infer<typeof AvailabilityRuleSchema>

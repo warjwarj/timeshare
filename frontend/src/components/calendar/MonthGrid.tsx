@@ -126,8 +126,11 @@ const MonthGrid: React.FC<MonthGridProps> = ({ gridStyle, gridConfig, colHeaders
   return (
     <div id="calendar-grid-container" className="w-full h-full flex flex-col gap-4 p-4 box-border">
       {/* Month navigation */}
-      <div className="flex items-center justify-center w-full h-10 mt-3">
-        <div className="flex-1 flex justify-end">
+      <div className="flex flex-col w-full mt-3">
+        <div className="px-4 py-1 text-center text-2xl font-bold text-light-primary-text dark:text-dark-primary-text rounded transition-colors">
+          {gridLabel}
+        </div>
+        <div className="flex justify-center">
           <button
             onClick={() => navigateMonth(-1)}
             className="p-2 rounded-full hover:bg-light-accent dark:hover:bg-dark-accent transition-colors"
@@ -135,11 +138,6 @@ const MonthGrid: React.FC<MonthGridProps> = ({ gridStyle, gridConfig, colHeaders
           >
             <ChevronLeft classes="w-6 h-6 text-light-primary-text dark:text-dark-primary-text" />
           </button>
-        </div>
-        <div className="px-4 py-1 text-center text-2xl font-bold text-light-primary-text dark:text-dark-primary-text rounded transition-colors">
-          {gridLabel}
-        </div>
-        <div className="flex-1 flex justify-start">
           <button
             onClick={() => navigateMonth(1)}
             className="p-2 rounded-full hover:bg-light-accent dark:hover:bg-dark-accent transition-colors"

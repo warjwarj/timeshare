@@ -355,7 +355,7 @@ export const makeDayAvailabilitySelectors = () => {
       return [...dayAvailabilitys]
         .map(dav => ({
           ...dav,
-          date: new Date(dav.date)
+          date: new TZDate(dav.date, dav.iana_timezone)
         }))
     },
   );

@@ -118,7 +118,7 @@ const EventModalContent: React.FC<EventModalContentProps> = ({ event, editing, o
       <div className="grid grid-cols-2 gap-4 pb-6">
         <div>
           <label htmlFor="start-date" className={labelClass}>
-            Event start
+            Event start date
           </label>
           <input
             type="datetime-local"
@@ -131,7 +131,7 @@ const EventModalContent: React.FC<EventModalContentProps> = ({ event, editing, o
         </div>
         <div>
           <label htmlFor="end-date" className={labelClass}>
-            Event end
+            Event end date
           </label>
           <input
             type="datetime-local"
