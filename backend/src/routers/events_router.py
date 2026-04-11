@@ -39,17 +39,17 @@ async def create(ctx: RequestContextDep, event: CreateEventRequest):
   return create_event(ctx.user.id, event)
 
 
-@events_router.put("/{uuid}", status_code=HTTPStatus.OK)
-async def update(uuid: str, _: RequestContextDep, event: UpdateEventRequest):
+@events_router.put("/{event_uuid}", status_code=HTTPStatus.OK)
+async def update(ctx: RequestContextDep, event_uuid: str, event: UpdateEventRequest):
   """
   Update an event.
   """
-  return update_event(uuid, event)
+  return update_event(ctx, event_uuid, event)
 
 
-@events_router.delete("/{uuid}", status_code=HTTPStatus.OK)
-async def delete(uuid: str, _: RequestContextDep):
+@events_router.delete("/{event_uuid}", status_code=HTTPStatus.OK)
+async def delete(ctx: RequestContextDep, event_uuid: str):
   """
   Delete an event.
   """
-  return delete_event(uuid)
+  return delete_event(ctx, event_uuid)

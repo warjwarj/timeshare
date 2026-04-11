@@ -48,20 +48,20 @@ async def create(ctx: RequestContextDep, req: CreateAvailabilityRuleRequest):
   return create_availability_rule(ctx.user.id, req)
 
 
-@availability_router.put("/{uuid}", status_code=HTTPStatus.OK)
-async def update(_: RequestContextDep, uuid: str, req: UpdateAvailabilityRuleRequest):
+@availability_router.put("/{rule_uuid}", status_code=HTTPStatus.OK)
+async def update(ctx: RequestContextDep, rule_uuid: str, req: UpdateAvailabilityRuleRequest):
   """
   Update an availability rule.
   """
-  return update_availability_rule(uuid, req)
+  return update_availability_rule(ctx, rule_uuid, req)
 
 
 @availability_router.delete("/{uuid}", status_code=HTTPStatus.OK)
-async def delete(_: RequestContextDep, uuid: str):
+async def delete(ctx: RequestContextDep, uuid: str):
   """
   Delete an availability rule.
   """
-  return delete_availability_rule(uuid)
+  return delete_availability_rule(ctx, uuid)
 
 
 @availability_router.post("/getAvailability", status_code=HTTPStatus.OK)

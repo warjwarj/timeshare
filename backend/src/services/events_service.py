@@ -2,6 +2,8 @@ import logging
 from dataclasses import asdict
 from datetime import datetime
 
+from src.dependancies.auth import RequestContextDep
+from src.repositories.user_event_repository import UserEventRepository
 from src.repositories.events_repository import EventsRepository
 from src.schemas.dtos.event_dto import EventDTO
 from src.schemas.requests.event_requests import CreateEventRequest, UpdateEventRequest
@@ -15,6 +17,7 @@ from src.schemas.responses.events_responses import SafeEventDTO
 logger = logging.getLogger(__name__)
 
 events_repo = EventsRepository()
+user_event_repo = UserEventRepository()
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Helpers
@@ -49,21 +52,6 @@ def create_event(user_id: int, event: CreateEventRequest) -> SafeEventDTO | None
   return sanitiseEvent(rec) if rec else None
 
 
-def update_event(event_uuid: str, event: UpdateEventRequest) -> SafeEventDTO | None:
-  """
-  Update an event
-
-  Args:
-    event_uuid (str): uuid of the event to be updated
-    event (CreateEventRequest): args describing the update params
-
-  Returns:
-    SafeEventDTO | None: the event, if created else None
-  """
-  rec = events_repo.update_record(lookup={"uuid": event_uuid}, **vars(event))
-  return sanitiseEvent(rec) if rec else None
-
-
 def get_all_events(user_id: str, start: datetime, end: datetime) -> list[SafeEventDTO]:
   """
   Get all events visible to user
@@ -80,9 +68,34 @@ def get_all_events(user_id: str, start: datetime, end: datetime) -> list[SafeEve
   return sanitiseEvents(evs) if evs else []
 
 
-def delete_event(event_uuid: str) -> SafeEventDTO | None:
+def update_event(ctx: RequestContextDep, event_uuid: str, event: UpdateEventRequest) -> SafeEventDTO | None:
+  """
+  Update an event
+
+  Args:
+    event_uuid (str): uuid of the event to be updated
+    event (CreateEventRequest): args describing the update params
+
+  Returns:
+    SafeEventDTO | None: the event, if created else None
+  """
+  user_event_associations = user_event_repo.get_multiple_records(user_id=ctx.user.id)
+  event_rec = events_repo.get_record(uuid=event_uuid)
+  # check if any associations, if None then return
+  if not any(assoc.event_id == event_rec.id for assoc in user_event_associations):
+    return None
+  rec = events_repo.update_record(lookup={"id": event_rec.id}, **vars(event))
+  return sanitiseEvent(rec) if rec else None
+
+
+def delete_event(ctx: RequestContextDep, event_uuid: str) -> SafeEventDTO | None:
   """
   Delete an event
   """
-  rec = events_repo.delete_record(uuid=event_uuid)
+  user_event_associations = user_event_repo.get_multiple_records(user_id=ctx.user.id)
+  event_rec = events_repo.get_record(uuid=event_uuid)
+  # check if any associations, if None then return
+  if not any(assoc.event_id == event_rec.id for assoc in user_event_associations):
+    return None
+  rec = events_repo.delete_record(id=event_rec.id)
   return sanitiseEvent(rec) if rec else None

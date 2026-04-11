@@ -89,7 +89,7 @@ def get_availability_rule(rule_uuid: str) -> SafeAvailabilityRuleDTO | None:
   return sanitise_availability_rule(rule) if rule else None
 
 
-def update_availability_rule(rule_uuid: str, rule: UpdateAvailabilityRuleRequest) -> SafeAvailabilityRuleDTO | None:
+def update_availability_rule(ctx: RequestContextDep, rule_uuid: str, rule: UpdateAvailabilityRuleRequest) -> SafeAvailabilityRuleDTO | None:
   """
   Update availability rule by uuid
 
@@ -100,11 +100,11 @@ def update_availability_rule(rule_uuid: str, rule: UpdateAvailabilityRuleRequest
   Returns:
       SafeAvailabilityRuleDTO: the udpated rule, or None if failed
   """
-  rec = availability_repo.update_record(lookup={"uuid": rule_uuid}, **vars(rule))
+  rec = availability_repo.update_record(lookup={"uuid": rule_uuid, "user_id": ctx.user.id}, **vars(rule))
   return sanitise_availability_rule(rec) if rec else None
 
 
-def delete_availability_rule(rule_uuid: str) -> SafeAvailabilityRuleDTO | None:
+def delete_availability_rule(ctx: RequestContextDep, rule_uuid: str) -> SafeAvailabilityRuleDTO | None:
   """
   Delete an avaiability rule
 
@@ -114,7 +114,7 @@ def delete_availability_rule(rule_uuid: str) -> SafeAvailabilityRuleDTO | None:
   Returns:
       SafeAvailabilityRuleDTO | None: the deleted rule, or None if failed.
   """
-  rec = availability_repo.delete_record(uuid=rule_uuid)
+  rec = availability_repo.delete_record(uuid=rule_uuid, user_id=ctx.user.id)
   return sanitise_availability_rule(rec) if rec else None
 
 
