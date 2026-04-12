@@ -16,6 +16,7 @@ import { selectCurrentDatetimeAsTzDate, selectSelectedDateAsTzDate, selectSelect
 import { ViewHeader } from '../components/ViewHeader.tsx';
 import { ViewBody } from '../components/ViewBody.tsx';
 import { TZDate } from "@date-fns/tz";
+import GenericDropdown from '../components/utils/GenericDropdown.tsx';
 
 const weekdayNames = Object.values(WeekDayEnum)
 
@@ -106,43 +107,51 @@ const CalendarView: React.FC = () => {
     dispatch(setSelectedMonth({ monthIsoStr: date.toISOString() }));
   }, [dispatch, currentDate]);
 
+  const getCalendarDisplayOptions = () => {
+    return (
+      <div className="flex ml-auto border-light-border dark:border-dark-border">
+        <button
+          onClick={() => setYearViewOn(!yearViewOn)}
+          className={`px-3 py-1 rounded text-sm transition-colors
+            ${yearViewOn
+              ? 'bg-dark-background text-dark-primary-text dark:bg-light-background dark:text-light-primary-text'
+              : 'bg-light-background text-light-primary-text dark:bg-dark-background dark:text-dark-primary-text hover:bg-light-accent dark:hover:bg-dark-accent'
+            }`}
+        >
+          Year
+        </button>
+        <button
+          onClick={() => setMonthViewOn(!monthViewOn)}
+          className={`px-3 py-1 rounded text-sm transition-colors
+            ${monthViewOn
+              ? 'bg-dark-background text-dark-primary-text dark:bg-light-background dark:text-light-primary-text'
+              : 'bg-light-background text-light-primary-text dark:bg-dark-background dark:text-dark-primary-text hover:bg-light-accent dark:hover:bg-dark-accent'
+            }`}
+        >
+          Month
+        </button>
+        <button
+          onClick={() => setDayViewOn(!dayViewOn)}
+          className={`px-3 py-1 rounded text-sm transition-colors
+              ${dayViewOn
+              ? 'bg-dark-background text-dark-primary-text dark:bg-light-background dark:text-light-primary-text'
+              : 'bg-light-background text-light-primary-text dark:bg-dark-background dark:text-dark-primary-text hover:bg-light-accent dark:hover:bg-dark-accent'
+            }`}
+        >
+          Day
+        </button>
+      </div>
+    )
+  }
+
   return (
     <ViewBody id={"CalendarView"}>
       <ViewHeader>
         {/* events view controls. */}
         <div className="flex ml-auto border-light-border dark:border-dark-border">
-          <button
-            onClick={() => setYearViewOn(!yearViewOn)}
-            className={`px-3 py-1 rounded text-sm transition-colors
-            ${yearViewOn
-                ? 'bg-dark-background text-dark-primary-text dark:bg-light-background dark:text-light-primary-text'
-                : 'bg-light-background text-light-primary-text dark:bg-dark-background dark:text-dark-primary-text hover:bg-light-accent dark:hover:bg-dark-accent'
-              }`}
-          >
-            Year
-          </button>
-          <button
-            onClick={() => setMonthViewOn(!monthViewOn)}
-            className={`px-3 py-1 rounded text-sm transition-colors
-            ${monthViewOn
-                ? 'bg-dark-background text-dark-primary-text dark:bg-light-background dark:text-light-primary-text'
-                : 'bg-light-background text-light-primary-text dark:bg-dark-background dark:text-dark-primary-text hover:bg-light-accent dark:hover:bg-dark-accent'
-              }`}
-          >
-            Month
-          </button>
-          <button
-            onClick={() => setDayViewOn(!dayViewOn)}
-            className={`px-3 py-1 rounded text-sm transition-colors
-              ${dayViewOn
-                ? 'bg-dark-background text-dark-primary-text dark:bg-light-background dark:text-light-primary-text'
-                : 'bg-light-background text-light-primary-text dark:bg-dark-background dark:text-dark-primary-text hover:bg-light-accent dark:hover:bg-dark-accent'
-              }`}
-          >
-            Day
-          </button>
           {/* Date Selector */}
-          <DateSelector onlyMonthSelector={false} startDate={currentDate} />
+          {/* <DateSelector onlyMonthSelector={false} startDate={currentDate} /> */}
+          <GenericDropdown iconChildren={"View Options"} bodyChildren={getCalendarDisplayOptions()} />
         </div>
       </ViewHeader>
 
