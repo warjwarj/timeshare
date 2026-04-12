@@ -206,7 +206,7 @@ const AvailabilityRuleModalContent: React.FC<AvailabilityRuleModalContentProps> 
           Delete
         </button>}
         <SaveButton onClick={() => internalSave()}>
-          {editing ? 'Update' : 'Create'}
+          {editing ? 'Save' : 'Create'}
         </SaveButton>
       </div>
 
