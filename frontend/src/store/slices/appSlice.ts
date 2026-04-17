@@ -17,7 +17,7 @@ const getCurrentDate = createAsyncThunk(
         },
         signal,
         validateStatus: status => status < 500
-      })      
+      })
       if (res.status !== HttpStatusCode.Ok) {
         const errMsg = tryParseAxiosMessage(res);
         toastService.showError("Couldn't get current datetime", errMsg);
@@ -41,17 +41,17 @@ const getCurrentDate = createAsyncThunk(
 );
 
 interface AppState {
-  ianaTimezone: string
-  currentDatetime: string
-  selectedDate: string
-  selectedMonth: string
+  ianaTimezone: string;
+  currentDatetime: string;
+  isPhone: boolean;
+  selectedDate: string;
+  selectedMonth: string;
 }
 
 export const appSlice = createSlice({
   name: "app",
   initialState: {
     ianaTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone
-    // ianaTimezone: "America/Los_Angeles"
   } as AppState,
   reducers: {
     setSelectedMonth: (state, action: PayloadAction<{ monthIsoStr: string }>) => {
@@ -62,6 +62,9 @@ export const appSlice = createSlice({
     },
     setSelectedTimezone: (state, action: PayloadAction<{ newTz: string }>) => {
       state.ianaTimezone = action.payload.newTz
+    },
+    setIsPhone: (state, action: PayloadAction<{ isPhone: boolean }>) => {
+      state.isPhone = action.payload.isPhone
     }
   },
   extraReducers: (builder) => {
@@ -75,13 +78,12 @@ export const appSlice = createSlice({
   }
 })
 
-// selectors
 export const selectCurrentDatetime = (state: { app: AppState }) => state.app.currentDatetime
 export const selectSelectedDate = (state: { app: AppState }) => state.app.selectedDate
 export const selectSelectedMonth = (state: { app: AppState }) => state.app.selectedMonth
 export const selectSelectedIanaTimezone = (state: { app: AppState }) => state.app.ianaTimezone
+export const selectSelectedIsPhone = (state: { app: AppState }) => state.app.isPhone
 
-// selectors
 export const selectCurrentDatetimeAsTzDate = createSelector(
   [selectCurrentDatetime, selectSelectedIanaTimezone],
   (currentDatetime, ianaTimezone) => new TZDate(currentDatetime, ianaTimezone)
@@ -98,7 +100,7 @@ export const selectSelectedMonthAsTzDate = createSelector(
 )
 
 // reducers
-export const { setSelectedDate, setSelectedMonth, setSelectedTimezone } = appSlice.actions;
+export const { setSelectedDate, setSelectedMonth, setSelectedTimezone, setIsPhone } = appSlice.actions;
 
 // thunks
 export { getCurrentDate };

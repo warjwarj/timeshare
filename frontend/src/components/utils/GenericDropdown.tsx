@@ -2,19 +2,20 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 
 type GenericDropDownProps = {
-  initialHeightPx?: number
-  initialWidthPx?: number
-  iconChildren: ReactNode
-  bodyChildren: ReactNode
+  initialHeightPx?: number;
+  initialWidthPx?: number;
+  iconChildren: ReactNode;
+  bodyChildren: ReactNode;
+  isOpen: boolean;
+  setIsOpen: (isOpen: boolean) => void;
 }
 
-export default function GenericDropdown({ initialHeightPx = 320, initialWidthPx = 240, iconChildren, bodyChildren }: GenericDropDownProps) {
+export default function GenericDropdown({ initialHeightPx = 320, initialWidthPx = 240, iconChildren, bodyChildren, isOpen, setIsOpen }: GenericDropDownProps) {
 
   const DROPDOWN_HEIGHT = initialWidthPx;
   const DROPDOWN_WIDTH = initialHeightPx;
 
   // helper states and refs
-  const [isOpen, setIsOpen] = useState(false);
   const [dropdownPosition, setDropdownPosition] = useState<React.CSSProperties>({});
   const dropdownRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -73,7 +74,7 @@ export default function GenericDropdown({ initialHeightPx = 320, initialWidthPx 
         {isOpen && createPortal(
           <div
             ref={dropdownRef}
-            className="fixed z-50 w-60 border rounded-lg px-2 bg-light-background dark:bg-dark-background shadow-lg"
+            className="fixed z-50 border rounded-lg px-2 bg-light-background dark:bg-dark-background shadow-lg"
             style={dropdownPosition}
           >
             {bodyChildren}

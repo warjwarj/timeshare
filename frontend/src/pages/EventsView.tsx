@@ -18,7 +18,7 @@ import type { ProcessedEventDTO } from '../types/EventDTO';
 
 import { TZDate } from '@date-fns/tz';
 import { z } from 'zod';
-import { GenericFilterSortGrid } from '../components/GenericFilterSortGrid.tsx';
+import { GenericFilterSortGrid } from '../components/utils/GenericFilterSortGrid.tsx';
 
 // this is the shape of the data in the grid (zod object)
 const EventSchema = z.object({

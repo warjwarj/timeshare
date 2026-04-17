@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { z, type output } from 'zod';
-import { toastService } from "../toastService";
+import { toastService } from "../../toastService";
 import { ListFilterPlus } from "lucide-react";
 
 interface GenericFilterSortGridProps<T extends z.ZodObject> {

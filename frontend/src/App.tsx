@@ -11,6 +11,7 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 import { MainLayout } from './MainLayout';
 import { AvailabilityView } from './pages/AvailabilityView';
 import { EventsView } from './pages/EventsView';
+import { SearchView } from './pages/SearchView';
 
 const links = [
   { name: 'Timeshare', path: '/calendar' },
@@ -21,7 +22,7 @@ function App() {
     <>
       <Navbar links={links} />
       <Routes>
-        <Route path="/" element={<Navigate to="/calendar"/>} />
+        <Route path="/" element={<Navigate to="/calendar" />} />
         <Route path="/login" element={<LoginForm />} />
         <Route path="/register" element={<RegisterForm />} />
 
@@ -30,6 +31,7 @@ function App() {
             <MainLayout />
           </ProtectedRoute>
         }>
+          <Route path="/search" element={<SearchView />} />
           <Route path="/calendar" element={<CalendarView />} />
           <Route path="/events" element={<EventsView />} />
           <Route path="/availability" element={<AvailabilityView />} />

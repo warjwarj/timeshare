@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { Outlet } from "react-router-dom";
-import { ourUseDispatch } from "./store/hooks";
-import { getCurrentDate } from "./store/slices/appSlice";
-import { Sidebar } from "./components/Sidebar";
 import type { SidebarLink } from "./components/Sidebar";
+import { Sidebar } from "./components/Sidebar";
+import { ourUseDispatch } from "./store/hooks";
+import { getCurrentDate, setIsPhone } from "./store/slices/appSlice";
 
 type MainLayoutContext = {
   isCollapsed: boolean;
@@ -12,6 +12,7 @@ type MainLayoutContext = {
 };
 
 const sidebarLinks: SidebarLink[] = [
+  { label: "Search", path: "/search" },
   { label: "Calendar", path: "/calendar" },
   { label: "Events", path: "/events" },
   { label: "Availability", path: "/availability" },
@@ -28,6 +29,10 @@ const MainLayout: React.FC = () => {
   // Track sidebar visibility. Default to closed if on phone view
   const isPhone = !window.matchMedia("(min-width: 768px)").matches;
   const [isCollapsed, setIsCollapsed] = useState(isPhone);
+
+  useEffect(() => {
+    dispatch(setIsPhone({ isPhone: isPhone }))
+  }, [dispatch, isPhone])
 
   const handleBackdropClick = () => {
     if (isPhone && !isCollapsed) {

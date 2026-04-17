@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import z from 'zod';
 import { AvailabilityRuleModalContent } from '../components/availability/AvailabilityRuleModalContent.tsx';
-import { GenericFilterSortGrid } from '../components/GenericFilterSortGrid.tsx';
+import { GenericFilterSortGrid } from '../components/utils/GenericFilterSortGrid.tsx';
 import { Modal } from '../components/Modal.tsx';
 import { ViewBody } from '../components/ViewBody.tsx';
 import { ViewHeader } from '../components/ViewHeader.tsx';

@@ -1,22 +1,21 @@
-import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { MonthGrid } from '../components/calendar/MonthGrid.tsx';
-import type { GridStyle } from '../components/calendar/MonthGrid.tsx';
-import { DayGrid } from '../components/calendar/DayGrid.tsx';
-import type { DayGridStyle } from '../components/calendar/DayGrid.tsx';
-import { YearGrid } from '../components/calendar/YearGrid.tsx';
-import type { EventBarStyle } from '../components/calendar/EventBar.tsx';
-import { DateSelector } from "../components/DateSelector.tsx";
-import { TimeSpanEnum, WeekDayEnum } from "../types/dateTypes.ts";
-import { isValidDate } from '../utils/utils.ts';
-import { getMonthGridConfig, type MonthGridConfig } from '../utils/monthGridUtils.ts';
-import { getDayGridConfig, type DayGridConfig } from '../utils/dayGridUtils.ts';
-import { ourUseDispatch, ourUseSelector } from '../store/hooks.ts';
-import { selectCurrentDatetimeAsTzDate, selectSelectedDateAsTzDate, selectSelectedMonthAsTzDate, setSelectedMonth } from '../store/slices/appSlice.ts';
-import { ViewHeader } from '../components/ViewHeader.tsx';
-import { ViewBody } from '../components/ViewBody.tsx';
 import { TZDate } from "@date-fns/tz";
+import type { DayGridStyle } from '../components/calendar/DayGrid.tsx';
+import { DayGrid } from '../components/calendar/DayGrid.tsx';
+import type { EventBarStyle } from '../components/calendar/EventBar.tsx';
+import type { GridStyle } from '../components/calendar/MonthGrid.tsx';
+import { MonthGrid } from '../components/calendar/MonthGrid.tsx';
+import { YearGrid } from '../components/calendar/YearGrid.tsx';
 import GenericDropdown from '../components/utils/GenericDropdown.tsx';
+import { ViewBody } from '../components/ViewBody.tsx';
+import { ViewHeader } from '../components/ViewHeader.tsx';
+import { ourUseDispatch, ourUseSelector } from '../store/hooks.ts';
+import { selectCurrentDatetimeAsTzDate, selectSelectedDateAsTzDate, selectSelectedIsPhone, selectSelectedMonthAsTzDate, setSelectedMonth } from '../store/slices/appSlice.ts';
+import { TimeSpanEnum, WeekDayEnum } from "../types/dateTypes.ts";
+import { getDayGridConfig, type DayGridConfig } from '../utils/dayGridUtils.ts';
+import { getMonthGridConfig, type MonthGridConfig } from '../utils/monthGridUtils.ts';
+import { isValidDate } from '../utils/utils.ts';
 
 const weekdayNames = Object.values(WeekDayEnum)
 
@@ -63,11 +62,15 @@ const CalendarView: React.FC = () => {
   const currentDate = ourUseSelector(selectCurrentDatetimeAsTzDate);
   const selectedDate = ourUseSelector(selectSelectedDateAsTzDate);
   const selectedMonth = ourUseSelector(selectSelectedMonthAsTzDate);
+  const isPhone = ourUseSelector(selectSelectedIsPhone);
 
   // state
-  const [dayViewOn, setDayViewOn] = useState<boolean>(false);
-  const [monthViewOn, setMonthViewOn] = useState<boolean>(true);
-  const [yearViewOn, setYearViewOn] = useState<boolean>(false);
+  const [calendarViewState, setCalendarViewState] = useState({
+    dayViewOn: false,
+    monthViewOn: true,
+    yearViewOn: false
+  })
+  const [calendarViewStateDropdownOpen, setCalendarViewStateDropdownOpen] = useState(false)
 
   // set default selected month
   useEffect(() => {
@@ -108,38 +111,70 @@ const CalendarView: React.FC = () => {
   }, [dispatch, currentDate]);
 
   const getCalendarDisplayOptions = () => {
+    const buttonClass = "px-3 py-1 rounded text-sm transition-colors w-5 h-5 border border-light-border dark:border-dark-border mr-2"
+    const buttonClassTicked = "bg-dark-background text-dark-primary-text dark:bg-light-background dark:text-light-primary-text"
+    const buttonClassNotTicked = "bg-light-background text-light-primary-text dark:bg-dark-background dark:text-dark-primary-text hover:bg-light-accent dark:hover:bg-dark-accent"
+
+    const onYearClick = () => {
+      if (isPhone) {
+        setCalendarViewState({ yearViewOn: !calendarViewState.yearViewOn, monthViewOn: false, dayViewOn: false, })
+        setCalendarViewStateDropdownOpen(false)
+      } else {
+        setCalendarViewState({ ...calendarViewState, yearViewOn: !calendarViewState.yearViewOn })
+      }
+    }
+    const onMonthClick = () => {
+      if (isPhone) {
+        setCalendarViewState({ yearViewOn: false, monthViewOn: !calendarViewState.monthViewOn, dayViewOn: false, })
+        setCalendarViewStateDropdownOpen(false)
+      } else {
+        setCalendarViewState({ ...calendarViewState, monthViewOn: !calendarViewState.monthViewOn })
+      }
+    }
+    const onDayClick = () => {
+      if (isPhone) {
+        setCalendarViewState({ yearViewOn: false, monthViewOn: false, dayViewOn: !calendarViewState.dayViewOn })
+        setCalendarViewStateDropdownOpen(false)
+      } else {
+        setCalendarViewState({ ...calendarViewState, dayViewOn: !calendarViewState.dayViewOn })
+      }
+    }
+
     return (
-      <div className="flex ml-auto border-light-border dark:border-dark-border">
-        <button
-          onClick={() => setYearViewOn(!yearViewOn)}
-          className={`px-3 py-1 rounded text-sm transition-colors
-            ${yearViewOn
-              ? 'bg-dark-background text-dark-primary-text dark:bg-light-background dark:text-light-primary-text'
-              : 'bg-light-background text-light-primary-text dark:bg-dark-background dark:text-dark-primary-text hover:bg-light-accent dark:hover:bg-dark-accent'
-            }`}
-        >
-          Year
-        </button>
-        <button
-          onClick={() => setMonthViewOn(!monthViewOn)}
-          className={`px-3 py-1 rounded text-sm transition-colors
-            ${monthViewOn
-              ? 'bg-dark-background text-dark-primary-text dark:bg-light-background dark:text-light-primary-text'
-              : 'bg-light-background text-light-primary-text dark:bg-dark-background dark:text-dark-primary-text hover:bg-light-accent dark:hover:bg-dark-accent'
-            }`}
-        >
-          Month
-        </button>
-        <button
-          onClick={() => setDayViewOn(!dayViewOn)}
-          className={`px-3 py-1 rounded text-sm transition-colors
-              ${dayViewOn
-              ? 'bg-dark-background text-dark-primary-text dark:bg-light-background dark:text-light-primary-text'
-              : 'bg-light-background text-light-primary-text dark:bg-dark-background dark:text-dark-primary-text hover:bg-light-accent dark:hover:bg-dark-accent'
-            }`}
-        >
-          Day
-        </button>
+      <div className="flex flex-col ml-auto p-2 border-light-border dark:border-dark-border">
+        <div>
+          <button
+            onClick={() => onYearClick()}
+            className={`${buttonClass}
+            ${calendarViewState.yearViewOn
+                ? buttonClassTicked
+                : buttonClassNotTicked
+              }`}
+          />
+          <span>Year</span>
+        </div>
+        <div>
+          <button
+            onClick={() => onMonthClick()}
+            className={`${buttonClass}
+            ${calendarViewState.monthViewOn
+                ? buttonClassTicked
+                : buttonClassNotTicked
+              }`}
+          />
+          <span>Month</span>
+        </div>
+        <div>
+          <button
+            onClick={() => onDayClick()}
+            className={`${buttonClass}
+              ${calendarViewState.dayViewOn
+                ? buttonClassTicked
+                : buttonClassNotTicked
+              }`}
+          />
+          <span>Day</span>
+        </div>
       </div>
     )
   }
@@ -149,22 +184,20 @@ const CalendarView: React.FC = () => {
       <ViewHeader>
         {/* events view controls. */}
         <div className="flex ml-auto border-light-border dark:border-dark-border">
-          {/* Date Selector */}
-          {/* <DateSelector onlyMonthSelector={false} startDate={currentDate} /> */}
-          <GenericDropdown iconChildren={"View Options"} bodyChildren={getCalendarDisplayOptions()} />
+          <GenericDropdown iconChildren={"View Options"} bodyChildren={getCalendarDisplayOptions()} isOpen={calendarViewStateDropdownOpen} setIsOpen={setCalendarViewStateDropdownOpen} />
         </div>
       </ViewHeader>
 
       {/* Events views. */}
       {currentDate && <div className={`flex flex-1 overflow-hidden`}>
-        {yearViewOn && (
+        {calendarViewState.yearViewOn && (
           <div className="w-full max-h-[calc(100dvh-6rem)] overflow-y-auto">
             <YearGrid
               onMonthSelect={handleMonthSelect}
             />
           </div>
         )}
-        {monthViewOn && monthGridConfig && (
+        {calendarViewState.monthViewOn && monthGridConfig && (
           <div className="w-full max-h-[calc(100dvh-6rem)] overflow-y-auto">
             <MonthGrid
               gridStyle={monthGridStyle}
@@ -173,7 +206,7 @@ const CalendarView: React.FC = () => {
             />
           </div>
         )}
-        {dayViewOn && dayGridConfig && (
+        {calendarViewState.dayViewOn && dayGridConfig && (
           <div className="w-full max-h-[calc(100dvh-6rem)] overflow-y-auto">
             <DayGrid
               gridStyle={dayGridStyle}
@@ -186,4 +219,4 @@ const CalendarView: React.FC = () => {
   );
 }
 
-export { CalendarView }
+export { CalendarView };
