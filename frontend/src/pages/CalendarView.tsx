@@ -16,6 +16,7 @@ import { TimeSpanEnum, WeekDayEnum } from "../types/dateTypes.ts";
 import { getDayGridConfig, type DayGridConfig } from '../utils/dayGridUtils.ts';
 import { getMonthGridConfig, type MonthGridConfig } from '../utils/monthGridUtils.ts';
 import { isValidDate } from '../utils/utils.ts';
+import { Calendar, Settings } from 'lucide-react';
 
 const weekdayNames = Object.values(WeekDayEnum)
 
@@ -70,7 +71,7 @@ const CalendarView: React.FC = () => {
     monthViewOn: true,
     yearViewOn: false
   })
-  const [calendarViewStateDropdownOpen, setCalendarViewStateDropdownOpen] = useState(false)
+  const [viewPickerOpen, setViewPickerOpen] = useState(false)
 
   // set default selected month
   useEffect(() => {
@@ -110,7 +111,7 @@ const CalendarView: React.FC = () => {
     dispatch(setSelectedMonth({ monthIsoStr: date.toISOString() }));
   }, [dispatch, currentDate]);
 
-  const getCalendarDisplayOptions = () => {
+  const getCalendarViewOptions = () => {
     const buttonClass = "px-3 py-1 rounded text-sm transition-colors w-5 h-5 border border-light-border dark:border-dark-border mr-2"
     const buttonClassTicked = "bg-dark-background text-dark-primary-text dark:bg-light-background dark:text-light-primary-text"
     const buttonClassNotTicked = "bg-light-background text-light-primary-text dark:bg-dark-background dark:text-dark-primary-text hover:bg-light-accent dark:hover:bg-dark-accent"
@@ -118,7 +119,7 @@ const CalendarView: React.FC = () => {
     const onYearClick = () => {
       if (isPhone) {
         setCalendarViewState({ yearViewOn: !calendarViewState.yearViewOn, monthViewOn: false, dayViewOn: false, })
-        setCalendarViewStateDropdownOpen(false)
+        setViewPickerOpen(false)
       } else {
         setCalendarViewState({ ...calendarViewState, yearViewOn: !calendarViewState.yearViewOn })
       }
@@ -126,7 +127,7 @@ const CalendarView: React.FC = () => {
     const onMonthClick = () => {
       if (isPhone) {
         setCalendarViewState({ yearViewOn: false, monthViewOn: !calendarViewState.monthViewOn, dayViewOn: false, })
-        setCalendarViewStateDropdownOpen(false)
+        setViewPickerOpen(false)
       } else {
         setCalendarViewState({ ...calendarViewState, monthViewOn: !calendarViewState.monthViewOn })
       }
@@ -134,7 +135,7 @@ const CalendarView: React.FC = () => {
     const onDayClick = () => {
       if (isPhone) {
         setCalendarViewState({ yearViewOn: false, monthViewOn: false, dayViewOn: !calendarViewState.dayViewOn })
-        setCalendarViewStateDropdownOpen(false)
+        setViewPickerOpen(false)
       } else {
         setCalendarViewState({ ...calendarViewState, dayViewOn: !calendarViewState.dayViewOn })
       }
@@ -183,8 +184,8 @@ const CalendarView: React.FC = () => {
     <ViewBody id={"CalendarView"}>
       <ViewHeader>
         {/* events view controls. */}
-        <div className="flex ml-auto border-light-border dark:border-dark-border">
-          <GenericDropdown iconChildren={"View Options"} bodyChildren={getCalendarDisplayOptions()} isOpen={calendarViewStateDropdownOpen} setIsOpen={setCalendarViewStateDropdownOpen} />
+        <div className="flex ml-auto mt-4 mb-4 border-light-border dark:border-dark-border">
+          <GenericDropdown iconChildren={<><Calendar /><Settings /></>} bodyChildren={getCalendarViewOptions()} isOpen={viewPickerOpen} setIsOpen={setViewPickerOpen} />
         </div>
       </ViewHeader>
 

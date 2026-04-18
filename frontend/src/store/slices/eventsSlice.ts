@@ -89,7 +89,6 @@ const updateEvent = createAsyncThunk(
         start: tzdateToUtcString(event.start),
         end: tzdateToUtcString(event.end)
       }
-      console.log(normalisedEventDTO)
       const res = await apiClient.put(
         `/events/${event.uuid}`,
         normalisedEventDTO,
@@ -235,10 +234,19 @@ const eventsSlice = createSlice({
 });
 
 
-// selectors
 export const selectEvents = (state: { events: EventsState }) => state.events.events
 
-// function which returns event selectors
+/*
+  An input selector returned a different result when passed same arguments. 
+  This means your output selector will likely run more frequently than intended. 
+  Avoid returning a new reference inside your input selector, e.g.`createSelector([state => state.todos.map(todo => todo.id)], todoIds => todoIds.length)` 
+
+  ^^^ This is caused by our first memoised selector below mapping the events array.
+  However I think this is necessary since we need to make the events timezone aware.
+  Does this mean we shouldn't bother memoising the selector?
+
+*/
+
 export const makeEventSelectors = () => {
 
   // select all events with start and end dates as date objects
