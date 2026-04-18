@@ -119,7 +119,7 @@ const CalendarView: React.FC = () => {
 
     const onYearClick = () => {
       if (isPhone) {
-        setCalendarViewState({ yearViewOn: !calendarViewState.yearViewOn, monthViewOn: false, dayViewOn: false, })
+        setCalendarViewState({ yearViewOn: true, monthViewOn: false, dayViewOn: false, })
         setViewPickerOpen(false)
       } else {
         setCalendarViewState({ ...calendarViewState, yearViewOn: !calendarViewState.yearViewOn })
@@ -127,7 +127,7 @@ const CalendarView: React.FC = () => {
     }
     const onMonthClick = () => {
       if (isPhone) {
-        setCalendarViewState({ yearViewOn: false, monthViewOn: !calendarViewState.monthViewOn, dayViewOn: false, })
+        setCalendarViewState({ yearViewOn: false, monthViewOn: true, dayViewOn: false, })
         setViewPickerOpen(false)
       } else {
         setCalendarViewState({ ...calendarViewState, monthViewOn: !calendarViewState.monthViewOn })
@@ -135,7 +135,7 @@ const CalendarView: React.FC = () => {
     }
     const onDayClick = () => {
       if (isPhone) {
-        setCalendarViewState({ yearViewOn: false, monthViewOn: false, dayViewOn: !calendarViewState.dayViewOn })
+        setCalendarViewState({ yearViewOn: false, monthViewOn: false, dayViewOn: true })
         setViewPickerOpen(false)
       } else {
         setCalendarViewState({ ...calendarViewState, dayViewOn: !calendarViewState.dayViewOn })
