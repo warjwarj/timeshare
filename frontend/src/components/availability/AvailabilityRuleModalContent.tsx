@@ -6,7 +6,7 @@ import { toastService } from '../../toastService';
 import type { ProcessedAvailabilityRuleDTO } from '../../types/AvailabilityRuleDTO';
 import { WeekDayEnum } from '../../types/dateTypes';
 import { naiveIsoStrToTzDate, tzdateToWallClockInDatesTimezone } from '../../utils/utils';
-import { SaveButton } from '../SaveButton';
+import { SaveButton } from '../utils/SaveButton';
 
 // consts
 const WEEKDAY_NAMES = Object.values(WeekDayEnum).map(wd => wd.substring(0, 3));

@@ -5,7 +5,6 @@ import { addEvent, deleteEvent, getEvents, makeEventSelectors, updateEvent } fro
 import type { MonthGridConfig } from "../../utils/monthGridUtils";
 import { setEventPositions } from "../../utils/monthGridUtils";
 import { getDateFromCellIndex, isSameDay, isValidDate, toDateNum } from "../../utils/utils";
-import { ChevronLeft, ChevronRight } from '../svgs/Chevrons';
 import type { CellStyle } from "./Cell";
 import { Cell } from "./Cell";
 import type { EventBarProps, EventBarStyle } from "./EventBar";
@@ -15,6 +14,7 @@ import { TZDate } from "@date-fns/tz";
 import '../../../index.css';
 import { getDayAvailabilitys, makeDayAvailabilitySelectors } from "../../store/slices/availabilitySlice";
 import { TimeSpanEnum } from "../../types/dateTypes";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 type MonthGridStyle = {
   eventStyle: EventBarStyle;
@@ -136,14 +136,14 @@ const MonthGrid: React.FC<MonthGridProps> = ({ gridStyle, gridConfig, colHeaders
             className="p-2 rounded-full hover:bg-light-accent dark:hover:bg-dark-accent transition-colors"
             aria-label="Previous day"
           >
-            <ChevronLeft classes="w-6 h-6 text-light-primary-text dark:text-dark-primary-text" />
+            <ChevronLeft />
           </button>
           <button
             onClick={() => navigateMonth(1)}
             className="p-2 rounded-full hover:bg-light-accent dark:hover:bg-dark-accent transition-colors"
             aria-label="Next day"
           >
-            <ChevronRight classes="w-6 h-6 text-light-primary-text dark:text-dark-primary-text" />
+            <ChevronRight />
           </button>
         </div>
       </div>

@@ -1,12 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { ChevronLeft, ChevronRight } from './svgs/Chevrons';
 
-import { MonthEnum, WeekDayEnum } from '../types/dateTypes';
-import { isSameDay } from '../utils/utils';
-import { ourUseDispatch, ourUseSelector } from '../store/hooks';
-import { selectCurrentDatetimeAsTzDate, selectSelectedDateAsTzDate, selectSelectedIanaTimezone, setSelectedDate } from '../store/slices/appSlice';
+import { MonthEnum, WeekDayEnum } from '../../types/dateTypes';
+import { isSameDay } from '../../utils/utils';
+import { ourUseDispatch, ourUseSelector } from '../../store/hooks';
+import { selectCurrentDatetimeAsTzDate, selectSelectedDateAsTzDate, selectSelectedIanaTimezone, setSelectedDate } from '../../store/slices/appSlice';
 import { TZDate } from '@date-fns/tz';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 
 type DateSelectorProps = {
@@ -142,7 +142,7 @@ const DateSelector: React.FC<DateSelectorProps> = ({ onlyMonthSelector }) => {
                 onClick={() => navigateMonth(-1)}
                 className="p-2 hover:bg-v-light-accent dark:hover:bg-dark-accent rounded-full"
               >
-                <ChevronLeft classes={"w-5 h-5 text-light-primary-text dark:text-dark-primary-text"} />
+                <ChevronLeft />
               </button>
               <span className="font-semibold text-light-primary-text dark:text-dark-primary-text">
                 {monthNames[visibleMonth.getMonth()]} {visibleMonth.getFullYear()}
@@ -151,7 +151,7 @@ const DateSelector: React.FC<DateSelectorProps> = ({ onlyMonthSelector }) => {
                 onClick={() => navigateMonth(1)}
                 className="p-2 hover:bg-v-light-accent dark:hover:bg-dark-accent rounded-full"
               >
-                <ChevronRight classes={"w-5 h-5 text-light-primary-text dark:text-dark-primary-text"} />
+                <ChevronRight />
               </button>
             </div>
 

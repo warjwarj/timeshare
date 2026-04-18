@@ -1,5 +1,5 @@
-import { DarkModeToggle } from "./DarkModeToggle";
-import { XIcon } from "./XIcon";
+import { XIcon } from "lucide-react";
+import { DarkModeToggle } from "./utils/DarkModeToggle";
 
 type SidebarLink = {
   label: string;
@@ -26,7 +26,7 @@ const Sidebar: React.FC<SidebarProps> = ({ links, isCollapsed, setIsCollapsed })
             onClick={() => setIsCollapsed(true)}
             aria-label="Close modal"
           >
-            <XIcon />
+            <XIcon className="w-10 h-10" />
           </button>
         </div>
 

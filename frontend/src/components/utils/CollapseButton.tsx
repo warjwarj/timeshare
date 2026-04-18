@@ -1,4 +1,4 @@
-import { DoubleChevronLeft, DoubleChevronRight } from './svgs/Chevrons';
+import { ChevronsLeft, ChevronsRight } from "lucide-react";
 
 type CollapseButtonProps = {
   collapsed: boolean;
@@ -6,10 +6,10 @@ type CollapseButtonProps = {
 }
 
 const CollapseButton: React.FC<CollapseButtonProps> = ({ collapsed, setCollapsed }) => {
-return (
-  <button
-    onClick={() => setCollapsed(!collapsed)}
-    className="
+  return (
+    <button
+      onClick={() => setCollapsed(!collapsed)}
+      className="
       font-medium
       w-full h-full
       flex
@@ -27,11 +27,11 @@ return (
       dark:text-dark-primary-text
       hover:bg-v-light-accent 
       hover:dark:bg-v-dark-accent "
-    aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-  >
-    {collapsed ? <DoubleChevronRight/> : <DoubleChevronLeft/>}
-  </button>
+      aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+    >
+      {collapsed ? <ChevronsRight className="w-full h-full" /> : <ChevronsLeft className="w-full h-full" />}
+    </button>
   );
 }
 
-export { CollapseButton }
+export { CollapseButton };

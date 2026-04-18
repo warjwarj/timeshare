@@ -17,6 +17,7 @@ import { getDayGridConfig, type DayGridConfig } from '../utils/dayGridUtils.ts';
 import { getMonthGridConfig, type MonthGridConfig } from '../utils/monthGridUtils.ts';
 import { isValidDate } from '../utils/utils.ts';
 import { Calendar, Settings } from 'lucide-react';
+import { DateSelector } from '../components/utils/DateSelector.tsx';
 
 const weekdayNames = Object.values(WeekDayEnum)
 
@@ -184,7 +185,8 @@ const CalendarView: React.FC = () => {
     <ViewBody id={"CalendarView"}>
       <ViewHeader>
         {/* events view controls. */}
-        <div className="flex ml-auto mt-4 mb-4 border-light-border dark:border-dark-border">
+        <div className="flex gap-3 items-center ml-auto mt-4 mb-4 border-light-border dark:border-dark-border">
+          <DateSelector onlyMonthSelector={false} startDate={currentDate} />
           <GenericDropdown iconChildren={<><Calendar /><Settings /></>} bodyChildren={getCalendarViewOptions()} isOpen={viewPickerOpen} setIsOpen={setViewPickerOpen} />
         </div>
       </ViewHeader>

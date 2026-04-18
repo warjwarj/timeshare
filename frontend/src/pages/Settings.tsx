@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ourUseSelector, ourUseDispatch } from '../store/hooks';
 import { selectEmail, selectName, updateAccount } from '../store/slices/authSlice';
 import { toastService } from '../toastService';
-import { SaveButton } from '../components/SaveButton';
+import { SaveButton } from '../components/utils/SaveButton';
 
 const Settings: React.FC = () => {
 
@@ -46,7 +46,7 @@ const Settings: React.FC = () => {
               e.preventDefault();
               handleSave();
             }
-          }}>        
+          }}>
           <h2 className="text-xl font-semibold mb-6 text-light-primary-text dark:text-dark-primary-text">Account Information</h2>
 
           <div className="space-y-6">

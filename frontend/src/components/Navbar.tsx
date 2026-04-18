@@ -1,13 +1,13 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { Clock, LogOut, Settings, User } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from "react-router-dom";
-import { Settings, LogOut, Clock, User } from 'lucide-react';
 
-import { selectName, selectToken } from '../store/slices/authSlice';
-import { ourUseDispatch, ourUseSelector } from '../store/hooks';
-import { logout } from '../store/slices/authSlice';
 import { createPortal } from 'react-dom';
+import { logout } from '../store/slices/authSlice';
+import { ourUseDispatch, ourUseSelector } from '../store/hooks';
+import { selectName, selectToken } from '../store/slices/authSlice';
+import { TimezoneSelectorModalContent } from './utils/TimezoneSelectorModalContent';
 import { Modal } from './Modal';
-import { TimezoneSelectorModalContent } from './TimezoneSelectorModalContent';
 
 type NavLink = {
   name: string;
@@ -128,3 +128,4 @@ const Navbar: React.FC<NavbarProps> = ({ links }) => {
 };
 
 export { Navbar };
+

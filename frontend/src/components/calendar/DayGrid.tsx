@@ -1,3 +1,4 @@
+import { TZDate } from "@date-fns/tz";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { ourUseDispatch, ourUseSelector } from '../../store/hooks';
 import { selectSelectedIanaTimezone, setSelectedDate } from '../../store/slices/appSlice';
@@ -5,11 +6,10 @@ import { deleteEvent, makeEventSelectors, updateEvent } from '../../store/slices
 import type { DayGridConfig } from "../../utils/dayGridUtils";
 import { setDayEventPositions } from "../../utils/dayGridUtils";
 import { isValidDate, parseTimeToMinutes, toDateNum } from "../../utils/utils";
-import { ChevronLeft, ChevronRight } from '../svgs/Chevrons';
 import type { EventBarProps, EventBarStyle } from "./EventBar";
 import { EventBar } from './EventBar';
-import { TZDate } from "@date-fns/tz";
 
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import '../../../index.css';
 import { makeDayAvailabilitySelectors } from "../../store/slices/availabilitySlice";
 
@@ -107,14 +107,14 @@ const DayGrid: React.FC<DayGridProps> = ({ gridStyle, gridConfig }) => {
             className="p-2 rounded-full hover:bg-light-accent dark:hover:bg-dark-accent transition-colors"
             aria-label="Previous day"
           >
-            <ChevronLeft classes="w-6 h-6 text-light-primary-text dark:text-dark-primary-text" />
+            <ChevronLeft />
           </button>
           <button
             onClick={() => navigateDay(1)}
             className="p-2 rounded-full hover:bg-light-accent dark:hover:bg-dark-accent transition-colors"
             aria-label="Next day"
           >
-            <ChevronRight classes="w-6 h-6 text-light-primary-text dark:text-dark-primary-text" />
+            <ChevronRight />
           </button>
         </div>
       </div>
@@ -156,3 +156,4 @@ const DayGrid: React.FC<DayGridProps> = ({ gridStyle, gridConfig }) => {
 
 export { DayGrid };
 export type { DayGridProps, DayGridStyle };
+

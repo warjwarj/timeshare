@@ -1,6 +1,6 @@
 // componenents
 import { useLayoutContext } from '../utils/utils';
-import { CollapseButton } from './CollapseButton';
+import { CollapseButton } from './utils/CollapseButton';
 
 type ViewHeaderProps = {
   children: React.ReactNode;

@@ -1,6 +1,5 @@
+import { XIcon } from "lucide-react";
 
-// componenents
-import { XIcon } from './XIcon';
 
 type ModalProps = {
   label: string
@@ -26,7 +25,7 @@ const Modal: React.FC<ModalProps> = ({ label, isOpen, onClose, children }) => { 
             onClick={onClose}
             aria-label="Close modal"
           >
-            <XIcon />
+            <XIcon className="w-10 h-10" />
           </button>
         </div>
         <div className="p-4 sm:p-8" >

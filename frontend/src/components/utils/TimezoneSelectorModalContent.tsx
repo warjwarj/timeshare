@@ -1,8 +1,8 @@
-import { ourUseDispatch, ourUseSelector } from '../store/hooks';
-import { selectSelectedIanaTimezone, setSelectedTimezone } from "../store/slices/appSlice";
+import { ourUseDispatch, ourUseSelector } from '../../store/hooks';
+import { selectSelectedIanaTimezone, setSelectedTimezone } from "../../store/slices/appSlice";
 import { SaveButton } from './SaveButton';
 
-import '../../index.css';
+import '../../../index.css';
 import { useState } from 'react';
 
 // consts
@@ -53,7 +53,7 @@ const TimezoneSelectorModalContent: React.FC<TimezoneSelectorModalContentProps> 
         >
           Cancel
         </button>
-        <button 
+        <button
           type="button"
           onClick={internalResetToLocal}
           className="px-4 py-2 text-sm text-light-primary-text dark:text-dark-primary-text border border-light-border dark:border-dark-border rounded-lg hover:bg-light-accent dark:hover:bg-dark-accent transition-colors">
