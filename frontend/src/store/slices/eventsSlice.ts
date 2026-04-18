@@ -244,7 +244,6 @@ export const selectEvents = (state: { events: EventsState }) => state.events.eve
   ^^^ This is caused by our first memoised selector below mapping the events array.
   However I think this is necessary since we need to make the events timezone aware.
   Does this mean we shouldn't bother memoising the selector?
-
 */
 
 export const makeEventSelectors = () => {
