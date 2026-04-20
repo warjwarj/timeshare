@@ -26,7 +26,7 @@ const CollapseButton: React.FC<CollapseButtonProps> = ({ collapsed, setCollapsed
       text-light-primary-text
       dark:text-dark-primary-text
       hover:bg-v-light-accent 
-      hover:dark:bg-v-dark-accent "
+      hover:dark:bg-v-dark-accent"
       aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
     >
       {collapsed ? <ChevronsRight className="w-full h-full" /> : <ChevronsLeft className="w-full h-full" />}

@@ -156,6 +156,22 @@ class Repository(ABC, Generic[ModelClass, DtoClass]):
     except Exception as e:
       logger.error(f"ERROR GETTING RECORD: {e}")
 
+  def get_all_records(self) -> list[DtoClass] | None:
+    """
+    Retreive all records of the model class.
+
+    Returns:
+      list[DtoClass] | None: A list of DTOs representing all records
+    """
+    try:
+
+      with yield_session(DB_URL) as session:
+        records = session.query(self.model_class).all()
+        return [r.map_to_dto() for r in records] if records else None
+
+    except Exception as e:
+      logger.error(f"ERROR GETTING ALL RECORDS: {e}")
+
   def get_multiple_records(self, **kwargs) -> list[DtoClass] | None:
     """
     Retreive a list of records that match the provided filters.

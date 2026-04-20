@@ -1,0 +1,4 @@
+export const darkLightText = "text-light-primary-text dark:text-dark-primary-text"
+export const textInput = "w-full px-4 py-2 bg-[#F5F5F5] dark:bg-[#2A2A2A] border border-light-border dark:border-dark-border text-light-primary-text dark:text-dark-primary-text rounded-lg focus:ring-2 focus:ring-light-accent dark:focus:ring-dark-accent focus:border-transparent";
+export const inputLabel = "block text-sm font-medium text-light-primary-text dark:text-dark-primary-text mb-2";
+export const hoverHighlight = "hover:border-dark-primary-text dark:hover:border-light-primary-text bg-light-background dark:bg-dark-background hover:bg-dark-background dark:hover:bg-light-background text-light-primary-text dark:text-dark-primary-text hover:bg-v-light-accent hover:dark:bg-v-dark-accent"

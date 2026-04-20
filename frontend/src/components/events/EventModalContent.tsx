@@ -15,10 +15,7 @@ import { selectSelectedIanaTimezone } from '../../store/slices/appSlice';
 import { toastService } from '../../toastService';
 import { naiveIsoStrToTzDate, tzdateToWallClockInDatesTimezone } from '../../utils/utils';
 import { SaveButton } from '../utils/SaveButton';
-
-const inputClass = "w-full px-4 py-2 bg-[#F5F5F5] dark:bg-[#2A2A2A] border border-light-border dark:border-dark-border text-light-primary-text dark:text-dark-primary-text rounded-lg focus:ring-2 focus:ring-light-accent dark:focus:ring-dark-accent focus:border-transparent";
-const labelClass = "block text-sm font-medium text-light-primary-text dark:text-dark-primary-text mb-2";
-
+import { textInput, inputLabel } from '../../../PredefinedStyles'
 
 /*
   Modal for adding or editing an event.
@@ -82,7 +79,7 @@ const EventModalContent: React.FC<EventModalContentProps> = ({ event, editing, o
 
       {/* Name */}
       <div className="pb-6">
-        <label htmlFor="rule-name" className={labelClass}>
+        <label htmlFor="rule-name" className={inputLabel}>
           Event name
         </label>
         <input
@@ -90,14 +87,14 @@ const EventModalContent: React.FC<EventModalContentProps> = ({ event, editing, o
           id="rule-name"
           defaultValue={formData.name}
           onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-          className={inputClass}
+          className={textInput}
           placeholder="e.g., Lunch Break"
         />
       </div>
 
       {/* Colour */}
       <div className="pb-6">
-        <label htmlFor="addEventModalContent_Colour" className={labelClass}>
+        <label htmlFor="addEventModalContent_Colour" className={inputLabel}>
           Colour:
         </label>
         <input
@@ -105,7 +102,7 @@ const EventModalContent: React.FC<EventModalContentProps> = ({ event, editing, o
           type="color"
           value={formData.colour}
           onChange={(e) => setFormData(prev => ({ ...prev, colour: e.target.value }))}
-          className={inputClass}
+          className={textInput}
         />
       </div>
 
@@ -117,7 +114,7 @@ const EventModalContent: React.FC<EventModalContentProps> = ({ event, editing, o
       {/* Date range */}
       <div className="grid grid-cols-2 gap-4 pb-6">
         <div>
-          <label htmlFor="start-date" className={labelClass}>
+          <label htmlFor="start-date" className={inputLabel}>
             Event start date
           </label>
           <input
@@ -125,12 +122,12 @@ const EventModalContent: React.FC<EventModalContentProps> = ({ event, editing, o
             id="start-datetime"
             value={formData.start}
             onChange={(e) => setFormData(prev => ({ ...prev, start: e.target.value }))}
-            className={inputClass}
+            className={textInput}
             required
           />
         </div>
         <div>
-          <label htmlFor="end-date" className={labelClass}>
+          <label htmlFor="end-date" className={inputLabel}>
             Event end date
           </label>
           <input
@@ -138,7 +135,7 @@ const EventModalContent: React.FC<EventModalContentProps> = ({ event, editing, o
             id="end-datetime"
             value={formData.end}
             onChange={(e) => setFormData(prev => ({ ...prev, end: e.target.value }))}
-            className={inputClass}
+            className={textInput}
             required
           />
         </div>

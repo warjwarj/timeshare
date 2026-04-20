@@ -28,7 +28,7 @@ const Modal: React.FC<ModalProps> = ({ label, isOpen, onClose, children }) => { 
             <XIcon className="w-10 h-10" />
           </button>
         </div>
-        <div className="p-4 sm:p-8" >
+        <div onClick={(e) => e.stopPropagation()} className="p-4 sm:p-8" >
           {children}
         </div>
       </div>

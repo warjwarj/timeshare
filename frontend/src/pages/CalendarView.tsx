@@ -18,6 +18,7 @@ import { getMonthGridConfig, type MonthGridConfig } from '../utils/monthGridUtil
 import { isValidDate } from '../utils/utils.ts';
 import { Calendar, Settings } from 'lucide-react';
 import { DateSelector } from '../components/utils/DateSelector.tsx';
+import SearchBar from '../components/search/SearchBar.tsx';
 
 const weekdayNames = Object.values(WeekDayEnum)
 
@@ -184,10 +185,21 @@ const CalendarView: React.FC = () => {
   return (
     <ViewBody id={"CalendarView"}>
       <ViewHeader>
-        {/* events view controls. */}
-        <div className="flex gap-3 items-center ml-auto mt-4 mb-4 border-light-border dark:border-dark-border">
-          <DateSelector onlyMonthSelector={false} startDate={currentDate} />
-          <GenericDropdown iconChildren={<><Calendar /><Settings /></>} bodyChildren={getCalendarViewOptions()} isOpen={viewPickerOpen} setIsOpen={setViewPickerOpen} />
+        <div className="flex gap-3 ml-auto items-center mt-4 mb-4 border-light-border dark:border-dark-border">
+          <SearchBar />
+        </div>
+        <div className="flex gap-3 ml-auto items-center mt-4 mb-4 border-light-border dark:border-dark-border">
+          {!isPhone &&
+            <DateSelector onlyMonthSelector={false} startDate={currentDate} />
+          }
+          <GenericDropdown
+            initialHeightPx={200}
+            initialWidthPx={120}
+            iconChildren={<><Calendar /><Settings /></>}
+            bodyChildren={getCalendarViewOptions()}
+            isOpen={viewPickerOpen}
+            setIsOpen={setViewPickerOpen}
+          />
         </div>
       </ViewHeader>
 

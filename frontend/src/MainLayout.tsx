@@ -12,7 +12,6 @@ type MainLayoutContext = {
 };
 
 const sidebarLinks: SidebarLink[] = [
-  { label: "Search", path: "/search" },
   { label: "Calendar", path: "/calendar" },
   { label: "Events", path: "/events" },
   { label: "Availability", path: "/availability" },
@@ -41,7 +40,7 @@ const MainLayout: React.FC = () => {
   };
 
   return (
-    <div id="MainLayout" className="flex w-full h-[calc(100vh-5rem)] border-box overflow-x-hidden">
+    <div id="MainLayout" className="flex w-full h-[calc(100vh-5rem)] border-box overflow-hidden">
       {/* Backdrop overlay for phone view */}
       {isPhone && !isCollapsed && (
         <div

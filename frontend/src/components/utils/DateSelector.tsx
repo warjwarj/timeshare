@@ -1,12 +1,12 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { createPortal } from 'react-dom';
+import React, { useState } from 'react';
 
-import { MonthEnum, WeekDayEnum } from '../../types/dateTypes';
-import { isSameDay } from '../../utils/utils';
-import { ourUseDispatch, ourUseSelector } from '../../store/hooks';
-import { selectCurrentDatetimeAsTzDate, selectSelectedDateAsTzDate, selectSelectedIanaTimezone, setSelectedDate } from '../../store/slices/appSlice';
 import { TZDate } from '@date-fns/tz';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ourUseDispatch, ourUseSelector } from '../../store/hooks';
+import { selectCurrentDatetimeAsTzDate, selectSelectedDateAsTzDate, selectSelectedIanaTimezone, setSelectedDate } from '../../store/slices/appSlice';
+import { MonthEnum, WeekDayEnum } from '../../types/dateTypes';
+import { isSameDay } from '../../utils/utils';
+import GenericDropdown from './GenericDropdown';
 
 
 type DateSelectorProps = {
@@ -27,49 +27,6 @@ const DateSelector: React.FC<DateSelectorProps> = ({ onlyMonthSelector }) => {
 
   // helper states and refs
   const [isOpen, setIsOpen] = useState(false);
-  const [dropdownPosition, setDropdownPosition] = useState<React.CSSProperties>({});
-  const dropdownRef = useRef<HTMLDivElement>(null);
-  const buttonRef = useRef<HTMLButtonElement>(null);
-
-  const DROPDOWN_WIDTH = 240; // w-60
-  const DROPDOWN_HEIGHT = 320; // approximate height
-
-  // Update dropdown position when opened
-  useEffect(() => {
-    if (isOpen && buttonRef.current) {
-      const rect = buttonRef.current.getBoundingClientRect();
-      const position: React.CSSProperties = {};
-
-      // Vertical positioning
-      const spaceBelow = window.innerHeight - rect.bottom;
-      if (spaceBelow >= DROPDOWN_HEIGHT + 4) {
-        position.top = rect.bottom + 4;
-      } else {
-        position.bottom = window.innerHeight - rect.top + 4;
-      }
-
-      // Horizontal positioning
-      const spaceRight = window.innerWidth - rect.left;
-      if (spaceRight >= DROPDOWN_WIDTH) {
-        position.left = rect.left;
-      } else {
-        position.right = window.innerWidth - rect.right;
-      }
-
-      setDropdownPosition(position);
-    }
-  }, [isOpen]);
-
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
 
   const handleDateSelection = (d: TZDate) => {
     dispatch(setSelectedDate({ dateIsoStr: d.toISOString() }))
@@ -113,102 +70,99 @@ const DateSelector: React.FC<DateSelectorProps> = ({ onlyMonthSelector }) => {
 
   const days = getDaysInMonth(visibleMonth);
 
-  return (
-    <>
-      <div className="w-full h-auto">
+  const getIcon = () => {
+    return (
+      <span>
+        {displayDate()}
+      </span>
+    )
+  }
 
-        {/* Show/hide drop down */}
-        <div className="flex flex-row p-2 rounded-lg border w-min overflow-auto justify-center">
+  const getBody = () => {
+    return (
+      <div className="w-full h-full p-3">
+        {/* Month Navigation */}
+        <div className="flex items-center justify-between">
           <button
-            ref={buttonRef}
-            onClick={() => setIsOpen(!isOpen)}
-            className="flex items-center justify-center text-lg font-semibold"
+            onClick={() => navigateMonth(-1)}
+            className="p-2 hover:bg-v-light-accent dark:hover:bg-dark-accent rounded-full"
           >
-            {displayDate()}
+            <ChevronLeft />
+          </button>
+          <span className="font-semibold text-light-primary-text dark:text-dark-primary-text">
+            {monthNames[visibleMonth.getMonth()]} {visibleMonth.getFullYear()}
+          </span>
+          <button
+            onClick={() => navigateMonth(1)}
+            className="p-2 hover:bg-v-light-accent dark:hover:bg-dark-accent rounded-full"
+          >
+            <ChevronRight />
           </button>
         </div>
 
-        {/*  dropdown calendar */}
-        {isOpen && createPortal(
-          <div
-            ref={dropdownRef}
-            className="fixed z-50 w-60 border rounded-lg px-2 bg-light-background dark:bg-dark-background shadow-lg"
-            style={dropdownPosition}
-          >
-
-            {/* Month Navigation */}
-            <div className="flex items-center justify-between">
+        {!onlyMonthSelector && (
+          <>
+            {/* Quick Presets */}
+            <div className="flex justify-evenly mb-4">
               <button
-                onClick={() => navigateMonth(-1)}
-                className="p-2 hover:bg-v-light-accent dark:hover:bg-dark-accent rounded-full"
-              >
-                <ChevronLeft />
-              </button>
-              <span className="font-semibold text-light-primary-text dark:text-dark-primary-text">
-                {monthNames[visibleMonth.getMonth()]} {visibleMonth.getFullYear()}
-              </span>
+                onClick={() => selectPreset(0)}
+                className="text-sm pt-1 pb-1 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700"
+              >Today </button>
               <button
-                onClick={() => navigateMonth(1)}
-                className="p-2 hover:bg-v-light-accent dark:hover:bg-dark-accent rounded-full"
-              >
-                <ChevronRight />
-              </button>
+                onClick={() => selectPreset(1)}
+                className="text-sm pt-1 pb-1 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700"
+              >Tomorrow </button>
             </div>
 
-            {!onlyMonthSelector && (
-              <>
-                {/* Quick Presets */}
-                <div className="flex justify-evenly mb-4">
-                  <button
-                    onClick={() => selectPreset(0)}
-                    className="text-sm pt-1 pb-1 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700"
-                  >Today </button>
-                  <button
-                    onClick={() => selectPreset(1)}
-                    className="text-sm pt-1 pb-1 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700"
-                  >Tomorrow </button>
+            {/* Weekday names */}
+            <div className="grid grid-cols-7 gap-1 mb-2">
+              {dayNames.map(day => (
+                <div key={day} className="text-center text-xs font-semibold py-2 text-light-secondary-text dark:text-dark-secondary-text">
+                  {day}
                 </div>
+              ))}
+            </div>
 
-                {/* Weekday names */}
-                <div className="grid grid-cols-7 gap-1 mb-2">
-                  {dayNames.map(day => (
-                    <div key={day} className="text-center text-xs font-semibold py-2 text-light-secondary-text dark:text-dark-secondary-text">
-                      {day}
-                    </div>
-                  ))}
-                </div>
-
-                {/* Calendar Days */}
-                <div className="grid grid-cols-7 gap-1">
-                  {days.map((day, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => {
-                        if (day) {
-                          handleDateSelection(day);
-                        }
-                      }}
-                      disabled={!day}
-                      className={`
+            {/* Calendar Days */}
+            <div className="grid grid-cols-7 gap-1">
+              {days.map((day, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => {
+                    if (day) {
+                      handleDateSelection(day);
+                    }
+                  }}
+                  disabled={!day}
+                  className={`
                         aspect-square flex items-center justify-center rounded-lg text-sm transition-all
                         ${!day ? 'invisible' : ''}                                          
                         ${isSameDay(day, selectedDate) ? 'bg-light-accent dark:bg-dark-accent text-light-background dark:text-dark-background font-bold font-bold font-bold text-l' : ''}
                         ${day && isSameDay(day, currentDate) && !isSameDay(day, selectedDate) ? 'font-bold text-l' : ''}
                         ${day && !isSameDay(day, selectedDate) && !isSameDay(day, currentDate) ? 'hover:bg-v-light-accent hover:dark:v-dark-accent text-light-primary-text dark:text-dark-primary-text' : ''}
                       `}
-                    >
-                      {day?.getDate()}
-                    </button>
-                  ))}
-                </div>
-              </>
-            )}
-          </div>,
-          document.body
+                >
+                  {day?.getDate()}
+                </button>
+              ))}
+            </div>
+          </>
         )}
       </div>
-    </>
+    )
+  }
+
+  return (
+    <GenericDropdown
+      iconChildren={getIcon()}
+      bodyChildren={getBody()}
+      isOpen={isOpen}
+      setIsOpen={setIsOpen}
+      initialHeightPx={400}
+      initialWidthPx={300}
+    />
   );
 }
 
-export { DateSelector }
+export { DateSelector };
+

@@ -1,13 +1,13 @@
-import { Clock, LogOut, Settings, User } from 'lucide-react';
+import { Clock, LogOut, Settings } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from "react-router-dom";
 
 import { createPortal } from 'react-dom';
-import { logout } from '../store/slices/authSlice';
 import { ourUseDispatch, ourUseSelector } from '../store/hooks';
-import { selectName, selectToken } from '../store/slices/authSlice';
-import { TimezoneSelectorModalContent } from './utils/TimezoneSelectorModalContent';
+import { logout, selectName, selectToken } from '../store/slices/authSlice';
 import { Modal } from './Modal';
+import ProfileIcon from './utils/ProfileIcon';
+import { TimezoneSelectorModalContent } from './utils/TimezoneSelectorModalContent';
 
 type NavLink = {
   name: string;
@@ -82,12 +82,11 @@ const Navbar: React.FC<NavbarProps> = ({ links }) => {
         <div className="relative" ref={dropdownRef}>
 
           {/* Profile Icon */}
-          {token && <button
-            onClick={() => setIsOpen(!isOpen)}
-            className="flex items-center justify-center w-10 h-10 rounded-full bg-blue-600 text-white font-semibold hover:bg-blue-700 text-lg leading-none"
-          >
-            {name ? <p className="mb-[0.09rem]">{name[0]?.toLocaleUpperCase()}</p> : <User width={15} />}
-          </button>}
+          {token &&
+            <div className="w-10 h-10 text-lg">
+              <ProfileIcon name={name} onClick={() => setIsOpen(!isOpen)} />
+            </div>
+          }
 
           {/* Timezone selector */}
           {tzModalOpen && createPortal(

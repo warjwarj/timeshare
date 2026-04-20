@@ -13,8 +13,8 @@ class UserModel(Base, TimestampMixin, UUIDMixin):
   __tablename__: str = "users"
 
   id: Mapped[int] = mapped_column(
-    Integer,
-    primary_key=True
+      Integer,
+      primary_key=True
   )
 
   name: Mapped[str | None] = mapped_column(String(255), index=True)
@@ -23,13 +23,28 @@ class UserModel(Base, TimestampMixin, UUIDMixin):
   role: Mapped[str | None] = mapped_column(String(64), index=True)
 
   availability_rules: Mapped[list["AvailabilityRuleModel"]] = relationship(
-    "AvailabilityRuleModel",
-    back_populates="user",
-    foreign_keys="AvailabilityRuleModel.user_id"
+      "AvailabilityRuleModel",
+      back_populates="user",
+      foreign_keys="AvailabilityRuleModel.user_id"
   )
-  
+
+  __table_args__ = (
+      Index(
+          "ix_users_name_trgm",
+          "name",
+          postgresql_using="gin",
+          postgresql_ops={"name": "gin_trgm_ops"},
+      ),
+      Index(
+          "ix_users_email_trgm",
+          "email",
+          postgresql_using="gin",
+          postgresql_ops={"email": "gin_trgm_ops"},
+      ),
+  )
+
   def map_to_dto(self):
     return UserDTO(**{
-      column.key: getattr(self, column.key)
-      for column in inspect(self).mapper.column_attrs
+        column.key: getattr(self, column.key)
+        for column in inspect(self).mapper.column_attrs
     })
