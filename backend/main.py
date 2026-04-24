@@ -7,7 +7,7 @@ from src.routers.availability_router import availability_router
 from src.routers.auth_router import auth_router
 from src.routers.events_router import events_router
 from src.routers.common_router import common_router
-from src.routers.users_router import users_router
+from src.routers.orgusers_router import orgusers_router
 from src.db.custom_log_handler import CustomLogHandler
 from src.models import Base
 from src.db.session import DB_URL, get_engine
@@ -46,7 +46,7 @@ for logger_name in ("uvicorn", "uvicorn.error", "uvicorn.access", "fastapi", "ht
 # Db
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-# hope this works
+# if this doesn't work just run it in pgadmin
 engine = get_engine(DB_URL)
 with engine.begin() as conn:
   conn.execute(text("CREATE EXTENSION IF NOT EXISTS pg_trgm"))
@@ -78,4 +78,4 @@ app.include_router(auth_router)
 app.include_router(events_router)
 app.include_router(common_router)
 app.include_router(availability_router)
-app.include_router(users_router)
+app.include_router(orgusers_router)

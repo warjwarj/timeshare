@@ -9,8 +9,7 @@ import UserSearchItem from "./UserSearchItem";
 
 
 type SearchBarModalContentProps = {
-  onClose: () => void;
-  selectedUser: UserDTO | null;
+  onClose: () => void; selectedUser: UserDTO | null;
   setSelectedUser: (user: UserDTO) => void
 }
 
@@ -21,7 +20,7 @@ export default function SearchBarModalContent({ setSelectedUser }: SearchBarModa
 
   // search api call 
   const search = async (term: string, signal: AbortSignal) => {
-    const res = await apiClient.get(`/users/search/${term}`, {
+    const res = await apiClient.get(`/orgusers/search/${term}`, {
       signal,
       validateStatus: status => status < 500,
     })
@@ -30,6 +29,7 @@ export default function SearchBarModalContent({ setSelectedUser }: SearchBarModa
       toastService.showError("Couldn't search", errMsg);
       return;
     }
+    console.log(res.data)
     setSearchResults(res.data as UserDTO[])
   }
 
@@ -64,7 +64,7 @@ export default function SearchBarModalContent({ setSelectedUser }: SearchBarModa
       </div>
       <div className="flex flex-col gap-3">
         {searchResults.length !== 0 && searchResults.map(user => {
-          return <UserSearchItem minimal={false} user={user} />
+          return <UserSearchItem user={user} minimal={false} onClick={() => setSelectedUser(user)} />
         })}
         {searchTerm !== "" && searchResults.length === 0 &&
           <div>

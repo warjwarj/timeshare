@@ -4,6 +4,7 @@ import { apiClient } from "../../utils/apiClient";
 import { toastService } from '../../toastService';
 import axios, { HttpStatusCode } from 'axios';
 import { tryParseAxiosErrorMessage, tryParseAxiosMessage } from '../../utils/utils';
+import type { UserDTO } from '../../types/UserDTO';
 
 const login = createAsyncThunk(
   'auth/login',
@@ -87,13 +88,14 @@ const register = createAsyncThunk(
 const updateAccount = createAsyncThunk(
   'auth/updateAccount',
   async (
-    { name, email }: { name: string | null, email: string },
+    { name, email, colour }: { name: string | null, email: string, colour: string },
     { signal, rejectWithValue }
   ) => {
     try {
       const res = await apiClient.put("/auth/account", {
         name,
-        email
+        email,
+        colour
       },
         { signal, validateStatus: status => status < 500 }
       );
@@ -123,43 +125,40 @@ const updateAccount = createAsyncThunk(
 );
 
 interface Auth {
-  name: string | null
-  email: string
+  user: UserDTO;
   token: string
 }
 
 export const authSlice = createSlice({
   name: "auth",
   initialState: {
-    ...JSON.parse(localStorage.getItem("auth_state") || '{"name":"","email":"","token":""}')
+    ...JSON.parse(localStorage.getItem("auth_state") || '{"token":"", "user": {"uuid": "","name":"","email":"","colour":""}}')
   } as Auth,
   reducers: {
     logout: (state) => {
       localStorage.removeItem("auth_state");
-      state.token = state.email = state.name = "";
+      state.token = "";
     }
   },
   extraReducers: (builder) => {
     builder
       .addCase(login.fulfilled, (state, action) => {
-        const { success, name, email, access_token } = action.payload;
+        const { success, uuid, name, email, colour, access_token } = action.payload;
         if (!success || !access_token) {
           toastService.showError("Couldn't log in", action.payload.detail as string)
           return;
         }
         state.token = access_token
-        state.name = name
-        state.email = email
+        state.user = { uuid, name, email, colour } as UserDTO;
         localStorage.setItem("auth_state", JSON.stringify({ ...state }))
       })
       .addCase(updateAccount.fulfilled, (state, action) => {
-        const { success, name, email } = action.payload;
+        const { success, name, email, colour } = action.payload;
         if (!success) {
           toastService.showError("Couldn't update account", action.payload.detail as string)
           return;
         }
-        state.name = name
-        state.email = email
+        state.user = { ...state.user, name, email, colour } as UserDTO;
         localStorage.setItem("auth_state", JSON.stringify({ ...state }))
         toastService.showSuccess("Account updated successfully")
       })
@@ -167,10 +166,10 @@ export const authSlice = createSlice({
 })
 
 export const { logout } = authSlice.actions;
+
 export { login, register, updateAccount }
 
 export const selectToken = (state: { auth: Auth }) => state.auth.token;
-export const selectEmail = (state: { auth: Auth }) => state.auth.email;
-export const selectName = (state: { auth: Auth }) => state.auth.name;
+export const selectLoggedInUser = (state: { auth: Auth }) => state.auth.user;
 
 export default authSlice.reducer;

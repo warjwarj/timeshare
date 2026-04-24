@@ -5,9 +5,10 @@ import ProfileIcon from "../utils/ProfileIcon"
 type UserSearchItemProps = {
   user: UserDTO
   minimal: boolean
+  onClick: () => void;
 }
 
-export default function UserSearchItem({ minimal, user }: UserSearchItemProps) {
+export default function UserSearchItem({ user, minimal, onClick }: UserSearchItemProps) {
 
   const getUserDescription = () => {
     if (minimal) {
@@ -18,10 +19,12 @@ export default function UserSearchItem({ minimal, user }: UserSearchItemProps) {
   }
 
   return (
-    <div className={`flex items-center w-min ${minimal ? "max-h-10" : ""} rounded-lg bg-[#bbbbbb] text-black`}>
+    <div className={`flex items-center w-min ${minimal ? "max-h-10" : ""} rounded-lg bg-[#bbbbbb] text-black`}
+      onClick={() => onClick()}
+    >
       <div className="flex p-3 gap-3 justify-around">
         <div className="flex w-6 h-6 text-sm">
-          <ProfileIcon name={user.name} onClick={() => { }} />
+          <ProfileIcon user={user} onClick={() => { }} />
         </div>
         <div className="flex flex-col">
           <span className="text-nowrap">

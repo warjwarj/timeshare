@@ -1,12 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { TZDate } from "@date-fns/tz";
+import { Calendar, Settings } from 'lucide-react';
 import type { DayGridStyle } from '../components/calendar/DayGrid.tsx';
 import { DayGrid } from '../components/calendar/DayGrid.tsx';
 import type { EventBarStyle } from '../components/calendar/EventBar.tsx';
 import type { GridStyle } from '../components/calendar/MonthGrid.tsx';
 import { MonthGrid } from '../components/calendar/MonthGrid.tsx';
 import { YearGrid } from '../components/calendar/YearGrid.tsx';
+import { DateSelector } from '../components/utils/DateSelector.tsx';
 import GenericDropdown from '../components/utils/GenericDropdown.tsx';
 import { ViewBody } from '../components/ViewBody.tsx';
 import { ViewHeader } from '../components/ViewHeader.tsx';
@@ -16,9 +18,6 @@ import { TimeSpanEnum, WeekDayEnum } from "../types/dateTypes.ts";
 import { getDayGridConfig, type DayGridConfig } from '../utils/dayGridUtils.ts';
 import { getMonthGridConfig, type MonthGridConfig } from '../utils/monthGridUtils.ts';
 import { isValidDate } from '../utils/utils.ts';
-import { Calendar, Settings } from 'lucide-react';
-import { DateSelector } from '../components/utils/DateSelector.tsx';
-import SearchBar from '../components/search/SearchBar.tsx';
 
 const weekdayNames = Object.values(WeekDayEnum)
 
@@ -186,9 +185,6 @@ const CalendarView: React.FC = () => {
     <ViewBody id={"CalendarView"}>
       <ViewHeader>
         <div className="flex gap-3 ml-auto items-center mt-4 mb-4 border-light-border dark:border-dark-border">
-          <SearchBar />
-        </div>
-        <div className="flex gap-3 ml-auto items-center mt-4 mb-4 border-light-border dark:border-dark-border">
           {!isPhone &&
             <DateSelector onlyMonthSelector={false} startDate={currentDate} />
           }
@@ -235,3 +231,4 @@ const CalendarView: React.FC = () => {
 }
 
 export { CalendarView };
+

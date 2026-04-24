@@ -18,13 +18,13 @@ const LoginForm: React.FC = () => {
   const submit = async (e: FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
-      setErrorMessage("Please fill in the usenname and password fields.");
+      setErrorMessage("Please fill in the username and password fields.");
       return;
     }
     try {
-      await dispatch(login({ 
-        name: null, 
-        email, 
+      await dispatch(login({
+        name: null,
+        email,
         password,
       })).unwrap();
       navigate('/calendar');

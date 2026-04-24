@@ -21,6 +21,7 @@ class UserModel(Base, TimestampMixin, UUIDMixin):
   email: Mapped[str | None] = mapped_column(String(255), index=True, unique=True)
   password: Mapped[str] = mapped_column(Text, nullable=False)
   role: Mapped[str | None] = mapped_column(String(64), index=True)
+  colour: Mapped[str | None] = mapped_column(String(16), nullable=True)
 
   availability_rules: Mapped[list["AvailabilityRuleModel"]] = relationship(
       "AvailabilityRuleModel",

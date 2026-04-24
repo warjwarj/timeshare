@@ -82,7 +82,6 @@ const updateEvent = createAsyncThunk(
   'updateEvent',
   async (event: ProcessedEventDTO, { signal, rejectWithValue }) => {
     try {
-      console.log(event)
       // format to utc+0 time on outbound
       const normalisedEventDTO: EventDTO = {
         ...event,

@@ -13,7 +13,8 @@ class SafeUserDTO(BaseModel):
   """
   uuid: UUID
   name: str | None
-  email: str | None
-  role: str | None = None
+  email: str
+  colour: str
+  role: str | None
   created_at: Optional[datetime] = None
   updated_at: Optional[datetime] = None

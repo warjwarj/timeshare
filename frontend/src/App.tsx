@@ -11,15 +11,21 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 import { MainLayout } from './MainLayout';
 import { AvailabilityView } from './pages/AvailabilityView';
 import { EventsView } from './pages/EventsView';
+import { ourUseSelector } from './store/hooks';
+import { selectToken } from './store/slices/authSlice';
 
 const links = [
   { name: 'Timeshare', path: '/calendar' },
 ];
 
 function App() {
+  const token = ourUseSelector(selectToken)
   return (
     <>
-      <Navbar links={links} />
+      {
+        token &&
+        <Navbar links={links} />
+      }
       <Routes>
         <Route path="/" element={<Navigate to="/calendar" />} />
         <Route path="/login" element={<LoginForm />} />

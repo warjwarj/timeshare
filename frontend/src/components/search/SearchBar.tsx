@@ -22,7 +22,7 @@ export default function SearchBar() {
         <SearchIcon />
       </div>
       {selectedUser &&
-        <UserSearchItem minimal={true} user={selectedUser} />
+        <UserSearchItem minimal={true} user={selectedUser} onClick={() => { }} />
       }
       {showModal && createPortal(
         <Modal

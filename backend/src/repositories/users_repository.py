@@ -41,14 +41,7 @@ class UserRepository(Repository[UserModel, UserDTO]):
 
   def search_users(session, q: str, limit: int = 20):
     """
-
-    Args:
-        session (_type_): _description_
-        q (str): _description_
-        limit (int, optional): _description_. Defaults to 20.
-
-    Returns:
-        _type_: _description_
+    fuzzy search on users
     """
     name_sim = func.similarity(UserModel.name, q)
     email_sim = func.similarity(UserModel.email, q)

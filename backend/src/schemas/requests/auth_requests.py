@@ -31,3 +31,4 @@ class UpdateAccountRequest(BaseModel):
   """
   name: Optional[Annotated[str, StringConstraints(max_length=255)]] = None
   email: Optional[Annotated[str, StringConstraints(max_length=255)]] = None
+  colour: Optional[Annotated[str, StringConstraints(max_length=16)]] = None

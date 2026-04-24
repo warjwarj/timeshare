@@ -4,10 +4,11 @@ import { useNavigate } from "react-router-dom";
 
 import { createPortal } from 'react-dom';
 import { ourUseDispatch, ourUseSelector } from '../store/hooks';
-import { logout, selectName, selectToken } from '../store/slices/authSlice';
+import { logout, selectLoggedInUser, selectToken } from '../store/slices/authSlice';
 import { Modal } from './Modal';
 import ProfileIcon from './utils/ProfileIcon';
 import { TimezoneSelectorModalContent } from './utils/TimezoneSelectorModalContent';
+import type { UserDTO } from '../types/UserDTO';
 
 type NavLink = {
   name: string;
@@ -28,8 +29,7 @@ type MenuItem = {
 const Navbar: React.FC<NavbarProps> = ({ links }) => {
   const dispatch = ourUseDispatch()
   const navigator = useNavigate()
-  const name: string | null = ourUseSelector(selectName)
-  const token = ourUseSelector(selectToken)
+  const user: UserDTO = ourUseSelector(selectLoggedInUser)
   const [isOpen, setIsOpen] = useState(false);
   const [tzModalOpen, setTzModalOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -82,9 +82,9 @@ const Navbar: React.FC<NavbarProps> = ({ links }) => {
         <div className="relative" ref={dropdownRef}>
 
           {/* Profile Icon */}
-          {token &&
+          {user &&
             <div className="w-10 h-10 text-lg">
-              <ProfileIcon name={name} onClick={() => setIsOpen(!isOpen)} />
+              <ProfileIcon user={user} onClick={() => setIsOpen(!isOpen)} />
             </div>
           }
 
@@ -122,7 +122,7 @@ const Navbar: React.FC<NavbarProps> = ({ links }) => {
           )}
         </div>
       </div>
-    </nav>
+    </nav >
   );
 };
 

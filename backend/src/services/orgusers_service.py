@@ -39,3 +39,11 @@ def get_users_by_name(name: str) -> list[SafeUserDTO]:
   """
   users = users_repo.get_multiple_records(name=name)
   return sanitise_users(users) if users else []
+
+
+def search_users(search_term: str) -> list[SafeUserDTO]:
+  """
+  Fuzzy search users
+  """
+  users = users_repo.search_users(q=search_term)
+  return sanitise_users(users) if users else []

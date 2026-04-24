@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta, timezone
 from http import HTTPStatus
 import logging
+import random
 from typing import Optional
 from argon2 import PasswordHasher
 from argon2.exceptions import VerificationError, VerifyMismatchError, InvalidHashError
@@ -14,7 +15,7 @@ from src.repositories.organisation_repository import OrganisationRepository
 from src.schemas.responses.auth_responses import LoginResponse, UpdateAccountResponse
 from src.schemas.requests.auth_requests import LoginRequest, RegisterRequest, UpdateAccountRequest
 from src.repositories.users_repository import UserRepository
-from src.utils.utils import getUnixEpoch, getUtcDatetimeNow
+from src.utils.utils import getUnixEpoch, getUtcDatetimeNow, random_colour
 
 from settings import settings
 
@@ -122,21 +123,35 @@ def register_orguser(req: RegisterRequest) -> Response:
           detail="Organisation alrady registered"
       )
 
+    # user data
     user_data = {k: v for k, v in req if k != "org_name"}
-    org_data = {"name": req.org_name}
-
+    user_data["colour"] = random_colour()  # random hex colour for user
     hashed_password = hash_password(req.password)
     user_data["password"] = hashed_password
 
+    # org data
+    org_data = {"name": req.org_name}
+
     user = users_repo.add_record(**user_data)
+    if not user:
+      logger.error(f"Couldn't add user: user record was None")
+      raise HTTPException(
+          status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
+          detail=f"Couldn't register user"
+      )
     org = orgs_repo.add_record(**org_data)
+    if not org:
+      logger.error(f"Couldn't add organisation, org record was None")
+      raise HTTPException(
+          status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
+          detail=f"Couldn't register organisation"
+      )
     org_users_repo.add_record(
         org_id=org.id,
         user_id=user.id,
         role=OrganisationUserRole.org_admin,
         **{"is_default": True},
     )
-
   except HTTPException:
     raise
   except Exception as ex:
@@ -145,7 +160,6 @@ def register_orguser(req: RegisterRequest) -> Response:
         status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
         detail=f"Error during register: {str(ex)}"
     )
-
   return Response(status_code=HTTPStatus.CREATED)
 
 
@@ -184,8 +198,10 @@ def login_user(req: LoginRequest) -> LoginResponse:
       success=True,
       access_token=encoded_token,
       token_type="bearer",
+      uuid=user.uuid,
       name=user.name,
-      email=user.email
+      email=user.email,
+      colour=user.colour
   )
 
 
@@ -209,11 +225,14 @@ def update_user_account(user_uuid: str, req: UpdateAccountRequest) -> UpdateAcco
     update_data['email'] = req.email
   if req.name is not None:
     update_data['name'] = req.name
+  if req.colour is not None:
+    update_data["colour"] = req.colour
   update_data['updated_at'] = str(getUtcDatetimeNow())
   rec = users_repo.update_record(lookup={"uuid": user_uuid}, **update_data)
   return UpdateAccountResponse(
       success=True,
       updated_at=str(rec.updated_at),
       name=rec.name,
-      email=rec.email
+      email=rec.email,
+      colour=rec.colour
   )

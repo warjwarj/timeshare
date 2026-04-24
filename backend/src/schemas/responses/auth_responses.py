@@ -10,8 +10,10 @@ class LoginResponse():
   success: bool
   access_token: str
   token_type: str
+  uuid: str
   name: str
   email: str
+  colour: str
 
 
 @dataclass
@@ -23,3 +25,4 @@ class UpdateAccountResponse():
   updated_at: str
   name: str
   email: str
+  colour: str
