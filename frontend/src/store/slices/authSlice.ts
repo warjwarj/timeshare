@@ -1,126 +1,59 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 
-import { apiClient } from "../../utils/apiClient";
+import type { LoginRequest } from '../../actions/auth/loginAction';
+import loginAction from '../../actions/auth/loginAction';
+import type { RegisterRequest } from '../../actions/auth/registerAction';
+import registerAction from '../../actions/auth/registerAction';
+import type { UpdateAccountRequest } from '../../actions/auth/updateAccountAction';
+import updateAccountAction from '../../actions/auth/updateAccountAction';
 import { toastService } from '../../toastService';
-import axios, { HttpStatusCode } from 'axios';
-import { tryParseAxiosErrorMessage, tryParseAxiosMessage } from '../../utils/utils';
 import type { UserDTO } from '../../types/UserDTO';
 
 const login = createAsyncThunk(
   'auth/login',
   async (
-    { name, email, password }: { name: string | null, email: string, password: string },
+    req: LoginRequest,
     { signal, rejectWithValue }
   ) => {
-    try {
-      const res = await apiClient.post("/auth/login", {
-        name,
-        email,
-        password
-      },
-        { signal, validateStatus: status => status < 500 }
-      );
-      if (res.status !== HttpStatusCode.Ok) {
-        const errMsg = tryParseAxiosMessage(res)
-        toastService.showError("Couldn't login", errMsg);
-        return rejectWithValue(errMsg);
-      }
-      return res.data;
-    } catch (error: unknown) {
-      // don't show message if cancel
-      if (axios.isCancel(error)) {
-        return rejectWithValue('Request cancelled');
-      }
-      // try and parse the error from server
-      if (axios.isAxiosError(error)) {
-        const errMsg = tryParseAxiosErrorMessage(error)
-        toastService.showError("Couldn't login", errMsg);
-        return rejectWithValue(errMsg);
-      }
-      // fallback to exception message or unknown
-      const err = error instanceof Error ? error.message : 'Unknown error';
-      toastService.showError("Couldn't login", err);
-      return rejectWithValue(err);
+    const errMsg = "Couldn't login"
+    const res = await loginAction(req, signal)
+    if (!res.ok) {
+      toastService.showError(errMsg, res.error);
+      return rejectWithValue(res.error);
     }
+    return res.data;
   }
 );
 
 const register = createAsyncThunk(
   'auth/register',
   async (
-    { org_name, name, email, password }: { org_name: string, name: string | null, email: string, password: string },
+    req: RegisterRequest,
     { signal, rejectWithValue }
   ) => {
-    try {
-      const res = await apiClient.post("/auth/register", {
-        org_name,
-        name,
-        email,
-        password
-      },
-        { signal, validateStatus: status => status < 500 }
-      );
-      if (res.status !== HttpStatusCode.Created) {
-        const errMsg = tryParseAxiosMessage(res)
-        toastService.showError("Couldn't register", errMsg);
-        return rejectWithValue(errMsg);
-      }
-      return res.data;
-    } catch (error: unknown) {
-      // cancel error, don't show message
-      if (axios.isCancel(error)) {
-        return rejectWithValue('Request cancelled');
-      }
-      // try and parse the error
-      if (axios.isAxiosError(error)) {
-        const errMsg = tryParseAxiosErrorMessage(error)
-        toastService.showError("Couldn't register", errMsg);
-        return rejectWithValue(errMsg);
-      }
-      // fallback to exception message or unknown
-      const err = error instanceof Error ? error.message : 'Unknown error';
-      toastService.showError("Couldn't register", err);
-      return rejectWithValue(err);
+    const errMsg = "Couldn't register"
+    const res = await registerAction(req, signal)
+    if (!res.ok) {
+      toastService.showError(errMsg, res.error);
+      return rejectWithValue(res.error);
     }
+    return res.data;
   }
 );
 
 const updateAccount = createAsyncThunk(
   'auth/updateAccount',
   async (
-    { name, email, colour }: { name: string | null, email: string, colour: string },
+    req: UpdateAccountRequest,
     { signal, rejectWithValue }
   ) => {
-    try {
-      const res = await apiClient.put("/auth/account", {
-        name,
-        email,
-        colour
-      },
-        { signal, validateStatus: status => status < 500 }
-      );
-      if (res.status !== HttpStatusCode.Ok) {
-        const errMsg = tryParseAxiosMessage(res)
-        toastService.showError("Couldn't update account", errMsg);
-        return rejectWithValue(errMsg);
-      }
-      return res.data;
-    } catch (error: unknown) {
-      // cancel error, don't show message
-      if (axios.isCancel(error)) {
-        return rejectWithValue('Request cancelled');
-      }
-      // try and parse the error
-      if (axios.isAxiosError(error)) {
-        const errMsg = tryParseAxiosErrorMessage(error)
-        toastService.showError("Couldn't register", errMsg);
-        return rejectWithValue(errMsg);
-      }
-      // fallback to exception message or unknown
-      const err = error instanceof Error ? error.message : 'Unknown error';
-      toastService.showError("Couldn't register", err);
-      return rejectWithValue(err);
+    const errMsg = "Couldn't login"
+    const res = await updateAccountAction(req, signal)
+    if (!res.ok) {
+      toastService.showError(errMsg, res.error);
+      return rejectWithValue(res.error);
     }
+    return res.data;
   }
 );
 
@@ -143,31 +76,22 @@ export const authSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(login.fulfilled, (state, action) => {
-        const { success, uuid, name, email, colour, access_token } = action.payload;
-        if (!success || !access_token) {
-          toastService.showError("Couldn't log in", action.payload.detail as string)
-          return;
-        }
+        const { uuid, name, email, colour, access_token } = action.payload;
         state.token = access_token
         state.user = { uuid, name, email, colour } as UserDTO;
         localStorage.setItem("auth_state", JSON.stringify({ ...state }))
       })
       .addCase(updateAccount.fulfilled, (state, action) => {
-        const { success, name, email, colour } = action.payload;
-        if (!success) {
-          toastService.showError("Couldn't update account", action.payload.detail as string)
-          return;
-        }
+        const { name, email, colour } = action.payload;
         state.user = { ...state.user, name, email, colour } as UserDTO;
         localStorage.setItem("auth_state", JSON.stringify({ ...state }))
-        toastService.showSuccess("Account updated successfully")
       })
   }
 })
 
 export const { logout } = authSlice.actions;
 
-export { login, register, updateAccount }
+export { login, register, updateAccount };
 
 export const selectToken = (state: { auth: Auth }) => state.auth.token;
 export const selectLoggedInUser = (state: { auth: Auth }) => state.auth.user;

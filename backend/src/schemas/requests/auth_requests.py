@@ -1,5 +1,5 @@
 from typing import Annotated, Optional
-from pydantic import StringConstraints, UUID7, BaseModel
+from pydantic import StringConstraints, BaseModel
 
 
 class RegisterRequest(BaseModel):
@@ -9,7 +9,7 @@ class RegisterRequest(BaseModel):
   This is for registering an organisation, and the admin of that organisation.
   """
   org_name: Annotated[str, StringConstraints(max_length=255)]
-  name: Optional[Annotated[str, StringConstraints(max_length=255)]]
+  name: Annotated[str, StringConstraints(max_length=255)]
   email: Annotated[str, StringConstraints(max_length=255)]
   password: Annotated[str, StringConstraints(max_length=255)]
 
@@ -19,8 +19,8 @@ class LoginRequest(BaseModel):
   Pydantic class for validating a login request.  
   Can send name, email, or both - but not neither
   """
-  name: Optional[Annotated[str, StringConstraints(max_length=255)]]
-  email: Optional[Annotated[str, StringConstraints(max_length=255)]]
+  name: Optional[Annotated[str, StringConstraints(max_length=255)]] = None
+  email: Optional[Annotated[str, StringConstraints(max_length=255)]] = None
   password: Annotated[str, StringConstraints(max_length=255)]
 
 

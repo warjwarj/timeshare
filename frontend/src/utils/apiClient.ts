@@ -12,6 +12,7 @@ const apiClient = axios.create({
   },
 });
 
+
 // Request interceptor - runs before every request
 apiClient.interceptors.request.use(
   async (config) => {

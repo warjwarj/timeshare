@@ -1,42 +1,20 @@
-import { createSlice, createAsyncThunk, createSelector } from '@reduxjs/toolkit';
-import type { PayloadAction } from '@reduxjs/toolkit'
+import type { PayloadAction } from '@reduxjs/toolkit';
+import { createAsyncThunk, createSelector, createSlice } from '@reduxjs/toolkit';
 
-import { apiClient } from "../../utils/apiClient";
-import axios, { HttpStatusCode } from 'axios';
-import { toastService } from '../../toastService';
-import { tryParseAxiosErrorMessage, tryParseAxiosMessage } from '../../utils/utils';
 import { TZDate } from '@date-fns/tz';
+import getCurrentDateAction from '../../actions/common/getCurrentDateAction';
+import { toastService } from '../../toastService';
 
 const getCurrentDate = createAsyncThunk(
   'common/current-datetime',
   async (_, { signal, rejectWithValue }) => {
-    try {
-      const res = await apiClient.get("/common/current-datetime", {
-        headers: {
-          "X-Timezone": "UTC"
-        },
-        signal,
-        validateStatus: status => status < 500
-      })
-      if (res.status !== HttpStatusCode.Ok) {
-        const errMsg = tryParseAxiosMessage(res);
-        toastService.showError("Couldn't get current datetime", errMsg);
-        return rejectWithValue(errMsg);
-      }
-      return res.data
-    } catch (error: unknown) {
-      if (axios.isCancel(error)) {
-        return rejectWithValue('Request cancelled');
-      }
-      if (axios.isAxiosError(error)) {
-        const errMsg = tryParseAxiosErrorMessage(error);
-        toastService.showError("Couldn't reach server", errMsg);
-        return rejectWithValue(errMsg);
-      }
-      const err = error instanceof Error ? error.message : 'Unknown error';
-      toastService.showError("Couldn't reach server", err);
-      return rejectWithValue(err);
+    const errMsg = "Couldn't get current datetime"
+    const res = await getCurrentDateAction(signal)
+    if (!res.ok) {
+      toastService.showError(errMsg, res.error);
+      return rejectWithValue(res.error);
     }
+    return res.data;
   }
 );
 
