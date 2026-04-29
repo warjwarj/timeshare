@@ -1,10 +1,8 @@
-import { HttpStatusCode } from "axios";
 import { useEffect, useState } from "react";
 import { inputLabel, textInput } from "../../../PredefinedStyles";
+import searchOrgusersAction from "../../actions/availability/searchOrgusersAction";
 import { toastService } from "../../toastService";
 import type { UserDTO } from "../../types/UserDTO";
-import { apiClient } from "../../utils/apiClient";
-import { tryParseAxiosMessage } from "../../utils/utils";
 import UserSearchItem from "./UserSearchItem";
 
 
@@ -20,17 +18,12 @@ export default function SearchBarModalContent({ setSelectedUser }: SearchBarModa
 
   // search api call 
   const search = async (term: string, signal: AbortSignal) => {
-    const res = await apiClient.get(`/orgusers/search/${term}`, {
-      signal,
-      validateStatus: status => status < 500,
-    })
-    if (res.status !== HttpStatusCode.Ok) {
-      const errMsg = tryParseAxiosMessage(res);
-      toastService.showError("Couldn't search", errMsg);
-      return;
+    const errMsg = "Couldn't search orgusers"
+    const res = await searchOrgusersAction(term, signal)
+    if (!res.ok) {
+      toastService.showError(errMsg, res.error);
     }
-    console.log(res.data)
-    setSearchResults(res.data as UserDTO[])
+    setSearchResults(res.data)
   }
 
   // call api with debounce

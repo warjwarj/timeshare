@@ -6,5 +6,5 @@ type GetCurrentDateResponse = {
 }
 
 export default function getCurrentDateAction(signal: AbortSignal): Promise<FetchWrapperResponse<GetCurrentDateResponse>> {
-  return fetchWrapper("/common/current-datetime", { method: "GET", signal: signal })
+  return fetchWrapper("/common/current-datetime", undefined, { method: "GET", signal: signal })
 }

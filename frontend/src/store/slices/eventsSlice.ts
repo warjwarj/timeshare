@@ -1,147 +1,73 @@
 import { createAsyncThunk, createSelector, createSlice } from '@reduxjs/toolkit';
 
 import { TZDate } from '@date-fns/tz';
-import axios, { HttpStatusCode } from 'axios';
+import addEventAction from '../../actions/events/addEventAction';
+import deleteEventAction from '../../actions/events/deleteEventAction';
+import getEventsAction from '../../actions/events/getEventsAction';
+import updateEventAction from '../../actions/events/updateEventAction';
 import { toastService } from '../../toastService';
 import type { EventDTO, ProcessedEventDTO } from '../../types/EventDTO';
-import { apiClient } from "../../utils/apiClient";
-import { definitelyUtcButNaiveIsoStrToTzDate, tryParseAxiosErrorMessage, tryParseAxiosMessage, tzdateToUtcString } from '../../utils/utils';
+import { definitelyUtcButNaiveIsoStrToTzDate, tzdateToUtcString } from '../../utils/utils';
 
 const getEvents = createAsyncThunk(
   'getEvents',
   async ({ start, end }: { start: string, end: string }, { signal, rejectWithValue }) => {
-    try {
-      const res = await apiClient.get("/events/", {
-        params: {
-          start: start,
-          end: end
-        },
-        signal,
-        validateStatus: status => status < 500,
-      })
-      if (res.status !== HttpStatusCode.Ok) {
-        const errMsg = tryParseAxiosMessage(res);
-        toastService.showError("Couldn't get events", errMsg);
-        return rejectWithValue(errMsg);
-      }
-      return res.data as EventDTO[];
-    } catch (error: unknown) {
-      if (axios.isCancel(error)) {
-        return rejectWithValue('Request cancelled');
-      }
-      if (axios.isAxiosError(error)) {
-        const errMsg = tryParseAxiosErrorMessage(error);
-        toastService.showError("Couldn't get events", errMsg);
-        return rejectWithValue(errMsg);
-      }
-      const err = error instanceof Error ? error.message : 'Unknown error';
-      toastService.showError("Couldn't get events", err);
-      return rejectWithValue(err);
+    const errMsg = "Couldn't get events"
+    const res = await getEventsAction({ start, end }, signal)
+    if (!res.ok) {
+      toastService.showError(errMsg, res.error);
+      return rejectWithValue(res.error);
     }
+    return res.data;
   }
 );
 
 const addEvent = createAsyncThunk(
   'addEvent',
   async (event: Omit<ProcessedEventDTO, "uuid">, { signal, rejectWithValue }) => {
-    try {
-      // format to utc+0 time on outbound
-      const normalisedEventDTO: Omit<EventDTO, 'uuid'> = {
-        ...event,
-        start: event.start.toISOString(),
-        end: event.end.toISOString(),
-      }
-      const res = await apiClient.post(
-        "/events",
-        normalisedEventDTO,
-        { signal, validateStatus: status => status < 500 }
-      )
-      if (res.status !== HttpStatusCode.Created) {
-        const errMsg = tryParseAxiosMessage(res);
-        toastService.showError("Couldn't add event", errMsg);
-        return rejectWithValue(errMsg);
-      }
-      return res.data as EventDTO;
-    } catch (error: unknown) {
-      if (axios.isCancel(error)) {
-        return rejectWithValue('Request cancelled');
-      }
-      if (axios.isAxiosError(error)) {
-        const errMsg = tryParseAxiosErrorMessage(error);
-        toastService.showError("Couldn't add event", errMsg);
-        return rejectWithValue(errMsg);
-      }
-      const err = error instanceof Error ? error.message : 'Unknown error';
-      toastService.showError("Couldn't add event", err);
-      return rejectWithValue(err);
+    const normalisedEventDTO: Omit<EventDTO, 'uuid'> = {
+      ...event,
+      start: event.start.toISOString(),
+      end: event.end.toISOString(),
     }
+    const errMsg = "Couldn't add event"
+    const res = await addEventAction(normalisedEventDTO, signal)
+    if (!res.ok) {
+      toastService.showError(errMsg, res.error);
+      return rejectWithValue(res.error);
+    }
+    return res.data;
   }
 );
 
 const updateEvent = createAsyncThunk(
   'updateEvent',
   async (event: ProcessedEventDTO, { signal, rejectWithValue }) => {
-    try {
-      // format to utc+0 time on outbound
-      const normalisedEventDTO: EventDTO = {
-        ...event,
-        start: tzdateToUtcString(event.start),
-        end: tzdateToUtcString(event.end)
-      }
-      const res = await apiClient.put(
-        `/events/${event.uuid}`,
-        normalisedEventDTO,
-        { signal, validateStatus: status => status < 500 }
-      )
-      if (res.status !== HttpStatusCode.Ok) {
-        const errMsg = tryParseAxiosMessage(res);
-        toastService.showError("Couldn't update event", errMsg);
-        return rejectWithValue(errMsg);
-      }
-      return res.data as EventDTO;
-    } catch (error: unknown) {
-      if (axios.isCancel(error)) {
-        return rejectWithValue('Request cancelled');
-      }
-      if (axios.isAxiosError(error)) {
-        const errMsg = tryParseAxiosErrorMessage(error);
-        toastService.showError("Couldn't update event", errMsg);
-        return rejectWithValue(errMsg);
-      }
-      const err = error instanceof Error ? error.message : 'Unknown error';
-      toastService.showError("Couldn't update event", err);
-      return rejectWithValue(err);
+    const normalisedEventDTO: EventDTO = {
+      ...event,
+      start: tzdateToUtcString(event.start),
+      end: tzdateToUtcString(event.end)
     }
+    const errMsg = "Couldn't update event"
+    const res = await updateEventAction(normalisedEventDTO, signal)
+    if (!res.ok) {
+      toastService.showError(errMsg, res.error);
+      return rejectWithValue(res.error);
+    }
+    return res.data;
   }
 );
 
 const deleteEvent = createAsyncThunk(
   'deleteEvent',
   async (uuid: string, { signal, rejectWithValue }) => {
-    try {
-      const res = await apiClient.delete(
-        `/events/${uuid}`,
-        { signal, validateStatus: status => status < 500 }
-      )
-      if (res.status !== HttpStatusCode.Ok) {
-        const errMsg = tryParseAxiosMessage(res);
-        toastService.showError("Couldn't delete event", errMsg);
-        return rejectWithValue(errMsg);
-      }
-      return uuid;
-    } catch (error: unknown) {
-      if (axios.isCancel(error)) {
-        return rejectWithValue('Request cancelled');
-      }
-      if (axios.isAxiosError(error)) {
-        const errMsg = tryParseAxiosErrorMessage(error);
-        toastService.showError("Couldn't delete event", errMsg);
-        return rejectWithValue(errMsg);
-      }
-      const err = error instanceof Error ? error.message : 'Unknown error';
-      toastService.showError("Couldn't delete event", err);
-      return rejectWithValue(err);
+    const errMsg = "Couldn't delete event"
+    const res = await deleteEventAction(uuid, signal)
+    if (!res.ok) {
+      toastService.showError(errMsg, res.error);
+      return rejectWithValue(res.error);
     }
+    return uuid;
   }
 );
 
@@ -236,9 +162,9 @@ const eventsSlice = createSlice({
 export const selectEvents = (state: { events: EventsState }) => state.events.events
 
 /*
-  An input selector returned a different result when passed same arguments. 
-  This means your output selector will likely run more frequently than intended. 
-  Avoid returning a new reference inside your input selector, e.g.`createSelector([state => state.todos.map(todo => todo.id)], todoIds => todoIds.length)` 
+  An input selector returned a different result when passed same arguments.
+  This means your output selector will likely run more frequently than intended.
+  Avoid returning a new reference inside your input selector, e.g.`createSelector([state => state.todos.map(todo => todo.id)], todoIds => todoIds.length)`
 
   ^^^ This is caused by our first memoised selector below mapping the events array.
   However I think this is necessary since we need to make the events timezone aware.

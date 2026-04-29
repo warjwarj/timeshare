@@ -18,7 +18,7 @@ export default async function fetchWrapper<T = void>(
   redirectOn400: boolean = true
 ): Promise<FetchWrapperResponse<T>> {
 
-  // lazy import becuase this loads before the reducer 
+  // lazy import becuase this loads before the reducer
   const { store } = await import('../store/store');
   const state = store.getState();
   const token = selectToken(state);
@@ -58,11 +58,44 @@ export default async function fetchWrapper<T = void>(
   return { ok: res.ok, data, error }
 };
 
+// example of a Pydantic error message
+// {
+// 	"detail": [
+// 		{
+// 			"type": "missing",
+// 			"loc": [
+// 				"body",
+// 				"name"
+// 			],
+// 			"msg": "Field required",
+// 			"input": {
+// 				"email": "asd",
+// 				"password": "asd"
+// 			}
+// 		}
+// 	]
+// }
+
 /**
  * Try and parse the assumed error message from the raw response data
  * @param data The raw fetch response
  * @returns The error message embedded in the response
  */
-function checkForErrorMessage(data: unknown): string {
-  return String(data)
+function checkForErrorMessage(possibleErr: unknown): string {
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const detail = (possibleErr as any)?.data?.detail ?? (possibleErr as any)?.response?.data?.detail
+
+  // if not array it's a regular message from our backend
+  if (!Array.isArray(detail)) {
+    return detail;
+  }
+
+  // if array then it's a pydantic error message
+  const parsedMessage = detail[0]?.msg
+  if (parsedMessage !== null) {
+    return parsedMessage;
+  }
+
+  return "";
 }

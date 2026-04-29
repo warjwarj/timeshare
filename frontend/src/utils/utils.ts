@@ -1,10 +1,9 @@
 // fake enum
-import { useOutletContext } from "react-router-dom";
-import { TimeSpanEnum, type TimeSpan } from "../types/dateTypes";
-import axios, { AxiosError, type AxiosResponse } from 'axios'
-import type { MainLayoutContext } from "../MainLayout";
 import { TZDate } from "@date-fns/tz";
 import { format } from "date-fns-tz";
+import { useOutletContext } from "react-router-dom";
+import type { MainLayoutContext } from "../MainLayout";
+import { TimeSpanEnum, type TimeSpan } from "../types/dateTypes";
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -12,48 +11,9 @@ import { format } from "date-fns-tz";
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-/**
- * try and get our assumed validation error from the axios response object
- * @returns Our message parsed from the axios response
- */
-export function tryParseAxiosMessage(
-  e: AxiosResponse<{ detail?: string | Array<{ msg?: string }> }>
-): string {
-  const detail = e.data?.detail;
-  return (Array.isArray(detail) ? detail[0]?.msg : detail) ?? "Unknown error";
-}
-
-/**
- * Try and get our error message from the axios err response object
- * @returns Our error from server parsed from the axios error message
- */
-export function tryParseAxiosErrorMessage(
-  e: AxiosError<{ detail?: string | Array<{ msg?: string }> }>
-): string {
-  const detail = e.response?.data?.detail;
-  return (Array.isArray(detail) ? detail[0]?.msg : detail) ?? "Unknown error";
-}
-
 
 export function useLayoutContext() {
   return useOutletContext<MainLayoutContext>();
-}
-
-// to make sure the error is of type string
-export function getStrErrorMessage(error: unknown): string {
-  if (axios.isAxiosError(error)) {
-    return error.response?.data?.message
-      || error.response?.data?.detail
-      || error.message
-      || 'Request failed';
-  }
-  if (error instanceof Error) {
-    return error.message;
-  }
-  if (typeof error === 'string') {
-    return error;
-  }
-  return 'An unexpected error occurred';
 }
 
 export function isNullOrWhitespace(input: string) {

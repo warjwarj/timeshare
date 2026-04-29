@@ -1,206 +1,102 @@
 import { createAsyncThunk, createSelector, createSlice } from '@reduxjs/toolkit';
 
 import { TZDate } from '@date-fns/tz';
-import axios, { HttpStatusCode } from 'axios';
+import createAvailabilityRuleAction from '../../actions/availability/createAvailabilityRuleAction';
+import deleteAvailabilityRuleAction from '../../actions/availability/deleteAvailabilityRuleAction';
+import getAvailabilityRuleAction from '../../actions/availability/getAvailabilityRuleAction';
+import getAvailabilityRulesAction from '../../actions/availability/getAvailabilityRulesAction';
+import getDayAvailabilitysAction from '../../actions/availability/getDayAvailabilitysAction';
+import updateAvailabilityRuleAction from '../../actions/availability/updateAvailabilityRuleAction';
 import { toastService } from '../../toastService';
 import { type AvailabilityRuleDTO, type ProcessedAvailabilityRuleDTO } from '../../types/AvailabilityRuleDTO';
 import type { DayAvailabilityDTO, ProcessedDayAvailabilityDTO } from '../../types/DayAvailabilityDTO';
-import { apiClient } from "../../utils/apiClient";
-import { definitelyUtcButNaiveIsoStrToTzDate, tryParseAxiosErrorMessage, tryParseAxiosMessage, tzdateToUtcString } from '../../utils/utils';
+import { definitelyUtcButNaiveIsoStrToTzDate, tzdateToUtcString } from '../../utils/utils';
 
 const getDayAvailabilitys = createAsyncThunk(
   'getDayAvailabilitys',
   async ({ iana_timezone, start_datetime, end_datetime }: { iana_timezone: string, start_datetime: string, end_datetime: string }, { signal, rejectWithValue }) => {
-    try {
-      const res = await apiClient.post("/availability/getAvailability", {
-        iana_timezone,
-        start_datetime,
-        end_datetime
-      }, {
-        signal,
-        validateStatus: status => status < 500,
-      });
-      if (res.status !== HttpStatusCode.Ok) {
-        const errMsg = tryParseAxiosMessage(res);
-        toastService.showError("Couldn't get availability", errMsg);
-        return rejectWithValue(errMsg);
-      }
-      return res.data as DayAvailabilityDTO[];
-    } catch (error: unknown) {
-      if (axios.isCancel(error)) {
-        return rejectWithValue('Request cancelled');
-      }
-      if (axios.isAxiosError(error)) {
-        const errMsg = tryParseAxiosErrorMessage(error);
-        toastService.showError("Couldn't get availability", errMsg);
-        return rejectWithValue(errMsg);
-      }
-      const err = error instanceof Error ? error.message : 'Unknown error';
-      toastService.showError("Couldn't get availability", err);
-      return rejectWithValue(err);
+    const errMsg = "Couldn't get availability"
+    const res = await getDayAvailabilitysAction({ iana_timezone, start_datetime, end_datetime }, signal)
+    if (!res.ok) {
+      toastService.showError(errMsg, res.error);
+      return rejectWithValue(res.error);
     }
+    return res.data;
   }
 );
 
 const getAvailabilityRules = createAsyncThunk(
   'getAvailabilityRules',
   async (_, { signal, rejectWithValue }) => {
-    try {
-      const res = await apiClient.get("/availability", {
-        signal,
-        validateStatus: status => status < 500,
-      });
-      if (res.status !== HttpStatusCode.Ok) {
-        const errMsg = tryParseAxiosMessage(res);
-        toastService.showError("Couldn't get availability rules", errMsg);
-        return rejectWithValue(errMsg);
-      }
-      return res.data as AvailabilityRuleDTO[];
-    } catch (error: unknown) {
-      if (axios.isCancel(error)) {
-        return rejectWithValue('Request cancelled');
-      }
-      if (axios.isAxiosError(error)) {
-        const errMsg = tryParseAxiosErrorMessage(error);
-        toastService.showError("Couldn't get availability rules", errMsg);
-        return rejectWithValue(errMsg);
-      }
-      const err = error instanceof Error ? error.message : 'Unknown error';
-      toastService.showError("Couldn't get availability rules", err);
-      return rejectWithValue(err);
+    const errMsg = "Couldn't get availability rules"
+    const res = await getAvailabilityRulesAction(signal)
+    if (!res.ok) {
+      toastService.showError(errMsg, res.error);
+      return rejectWithValue(res.error);
     }
+    return res.data;
   }
 );
 
 const getAvailabilityRule = createAsyncThunk(
   'getAvailabilityRule',
   async (uuid: string, { signal, rejectWithValue }) => {
-    try {
-      const res = await apiClient.get(`/availability/${uuid}`, {
-        signal,
-        validateStatus: status => status < 500,
-      });
-      if (res.status !== HttpStatusCode.Ok) {
-        const errMsg = tryParseAxiosMessage(res);
-        toastService.showError("Couldn't get availability rule", errMsg);
-        return rejectWithValue(errMsg);
-      }
-      return res.data as AvailabilityRuleDTO;
-    } catch (error: unknown) {
-      if (axios.isCancel(error)) {
-        return rejectWithValue('Request cancelled');
-      }
-      if (axios.isAxiosError(error)) {
-        const errMsg = tryParseAxiosErrorMessage(error);
-        toastService.showError("Couldn't get availability rule", errMsg);
-        return rejectWithValue(errMsg);
-      }
-      const err = error instanceof Error ? error.message : 'Unknown error';
-      toastService.showError("Couldn't get availability rule", err);
-      return rejectWithValue(err);
+    const errMsg = "Couldn't get availability rule"
+    const res = await getAvailabilityRuleAction(uuid, signal)
+    if (!res.ok) {
+      toastService.showError(errMsg, res.error);
+      return rejectWithValue(res.error);
     }
+    return res.data;
   }
 );
 
 const createAvailabilityRule = createAsyncThunk(
   'createAvailabilityRule',
   async (rule: Omit<ProcessedAvailabilityRuleDTO, "uuid">, { signal, rejectWithValue }) => {
-    try {
-      // format to utc+0 time on outbound
-      const normalisedRuleDTO: Omit<AvailabilityRuleDTO, 'uuid'> = {
-        ...rule,
-        start_datetime: rule.start_datetime?.toISOString(),
-        end_datetime: rule.end_datetime?.toISOString(),
-      }
-      const res = await apiClient.post("/availability", normalisedRuleDTO, {
-        signal,
-        validateStatus: status => status < 500,
-      });
-      if (res.status !== HttpStatusCode.Created) {
-        const errMsg = tryParseAxiosMessage(res);
-        toastService.showError("Couldn't create availability rule", errMsg);
-        return rejectWithValue(errMsg);
-      }
-      return res.data as AvailabilityRuleDTO;
-    } catch (error: unknown) {
-      if (axios.isCancel(error)) {
-        return rejectWithValue('Request cancelled');
-      }
-      if (axios.isAxiosError(error)) {
-        const errMsg = tryParseAxiosErrorMessage(error);
-        toastService.showError("Couldn't create availability rule", errMsg);
-        return rejectWithValue(errMsg);
-      }
-      const err = error instanceof Error ? error.message : 'Unknown error';
-      toastService.showError("Couldn't create availability rule", err);
-      return rejectWithValue(err);
+    const normalisedRuleDTO: Omit<AvailabilityRuleDTO, 'uuid'> = {
+      ...rule,
+      start_datetime: rule.start_datetime?.toISOString(),
+      end_datetime: rule.end_datetime?.toISOString(),
     }
+    const errMsg = "Couldn't create availability rule"
+    const res = await createAvailabilityRuleAction(normalisedRuleDTO, signal)
+    if (!res.ok) {
+      toastService.showError(errMsg, res.error);
+      return rejectWithValue(res.error);
+    }
+    return res.data;
   }
 );
 
 const updateAvailabilityRule = createAsyncThunk(
   'updateAvailabilityRule',
   async (rule: ProcessedAvailabilityRuleDTO, { signal, rejectWithValue }) => {
-    try {
-      // format to utc+0 time on outbound
-      const normalisedRuleDTO: AvailabilityRuleDTO = {
-        ...rule,
-        start_datetime: rule.start_datetime ? tzdateToUtcString(rule.start_datetime) : undefined,
-        end_datetime: rule.end_datetime ? tzdateToUtcString(rule.end_datetime) : undefined
-      }
-      const res = await apiClient.put(`/availability/${rule.uuid}`, normalisedRuleDTO, {
-        signal,
-        validateStatus: status => status < 500,
-      });
-      if (res.status !== HttpStatusCode.Ok) {
-        const errMsg = tryParseAxiosMessage(res);
-        toastService.showError("Couldn't update availability rule", errMsg);
-        return rejectWithValue(errMsg);
-      }
-      return res.data as AvailabilityRuleDTO;
-    } catch (error: unknown) {
-      if (axios.isCancel(error)) {
-        return rejectWithValue('Request cancelled');
-      }
-      if (axios.isAxiosError(error)) {
-        const errMsg = tryParseAxiosErrorMessage(error);
-        toastService.showError("Couldn't update availability rule", errMsg);
-        return rejectWithValue(errMsg);
-      }
-      const err = error instanceof Error ? error.message : 'Unknown error';
-      toastService.showError("Couldn't update availability rule", err);
-      return rejectWithValue(err);
+    const normalisedRuleDTO: AvailabilityRuleDTO = {
+      ...rule,
+      start_datetime: rule.start_datetime ? tzdateToUtcString(rule.start_datetime) : undefined,
+      end_datetime: rule.end_datetime ? tzdateToUtcString(rule.end_datetime) : undefined
     }
+    const errMsg = "Couldn't update availability rule"
+    const res = await updateAvailabilityRuleAction(normalisedRuleDTO, signal)
+    if (!res.ok) {
+      toastService.showError(errMsg, res.error);
+      return rejectWithValue(res.error);
+    }
+    return res.data;
   }
 );
 
 const deleteAvailabilityRule = createAsyncThunk(
   'deleteAvailabilityRule',
   async (uuid: string, { signal, rejectWithValue }) => {
-    try {
-      const res = await apiClient.delete(`/availability/${uuid}`, {
-        signal,
-        validateStatus: status => status < 500,
-      });
-      if (res.status !== HttpStatusCode.Ok) {
-        const errMsg = tryParseAxiosMessage(res);
-        toastService.showError("Couldn't delete availability rule", errMsg);
-        return rejectWithValue(errMsg);
-      }
-      return uuid;
-    } catch (error: unknown) {
-      if (axios.isCancel(error)) {
-        return rejectWithValue('Request cancelled');
-      }
-      if (axios.isAxiosError(error)) {
-        const errMsg = tryParseAxiosErrorMessage(error);
-        toastService.showError("Couldn't delete availability rule", errMsg);
-        return rejectWithValue(errMsg);
-      }
-      const err = error instanceof Error ? error.message : 'Unknown error';
-      toastService.showError("Couldn't delete availability rule", err);
-      return rejectWithValue(err);
+    const errMsg = "Couldn't delete availability rule"
+    const res = await deleteAvailabilityRuleAction(uuid, signal)
+    if (!res.ok) {
+      toastService.showError(errMsg, res.error);
+      return rejectWithValue(res.error);
     }
+    return uuid;
   }
 );
 
@@ -346,7 +242,7 @@ export const makeDayAvailabilitySelectors = () => {
 
   // when we send the request to the backend for day availabilities
   // we specify the timezone of the req + res dates.
-  // this should mean that the day availabilities returned are in our timezone. 
+  // this should mean that the day availabilities returned are in our timezone.
   const selectProcessedDayAvailabilitys = createSelector(
     [
       selectDayAvailabilitys,
