@@ -16,6 +16,7 @@ import { toastService } from '../../toastService';
 import { naiveIsoStrToTzDate, tzdateToWallClockInDatesTimezone } from '../../utils/utils';
 import { SaveButton } from '../utils/SaveButton';
 import { textInput, inputLabel } from '../../../PredefinedStyles'
+import GenericCheckbox from '../utils/GenericCheckbox';
 
 /*
   Modal for adding or editing an event.
@@ -28,6 +29,7 @@ type EventModalContentProps = {
   onDelete: (uuid: string) => void;
   onClose: () => void;
 };
+
 const EventModalContent: React.FC<EventModalContentProps> = ({ event, editing, onSave, onDelete, onClose }) => {
   const tz = ourUseSelector(selectSelectedIanaTimezone)
 
@@ -37,7 +39,8 @@ const EventModalContent: React.FC<EventModalContentProps> = ({ event, editing, o
     iana_timezone: event?.iana_timezone || tz,
     start: event?.start ? tzdateToWallClockInDatesTimezone(event.start) : "",
     end: event?.end ? tzdateToWallClockInDatesTimezone(event.end) : "",
-    colour: event?.colour || "#525252"
+    colour: event?.colour || "#525252",
+    blocking: event?.blocking || false
   })
 
   // save updated event object
@@ -108,7 +111,18 @@ const EventModalContent: React.FC<EventModalContentProps> = ({ event, editing, o
 
       {/* Timezone (need to add a warning or something) */}
       <div>
-        <label className={"block text-xl font-medium text-light-primary-text dark:text-dark-primary-text mb-2"}>Timezone: {formData.iana_timezone}</label>
+        <label className={"pb-6 block text-xl font-medium text-light-primary-text dark:text-dark-primary-text"}>Timezone: {formData.iana_timezone}</label>
+      </div>
+
+      <div className="flex pb-6">
+        <GenericCheckbox
+          checked={formData.blocking}
+          setChecked={(x) => setFormData(prev => ({ ...prev, blocking: x }))}
+          style={{ width: "20px", height: "20px" }}
+        />
+        <label className="inline ml-2 justify-center align-center text-sm font-medium text-light-primary-text dark:text-dark-primary-text">
+          Event is blocking
+        </label>
       </div>
 
       {/* Date range */}

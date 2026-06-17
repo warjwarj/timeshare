@@ -97,7 +97,7 @@ const Cell: React.FC<CellProps> = (props: CellProps) => {
           height: egcStyle.heightStyle
         }}
       >
-        <div >
+        <div>
           <span>
             {label}
           </span>

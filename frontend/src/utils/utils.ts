@@ -1,4 +1,4 @@
-// fake enum
+// fake enum+
 import { TZDate } from "@date-fns/tz";
 import { format } from "date-fns-tz";
 import { useOutletContext } from "react-router-dom";
@@ -10,7 +10,6 @@ import { TimeSpanEnum, type TimeSpan } from "../types/dateTypes";
   Generic utils
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
-
 
 export function useLayoutContext() {
   return useOutletContext<MainLayoutContext>();

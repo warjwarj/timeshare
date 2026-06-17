@@ -51,7 +51,7 @@ const CellInfoModalContent: React.FC<CellInfoModalContentProps> = ({ eventsInCel
           onClose={() => setShowAddEventModal(false)}
         >
           <EventModalContent
-            event={{ start: new TZDate(cellDate), end: addHours(new TZDate(cellDate), 1), uuid: "", name: "", iana_timezone: "", colour: "#525252" }}
+            event={{ start: new TZDate(cellDate), end: addHours(new TZDate(cellDate), 1), uuid: "", name: "", iana_timezone: "", colour: "#525252", blocking: false }}
             editing={false}
             onClose={() => setShowAddEventModal(false)}
             onDelete={() => { }}

@@ -8,6 +8,7 @@ export type EventDTO = {
   end: string;
   iana_timezone: string;
   colour: string;
+  blocking: boolean;
 };
 
 // dto with string dates processed into Date objects

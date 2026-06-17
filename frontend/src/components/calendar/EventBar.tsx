@@ -23,6 +23,7 @@ type EventBarStyle = {
   lane: number;
   top?: number; // Optional: direct top position in pixels (used by DayGrid)
 }
+
 type EventBarProps = {
   readonly eventDTO: ProcessedEventDTO
   evStyle: EventBarStyle

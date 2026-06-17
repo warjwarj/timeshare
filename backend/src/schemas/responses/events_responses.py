@@ -16,6 +16,7 @@ class SafeEventDTO(BaseModel):
   start: datetime
   end: datetime
   iana_timezone: str
+  blocking: bool
   name: str
   colour: str
   created_at: Optional[datetime] = None

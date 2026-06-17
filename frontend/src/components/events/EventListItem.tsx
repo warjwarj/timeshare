@@ -1,13 +1,12 @@
-import { useState } from 'react';
-import '../../../index.css';
-import { deleteEvent, updateEvent } from '../../store/slices/eventsSlice';
-import type { EventDTO, ProcessedEventDTO } from '../../types/EventDTO';
-import { ourUseDispatch } from '../../store/hooks';
+import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { EventModalContent } from './EventModalContent';
-import { Modal } from '../Modal';
-import React from 'react';
+import '../../../index.css';
+import { ourUseDispatch } from '../../store/hooks';
+import { deleteEvent, updateEvent } from '../../store/slices/eventsSlice';
+import type { ProcessedEventDTO } from '../../types/EventDTO';
 import { formatDate } from '../../utils/utils';
+import { Modal } from '../Modal';
+import { EventModalContent } from './EventModalContent';
 
 type EventListItemProps = {
   event: ProcessedEventDTO
@@ -18,7 +17,7 @@ const EventListItem: React.FC<EventListItemProps> = ({ event }) => {
 
   const [showModal, setShowModal] = useState<boolean>(false)
 
-  const onSave = async (ev: EventDTO) => {
+  const onSave = async (ev: ProcessedEventDTO) => {
     await dispatch(updateEvent(ev));
   };
 
@@ -96,4 +95,5 @@ const EventListItem: React.FC<EventListItemProps> = ({ event }) => {
 };
 
 export { EventListItem };
-export type { EventListItemProps }
+export type { EventListItemProps };
+

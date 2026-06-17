@@ -24,6 +24,7 @@ class CreateEventRequest(BaseModel):
   start: OptionalDatetime
   end: OptionalDatetime
   iana_timezone: TimeZoneName | None
+  blocking: bool
   name: str = Field(min_length=1, max_length=100)
   colour: str = Field(pattern=r"^#(?:[0-9a-fA-F]{3}){1,2}$")  # check colour is in hex code format
 
@@ -41,6 +42,7 @@ class UpdateEventRequest(BaseModel):
   """
   start: OptionalDatetime
   end: OptionalDatetime
+  blocking: bool
   name: str = Field(min_length=1, max_length=100)
   colour: str = Field(pattern=r"^#(?:[0-9a-fA-F]{3}){1,2}$")  # check colour is in hex code format
 

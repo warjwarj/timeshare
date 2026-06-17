@@ -1,5 +1,6 @@
 import logging
 from datetime import datetime
+from typing import Optional
 
 from sqlalchemy import select
 
@@ -32,13 +33,13 @@ org_user_rep = OrganisationUserRepository()
 
 
 class EventsRepository(Repository[EventModel, EventDTO]):
-  """  
+  """
   Repository for managing events, and those events relationships with other entities.
   """
   model_class = EventModel
 
   def add_record(self, user_id: str, **kwargs) -> EventDTO | None:
-    """ 
+    """
     Add an event record, along with its associations.
 
     Args:
@@ -62,7 +63,7 @@ class EventsRepository(Repository[EventModel, EventDTO]):
     )
     return event
 
-  def get_events_by_datetimes(self, user_id: str, start: datetime, end: datetime) -> list[EventDTO]:
+  def get_events_by_datetimes(self, user_id: str, start: datetime, end: datetime, filter_on_blocking: Optional[bool] = None) -> list[EventDTO]:
     """
     Get events for user within the given timespan.
 
@@ -73,14 +74,18 @@ class EventsRepository(Repository[EventModel, EventDTO]):
     """
     user = users_rep.get_record(id=user_id)
     with yield_session(DB_URL) as session:
-      records = session.execute(
+      query = (
           select(EventModel)
           .join(UserEventModel, UserEventModel.event_id == EventModel.id)
           .filter(
               UserEventModel.user_id == user.id,
               self.model_class.start <= end,
-              self.model_class.end >= start
-          )).scalars().all()
+              self.model_class.end >= start,
+          )
+      )
+      if filter_on_blocking is not None:
+        query = query.filter(self.model_class.blocking == filter_on_blocking)
+      records = session.execute(query).scalars().all()
       if records:
         return [r.map_to_dto() for r in records]
     return []

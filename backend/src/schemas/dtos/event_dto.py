@@ -3,6 +3,7 @@ from typing import Optional
 from dataclasses import dataclass
 from uuid import UUID
 
+
 @dataclass
 class EventDTO():
   """  
@@ -13,6 +14,7 @@ class EventDTO():
   start: datetime
   end: datetime
   iana_timezone: str
+  blocking: bool
   name: str
   colour: str
   created_at: Optional[datetime] = None

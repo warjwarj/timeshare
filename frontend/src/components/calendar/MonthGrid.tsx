@@ -50,17 +50,25 @@ const MonthGrid: React.FC<MonthGridProps> = ({ gridStyle, gridConfig, colHeaders
   // event bar props state
   const [eventProps, setEventProps] = useState<EventBarProps[][]>();
 
-  // fetch events and availability when date range changes
-  useEffect(() => {
+  const getGridStartEnd = () => {
     const tz = startDate.timeZone;
     const startDateISO = new TZDate(startDate.getFullYear(), startDate.getMonth() - 1, startDate.getDate(), tz).toISOString();
     const endDateISO = new TZDate(endDate.getFullYear(), endDate.getMonth() + 1, endDate.getDate(), tz).toISOString();
+    return { start: startDateISO, end: endDateISO }
+  }
+
+  // fetch events and availability when date range changes
+  useEffect(() => {
+    const { start, end } = getGridStartEnd();
+
     const timeoutId1 = setTimeout(() => {
-      dispatch(getEvents({ start: startDateISO, end: endDateISO }));
+      dispatch(getEvents({ start, end }));
     }, 300);
+
     const timeoutId2 = setTimeout(() => {
-      dispatch(getDayAvailabilitys({ iana_timezone: selectedTz, start_datetime: startDateISO, end_datetime: endDateISO }));
+      dispatch(getDayAvailabilitys({ iana_timezone: selectedTz, start_datetime: start, end_datetime: end }));
     }, 300);
+
     return () => {
       clearTimeout(timeoutId1);
       clearTimeout(timeoutId2);
@@ -203,7 +211,11 @@ const MonthGrid: React.FC<MonthGridProps> = ({ gridStyle, gridConfig, colHeaders
                   <EventBar
                     key={evp.key}
                     eventProps={evp}
-                    updateEvent={(ev) => dispatch(updateEvent(ev))}
+                    updateEvent={async (ev) => {
+                      await dispatch(updateEvent(ev))
+                      const { start, end } = getGridStartEnd();
+                      dispatch(getDayAvailabilitys({ iana_timezone: selectedTz, start_datetime: start, end_datetime: end }));
+                    }}
                     deleteEvent={(uuid) => dispatch(deleteEvent(uuid))}
                   />
                 ))}

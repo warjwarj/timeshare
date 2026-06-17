@@ -1,9 +1,12 @@
+from collections import namedtuple
 from datetime import datetime, time, timedelta, timezone
 import logging
 from dataclasses import asdict
 from uuid import UUID
 from zoneinfo import ZoneInfo
 
+from src.schemas.dtos.event_dto import EventDTO
+from src.repositories.events_repository import EventsRepository
 from src.dependancies.auth import RequestContextDep
 from src.schemas.dtos.day_availability import DayAvailability
 from src.repositories.users_repository import UserRepository
@@ -25,6 +28,7 @@ logger = logging.getLogger(__name__)
 
 availability_repo = AvailabilityRepository()
 user_repo = UserRepository()
+events_repo = EventsRepository()
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Helpers
@@ -130,10 +134,10 @@ def get_availability_for_user(ctx: RequestContextDep, req: GetAvailabilityReques
   """
   user = user_repo.get_record(uuid=ctx.user.uuid)
   rules = get_availability_rules_for_user(id=user.id)
-  return calculate_day_availability(req, rules)
+  return calculate_day_availability(ctx, req, rules)
 
 
-def calculate_day_availability(req: GetAvailabilityRequest, rules: AvailabilityRuleDTO) -> GetAvailabilityResponse:
+def calculate_day_availability(ctx: RequestContextDep, req: GetAvailabilityRequest, rules: AvailabilityRuleDTO) -> GetAvailabilityResponse:
   """
   Get availability for days within date range.
 
@@ -143,7 +147,6 @@ def calculate_day_availability(req: GetAvailabilityRequest, rules: AvailabilityR
       GetAvailabilityResponse: Availability for days within date range
   """
 
-  # make sure all rules use the same timezone
   for prev, curr in zip(rules, rules[1:]):
     if prev and prev.iana_timezone != curr.iana_timezone:
       raise RuntimeError("Can't use rules with different timezones")
@@ -157,17 +160,59 @@ def calculate_day_availability(req: GetAvailabilityRequest, rules: AvailabilityR
     rule.start_datetime = rule.start_datetime and rule.start_datetime.replace(tzinfo=timezone.utc).astimezone(ZoneInfo(rule.iana_timezone)) or datetime.min.replace(tzinfo=timezone.utc)
     rule.end_datetime = rule.end_datetime and rule.end_datetime.replace(tzinfo=timezone.utc).astimezone(ZoneInfo(rule.iana_timezone)) or datetime.max.replace(tzinfo=timezone.utc)
 
-  # only handle allowing rules for the min
   allowing_rules = [r for r in rules if not r.prevents_booking]
+
+  AvailabilityDateRange = namedtuple("AvailabilityDateRange", ["start", "end", "blocking"])
+
+  # get events and flatten date ranges
+  # this might be slower that the extra iterations caused by just iterating over the event's ranges without flattening
+  events = events_repo.get_events_by_datetimes(ctx.user.id, request_start, request_end, filter_on_blocking=True)
+  flattened_blocking_ranges: list[AvailabilityDateRange] = []
+  for event in sorted(events, key=lambda event: event.start):
+
+    event.start = event.start.replace(tzinfo=timezone.utc).astimezone(ZoneInfo(event.iana_timezone))
+    event.end = event.end.replace(tzinfo=timezone.utc).astimezone(ZoneInfo(event.iana_timezone))
+    overriding_start = event.start
+    overriding_end = event.end
+
+    asd = overriding_start.strftime("%d/%m/%Y, %H:%M:%S")
+    qwe = overriding_end.strftime("%d/%m/%Y, %H:%M:%S")
+
+    for i, fr in enumerate(flattened_blocking_ranges):
+      if fr and fr.start <= event.start and fr.end >= event.end:
+        # range is eclipsed or equal
+        flattened_blocking_ranges[i] = fr._replace(start=overriding_start)
+        flattened_blocking_ranges[i] = fr._replace(end=overriding_end)
+        break
+      elif fr and fr.start >= event.start and fr.end <= event.end:
+        # range is contained or equal
+        break
+      elif fr and event.start >= fr.start and event.start < fr.end and event.end > fr.end:
+        # start within or at start of range, end after
+        flattened_blocking_ranges[i] = fr._replace(end=overriding_end)
+        break
+      elif fr and event.start < fr.start and event.end > fr.start and event.end <= fr.end:
+        # start before, end within or at end of range
+        flattened_blocking_ranges[i] = fr._replace(start=overriding_start)
+        break
+    else:
+      flattened_blocking_ranges.append(AvailabilityDateRange(start=overriding_start, end=overriding_end, blocking=True))
 
   # this is the list we'll return
   day_availabilitys = []
 
   for rule in allowing_rules:
+
     bounded_rule_start = rule.start_datetime if rule.start_datetime > request_start else request_start
     bounded_rule_end = rule.end_datetime if rule.end_datetime < request_end else request_end
+    bounded_rule_start = bounded_rule_start.replace(tzinfo=timezone.utc).astimezone(ZoneInfo(rule.iana_timezone))
+    bounded_rule_end = bounded_rule_end.replace(tzinfo=timezone.utc).astimezone(ZoneInfo(rule.iana_timezone))
     rule_range_dates = [bounded_rule_start + timedelta(days=i) for i in range((bounded_rule_end - bounded_rule_start).days + 1)]
+
+    # iter over rule dates
     for rule_dt in rule_range_dates:
+
+      # availability description for day
       avail = next((da for da in day_availabilitys if da.date.date() == rule_dt.date()), None)
       if not avail:
         avail = DayAvailability(
@@ -177,8 +222,8 @@ def calculate_day_availability(req: GetAvailabilityRequest, rules: AvailabilityR
             start_time=rule.start_time,
             end_time=rule.end_time
         )
-      if (rule_dt > request_end):
-        break
+
+      # no need for further calcs if date blocked
       if (rule.weekdays and rule_dt.weekday() not in rule.weekdays):
         avail.brief = "None"
         avail.start_time, avail.end_time = None, None
@@ -194,26 +239,46 @@ def calculate_day_availability(req: GetAvailabilityRequest, rules: AvailabilityR
           if rule.end_time and rule.end_time > rule.end_datetime.time():
             avail.brief = "Part Day"
             avail.end_time = rule.end_datetime.time()
+
+      # these ranges are blocked off
+      for blocking_range in flattened_blocking_ranges:
+
+        curr_date = rule_dt.date()
+        br_start_date = blocking_range.start.date()
+        br_end_date = blocking_range.end.date()
+        br_start_time = blocking_range.start.time()
+        br_end_time = blocking_range.end.time()
+
+        asd = overriding_start.strftime("%d/%m/%Y, %H:%M:%S")
+        qwe = overriding_end.strftime("%d/%m/%Y, %H:%M:%S")
+
+        if curr_date == br_start_date:
+          # account for range (event) start and end times not just avail start and end times
+          if avail.start_time and avail.end_time:
+            avail.end_time = avail.end_time if avail.end_time < blocking_range.start.time() else blocking_range.start.time()
+            if avail.start_time < br_start_time:
+              avail.end_time = br_start_time
+              avail.brief = "Part Day"
+            elif avail.start_time >= br_start_time and br_end_time > avail.end_time or avail.end_time < avail.start_time:
+              avail.start_time, avail.end_time = None, None
+              avail.brief = "None"
+
+        elif curr_date == br_end_date:
+          # account for range (event) start and end times not just avail start and end times
+          if avail.start_time and avail.end_time:
+            avail.start_time = avail.start_time if avail.start_time > blocking_range.end.time() else blocking_range.end.time()
+            if avail.end_time > br_end_time:
+              avail.start_time = br_end_time
+              avail.brief = "Part Day"
+            elif avail.end_time <= br_end_time and br_start_time < avail.start_time:
+              avail.start_time, avail.end_time = None, None
+              avail.brief = "None"
+
+        # day falls within blocking range
+        elif curr_date < br_end_date and curr_date > br_start_date:
+          avail.start_time, avail.end_time = None, None
+          avail.brief = "None"
+
       day_availabilitys.append(avail)
 
   return day_availabilitys
-
-
-# NOT USED
-# # flatten rules by date range, ensuring no overlaps.
-# flattened_rules: list[AvailabilityRuleDTO] = []
-# for rule in sorted(allowing_rules, key=lambda rule: rule.start_datetime):
-#   for fr in flattened_rules:
-#     if fr.start_datetime <= rule.start_datetime and fr.end_datetime >= rule.end_datetime:
-#       # rule is eclipsed or equal
-#       break
-#     elif fr.start_datetime > rule.start_datetime and fr.start_datetime < rule.end_datetime and fr.end_datetime > rule.end_datetime:
-#       # rule start before, rule end within range
-#       rule.start_datetime = rule.start_datetime
-#       break
-#     elif fr.start_datetime < rule.start_datetime and fr.end_datetime > rule.start_datetime and fr.end_datetime < rule.end_datetime:
-#       # start within, end after
-#       rule.end_datetime = rule.end_datetime
-#       break
-#   else:
-#     flattened_rules.append(rule)
