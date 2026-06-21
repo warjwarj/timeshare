@@ -4,22 +4,30 @@ Unit tests for availability_service.py.
 All repository interactions are mocked — no database required.
 Run with: cd backend && pytest tests/unit -v
 """
-from datetime import datetime
+from datetime import date, datetime
 
 import pytest
-from uuid import uuid4, UUID
 
-from src.schemas.dtos.user_dto import UserDTO
+from tests.unit.helpers import (
+    USER_UUID,
+    USER_ID,
+    make_user_dto,
+    make_ctx,
+    make_rule_dto,
+    make_allowing_rule,
+    make_event,
+)
+from src.schemas.dtos.day_availability import DayAvailability
 from src.services.availability_service import (
     calculate_day_availability,
     create_availability_rule,
+    get_availability_for_user,
     get_availability_rules_for_user,
     get_availability_rule,
     update_availability_rule,
     delete_availability_rule,
     sanitise_availability_rule,
 )
-from src.schemas.dtos.availability_rule_dto import AvailabilityRuleDTO
 from src.schemas.responses.availability_responses import SafeAvailabilityRuleDTO
 from src.schemas.requests.availability_requests import (
     CreateAvailabilityRuleRequest,
@@ -29,34 +37,9 @@ from src.schemas.requests.availability_requests import (
 
 pytestmark = pytest.mark.unit
 
-USER_UUID = "00000000-0000-0000-0000-000000000000"
-USER_ID = 42
-
 # ---------------------------------------------------------------------------
-# helpers
+# request helpers (DTO factories live in tests/unit/helpers.py)
 # ---------------------------------------------------------------------------
-
-
-def make_user_dto() -> UserDTO:
-  return UserDTO(
-      id=USER_ID,
-      uuid=UUID(USER_UUID),
-      name="Test User",
-      email="test@test.com",
-  )
-
-
-def make_rule_dto() -> AvailabilityRuleDTO:
-  return AvailabilityRuleDTO(
-      id=1,
-      uuid=uuid4(),
-      name="Test Rule",
-      start_datetime=datetime(2026, 2, 28, 0, 0, 0),
-      end_datetime=datetime(2026, 3, 3, 23, 59, 59),
-      user_id=USER_ID,
-      iana_timezone="Europe/London",
-      prevents_booking=False,
-  )
 
 
 def make_create_request() -> CreateAvailabilityRuleRequest:
@@ -74,15 +57,20 @@ def make_update_request() -> UpdateAvailabilityRuleRequest:
   )
 
 
-def make_get_availability_request() -> GetAvailabilityRequest:
+def make_get_availability_request(
+    start=datetime(2026, 3, 1, 0, 0, 0),
+    end=datetime(2026, 3, 4, 0, 0, 0),
+) -> GetAvailabilityRequest:
   return GetAvailabilityRequest(
-      user_uuid=USER_UUID,
-      start_datetime=datetime(2026, 3, 1, 23, 59, 59),
-      end_datetime=datetime(2026, 3, 4, 23, 59, 59)
+      iana_timezone="Europe/London",
+      start_datetime=start,
+      end_datetime=end,
   )
-  # ---------------------------------------------------------------------------
-  # create_availability_rule
-  # ---------------------------------------------------------------------------
+
+
+# ---------------------------------------------------------------------------
+# create_availability_rule
+# ---------------------------------------------------------------------------
 
 
 def test_create_rule_returns_safe_dto(mocker):
@@ -170,7 +158,7 @@ def test_update_rule_returns_safe_dto(mocker):
   mock_avail_repo = mocker.patch("src.services.availability_service.availability_repo")
   mock_avail_repo.update_record.return_value = make_rule_dto()
 
-  result = update_availability_rule("some-uuid", make_update_request())
+  result = update_availability_rule(make_ctx(), "some-uuid", make_update_request())
 
   assert isinstance(result, SafeAvailabilityRuleDTO)
 
@@ -183,7 +171,7 @@ def test_delete_rule_returns_safe_dto(mocker):
   mock_avail_repo = mocker.patch("src.services.availability_service.availability_repo")
   mock_avail_repo.delete_record.return_value = make_rule_dto()
 
-  result = delete_availability_rule("some-uuid")
+  result = delete_availability_rule(make_ctx(), "some-uuid")
 
   assert isinstance(result, SafeAvailabilityRuleDTO)
 
@@ -192,7 +180,7 @@ def test_delete_rule_returns_none_when_not_found(mocker):
   mock_avail_repo = mocker.patch("src.services.availability_service.availability_repo")
   mock_avail_repo.delete_record.return_value = None
 
-  result = delete_availability_rule("some-uuid")
+  result = delete_availability_rule(make_ctx(), "some-uuid")
 
   assert result is None
 
@@ -210,51 +198,131 @@ def test_sanitise_rule_strips_user_id_and_id():
   assert not hasattr(result, "id")
 
 
-# ---------------------------------------------
-# calculate availability
-# ---------------------------------------------
+# ---------------------------------------------------------------------------
+# calculate_day_availability
+# ---------------------------------------------------------------------------
 
-def test_calculate_day_availability(mocker):
-  req = make_get_availability_request()
-  dto1 = AvailabilityRuleDTO(
-      id=1,
-      uuid=uuid4(),
-      name="Test Rule1",
-      start_datetime=datetime(2026, 2, 28, 0, 0, 0),
-      end_datetime=datetime(2026, 3, 3, 23, 59, 59),
-      user_id=USER_ID,
-      iana_timezone="Europe/London",
-      prevents_booking=False,
+def test_calculate_single_rule_full_day_when_no_events(mocker):
+  """A rule covering the window with no events => every day is 'Full Day'."""
+  mock_events = mocker.patch("src.services.availability_service.events_repo")
+  mock_events.get_events_by_datetimes.return_value = []
+
+  # Window is Mar 1 -> Mar 4 inclusive (4 days).
+  result = calculate_day_availability(
+      make_ctx(), make_get_availability_request(), [make_allowing_rule()]
   )
-  dto2 = AvailabilityRuleDTO(
-      id=2,
-      uuid=uuid4(),
-      name="Test Rule2",
-      start_datetime=datetime(2026, 2, 28, 0, 0, 0),
-      end_datetime=datetime(2026, 3, 3, 23, 59, 59),
-      user_id=USER_ID,
-      iana_timezone="Europe/London",
-      prevents_booking=False,
+
+  assert len(result) == 4
+  assert all(isinstance(da, DayAvailability) for da in result)
+  assert all(da.brief == "Full Day" for da in result)
+
+
+def test_calculate_weekday_restriction_blocks_non_matching_days(mocker):
+  """Days whose weekday is not in rule.weekdays are marked 'None'."""
+  mock_events = mocker.patch("src.services.availability_service.events_repo")
+  mock_events.get_events_by_datetimes.return_value = []
+
+  # 2026-03-01 is a Sunday (weekday 6); restrict the rule to Mon-Fri.
+  rule = make_allowing_rule(weekdays=[0, 1, 2, 3, 4])
+  result = calculate_day_availability(
+      make_ctx(), make_get_availability_request(), [rule]
   )
-  dto3 = AvailabilityRuleDTO(
-      id=3,
-      uuid=uuid4(),
-      name="Test Rule3",
-      start_datetime=datetime(2026, 3, 6, 0, 0, 0),
-      end_datetime=datetime(2026, 3, 20, 23, 59, 59),
-      user_id=USER_ID,
-      iana_timezone="Europe/London",
-      prevents_booking=False,
+
+  by_date = {da.date.date(): da for da in result}
+  sunday = by_date[date(2026, 3, 1)]
+  assert sunday.brief == "None"
+  assert sunday.start_time is None and sunday.end_time is None
+
+  monday = by_date[date(2026, 3, 2)]
+  assert monday.brief == "Full Day"
+
+
+def test_calculate_blocking_event_makes_day_unavailable(mocker):
+  """A day falling fully inside a blocking event range is marked 'None'."""
+  mock_events = mocker.patch("src.services.availability_service.events_repo")
+  # Event spans Mar 2 00:00 -> Mar 4 00:00, so Mar 3 is strictly inside it.
+  mock_events.get_events_by_datetimes.return_value = [
+      make_event(datetime(2026, 3, 2, 0, 0, 0), datetime(2026, 3, 4, 0, 0, 0))
+  ]
+
+  result = calculate_day_availability(
+      make_ctx(), make_get_availability_request(), [make_allowing_rule()]
   )
-  dto4 = AvailabilityRuleDTO(
-      id=3,
-      uuid=uuid4(),
-      name="Test Rule4",
-      start_datetime=datetime(2026, 3, 15, 0, 0, 0),
-      end_datetime=datetime(2026, 3, 25, 23, 59, 59),
-      user_id=USER_ID,
-      iana_timezone="Europe/London",
-      prevents_booking=False,
+
+  by_date = {da.date.date(): da for da in result}
+  assert by_date[date(2026, 3, 3)].brief == "None"
+  assert by_date[date(2026, 3, 3)].start_time is None
+  assert by_date[date(2026, 3, 3)].end_time is None
+
+
+def test_calculate_events_queried_with_user_db_id(mocker):
+  """Events are fetched using the context user's DB id."""
+  mock_events = mocker.patch("src.services.availability_service.events_repo")
+  mock_events.get_events_by_datetimes.return_value = []
+
+  calculate_day_availability(
+      make_ctx(), make_get_availability_request(), [make_allowing_rule()]
   )
-  res = calculate_day_availability(req, [dto1, dto2, dto3, dto4])
-  assert True
+
+  args, _ = mock_events.get_events_by_datetimes.call_args
+  assert args[0] == USER_ID
+
+
+def test_calculate_mismatched_timezones_raises(mocker):
+  """Rules with differing timezones are rejected."""
+  mocker.patch("src.services.availability_service.events_repo")
+
+  rule1 = make_allowing_rule(iana_timezone="Europe/London")
+  rule2 = make_allowing_rule(iana_timezone="America/New_York")
+
+  with pytest.raises(RuntimeError):
+    calculate_day_availability(
+        make_ctx(), make_get_availability_request(), [rule1, rule2]
+    )
+
+
+def test_calculate_no_rules_returns_empty(mocker):
+  mock_events = mocker.patch("src.services.availability_service.events_repo")
+  mock_events.get_events_by_datetimes.return_value = []
+
+  result = calculate_day_availability(
+      make_ctx(), make_get_availability_request(), []
+  )
+
+  assert result == []
+
+
+# ---------------------------------------------------------------------------
+# get_availability_for_user
+# ---------------------------------------------------------------------------
+
+def test_get_availability_for_user_returns_day_list(mocker):
+  mock_user_repo = mocker.patch("src.services.availability_service.user_repo")
+  mock_user_repo.get_record.return_value = make_user_dto()
+
+  mock_avail_repo = mocker.patch("src.services.availability_service.availability_repo")
+  mock_avail_repo.get_multiple_records.return_value = [make_allowing_rule()]
+
+  mock_events = mocker.patch("src.services.availability_service.events_repo")
+  mock_events.get_events_by_datetimes.return_value = []
+
+  result = get_availability_for_user(make_ctx(), make_get_availability_request())
+
+  assert isinstance(result, list)
+  assert len(result) == 4
+  assert all(isinstance(da, DayAvailability) for da in result)
+
+
+def test_get_availability_for_user_no_rules_returns_empty(mocker):
+  mock_user_repo = mocker.patch("src.services.availability_service.user_repo")
+  mock_user_repo.get_record.return_value = make_user_dto()
+
+  mock_avail_repo = mocker.patch("src.services.availability_service.availability_repo")
+  mock_avail_repo.get_multiple_records.return_value = None
+
+  mock_events = mocker.patch("src.services.availability_service.events_repo")
+  mock_events.get_events_by_datetimes.return_value = []
+
+  result = get_availability_for_user(make_ctx(), make_get_availability_request())
+
+  assert result == []

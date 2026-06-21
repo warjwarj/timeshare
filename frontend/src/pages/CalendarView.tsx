@@ -3,18 +3,21 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { TZDate } from "@date-fns/tz";
 import { Calendar, Settings } from 'lucide-react';
 import type { DayGridStyle } from '../components/calendar/DayGrid.tsx';
-import { DayGrid } from '../components/calendar/DayGrid.tsx';
+import DayGrid from '../components/calendar/DayGrid.tsx';
 import type { EventBarStyle } from '../components/calendar/EventBar.tsx';
-import type { GridStyle } from '../components/calendar/MonthGrid.tsx';
-import { MonthGrid } from '../components/calendar/MonthGrid.tsx';
+import type { MonthGridStyle } from '../components/calendar/MonthGrid.tsx';
+import MonthGrid from '../components/calendar/MonthGrid.tsx';
 import { YearGrid } from '../components/calendar/YearGrid.tsx';
 import { DateSelector } from '../components/utils/DateSelector.tsx';
 import GenericDropdown from '../components/utils/GenericDropdown.tsx';
 import { ViewBody } from '../components/ViewBody.tsx';
 import { ViewHeader } from '../components/ViewHeader.tsx';
 import { ourUseDispatch, ourUseSelector } from '../store/hooks.ts';
-import { selectCurrentDatetimeAsTzDate, selectSelectedDateAsTzDate, selectSelectedIsPhone, selectSelectedMonthAsTzDate, setSelectedMonth } from '../store/slices/appSlice.ts';
+import { selectCurrentDatetimeAsTzDate, selectSelectedDateAsTzDate, selectSelectedIanaTimezone, selectSelectedIsPhone, selectSelectedMonthAsTzDate, setSelectedMonth } from '../store/slices/appSlice.ts';
+import { getDayAvailabilitys } from '../store/slices/availabilitySlice.ts';
+import { deleteEvent, updateEvent } from '../store/slices/eventsSlice.ts';
 import { TimeSpanEnum, WeekDayEnum } from "../types/dateTypes.ts";
+import type { ProcessedEventDTO } from '../types/EventDTO.ts';
 import { getDayGridConfig, type DayGridConfig } from '../utils/dayGridUtils.ts';
 import { getMonthGridConfig, type MonthGridConfig } from '../utils/monthGridUtils.ts';
 import { isValidDate } from '../utils/utils.ts';
@@ -44,7 +47,7 @@ const dayGridEventStyle: EventBarStyle = {
 };
 
 // month grid style
-const monthGridStyle: GridStyle = {
+const monthGridStyle: MonthGridStyle = {
   eventStyle: monthGridEventStyle,
   cellStyle: {
     heightStyle: "150px",
@@ -57,13 +60,14 @@ const dayGridStyle: DayGridStyle = {
   eventStyle: dayGridEventStyle,
 }
 
-const CalendarView: React.FC = () => {
+export default function CalendarView() {
   const dispatch = ourUseDispatch();
 
   // selectors
   const currentDate = ourUseSelector(selectCurrentDatetimeAsTzDate);
   const selectedDate = ourUseSelector(selectSelectedDateAsTzDate);
   const selectedMonth = ourUseSelector(selectSelectedMonthAsTzDate);
+  const selectedTz = ourUseSelector(selectSelectedIanaTimezone);
   const isPhone = ourUseSelector(selectSelectedIsPhone);
 
   // state
@@ -181,6 +185,31 @@ const CalendarView: React.FC = () => {
     )
   }
 
+  const getPrevAndNextMonthRangeDatesIsoStrings = (startDate: TZDate, endDate: TZDate) => {
+    const tz = startDate.timeZone;
+    const startDateISO = new TZDate(startDate.getFullYear(), startDate.getMonth() - 1, startDate.getDate(), tz).toISOString();
+    const endDateISO = new TZDate(endDate.getFullYear(), endDate.getMonth() + 1, endDate.getDate(), tz).toISOString();
+    return { tz, start: startDateISO, end: endDateISO }
+  }
+
+  const recalcDayAvailabilities = () => {
+    if (!monthGridConfig?.startDate || !monthGridConfig?.endDate) return
+    const { start, end } = getPrevAndNextMonthRangeDatesIsoStrings(monthGridConfig?.startDate, monthGridConfig?.endDate);
+    dispatch(getDayAvailabilitys({ iana_timezone: selectedTz, start_datetime: start, end_datetime: end }));
+  }
+
+  const updateEventCallback = async (ev: ProcessedEventDTO) => {
+    if (!monthGridConfig?.startDate || !monthGridConfig?.endDate) return
+    await dispatch(updateEvent(ev))
+    recalcDayAvailabilities();
+  }
+
+  const deleteEventCallback = async (uuid: string) => {
+    if (!monthGridConfig?.startDate || !monthGridConfig?.endDate) return
+    await dispatch(deleteEvent(uuid))
+    recalcDayAvailabilities();
+  }
+
   return (
     <ViewBody id={"CalendarView"}>
       <ViewHeader>
@@ -214,6 +243,8 @@ const CalendarView: React.FC = () => {
               gridStyle={monthGridStyle}
               gridConfig={monthGridConfig}
               colHeaders={weekdayNames.map(x => x.substring(0, 3))}
+              updateEventCallback={updateEventCallback}
+              deleteEventCallback={deleteEventCallback}
             />
           </div>
         )}
@@ -222,6 +253,8 @@ const CalendarView: React.FC = () => {
             <DayGrid
               gridStyle={dayGridStyle}
               gridConfig={dayGridConfig}
+              updateEventCallback={updateEventCallback}
+              deleteEventCallback={deleteEventCallback}
             />
           </div>
         )}
@@ -229,6 +262,3 @@ const CalendarView: React.FC = () => {
     </ViewBody>
   );
 }
-
-export { CalendarView };
-

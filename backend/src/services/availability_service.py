@@ -175,9 +175,6 @@ def calculate_day_availability(ctx: RequestContextDep, req: GetAvailabilityReque
     overriding_start = event.start
     overriding_end = event.end
 
-    asd = overriding_start.strftime("%d/%m/%Y, %H:%M:%S")
-    qwe = overriding_end.strftime("%d/%m/%Y, %H:%M:%S")
-
     for i, fr in enumerate(flattened_blocking_ranges):
       if fr and fr.start <= event.start and fr.end >= event.end:
         # range is eclipsed or equal
@@ -249,14 +246,11 @@ def calculate_day_availability(ctx: RequestContextDep, req: GetAvailabilityReque
         br_start_time = blocking_range.start.time()
         br_end_time = blocking_range.end.time()
 
-        asd = overriding_start.strftime("%d/%m/%Y, %H:%M:%S")
-        qwe = overriding_end.strftime("%d/%m/%Y, %H:%M:%S")
-
         if curr_date == br_start_date:
           # account for range (event) start and end times not just avail start and end times
           if avail.start_time and avail.end_time:
-            avail.end_time = avail.end_time if avail.end_time < blocking_range.start.time() else blocking_range.start.time()
-            if avail.start_time < br_start_time:
+            # avail.end_time = avail.end_time if avail.end_time < blocking_range.start.time() else blocking_range.start.time()
+            if avail.start_time < br_start_time and avail.end_time > br_start_time:
               avail.end_time = br_start_time
               avail.brief = "Part Day"
             elif avail.start_time >= br_start_time and br_end_time > avail.end_time or avail.end_time < avail.start_time:
@@ -266,8 +260,8 @@ def calculate_day_availability(ctx: RequestContextDep, req: GetAvailabilityReque
         elif curr_date == br_end_date:
           # account for range (event) start and end times not just avail start and end times
           if avail.start_time and avail.end_time:
-            avail.start_time = avail.start_time if avail.start_time > blocking_range.end.time() else blocking_range.end.time()
-            if avail.end_time > br_end_time:
+            # avail.start_time = avail.start_time if avail.start_time > blocking_range.end.time() else blocking_range.end.time()
+            if avail.start_time < br_end_time and avail.end_time > br_end_time:
               avail.start_time = br_end_time
               avail.brief = "Part Day"
             elif avail.end_time <= br_end_time and br_start_time < avail.start_time:

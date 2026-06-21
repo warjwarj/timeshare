@@ -40,6 +40,7 @@ def make_event_payload(name="Test Event", offset_hours=1) -> dict:
       "iana_timezone": "Europe/London",
       "start": (now + timedelta(hours=offset_hours)).isoformat(),
       "end": (now + timedelta(hours=offset_hours + 1)).isoformat(),
+      "blocking": True
   }
 
 
@@ -232,6 +233,7 @@ def test_update_event_success(http_client):
       "colour": "#FF5733",
       "start": (now + timedelta(hours=1)).isoformat(),
       "end": (now + timedelta(hours=2)).isoformat(),
+      "blocking": True
   }
   resp = http_client.put(f"/events/{uuid}", headers=AUTH_HEADERS, json=payload)
   assert resp.status_code == 200

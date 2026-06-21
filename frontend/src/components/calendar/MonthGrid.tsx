@@ -1,7 +1,7 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ourUseDispatch, ourUseSelector } from '../../store/hooks';
 import { selectCurrentDatetimeAsTzDate, selectSelectedDateAsTzDate, selectSelectedIanaTimezone, selectSelectedMonthAsTzDate, setSelectedMonth } from '../../store/slices/appSlice';
-import { addEvent, deleteEvent, getEvents, makeEventSelectors, updateEvent } from '../../store/slices/eventsSlice';
+import { addEvent, getEvents, makeEventSelectors } from '../../store/slices/eventsSlice';
 import type { MonthGridConfig } from "../../utils/monthGridUtils";
 import { setEventPositions } from "../../utils/monthGridUtils";
 import { getDateFromCellIndex, isSameDay, isValidDate, toDateNum } from "../../utils/utils";
@@ -11,26 +11,30 @@ import type { EventBarProps, EventBarStyle } from "./EventBar";
 import { EventBar } from './EventBar';
 
 import { TZDate } from "@date-fns/tz";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import '../../../index.css';
 import { getDayAvailabilitys, makeDayAvailabilitySelectors } from "../../store/slices/availabilitySlice";
 import { TimeSpanEnum } from "../../types/dateTypes";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import type { ProcessedEventDTO } from "../../types/EventDTO";
 
-type MonthGridStyle = {
+export type MonthGridStyle = {
   eventStyle: EventBarStyle;
   cellStyle: CellStyle;
   colCount: number;
 }
 
-type MonthGridProps = {
+export type MonthGridProps = {
   gridStyle: MonthGridStyle;
   gridConfig: MonthGridConfig;
   colHeaders: string[];
+  updateEventCallback: (ev: ProcessedEventDTO) => void;
+  deleteEventCallback: (uuid: string) => void;
 };
 
-const MonthGrid: React.FC<MonthGridProps> = ({ gridStyle, gridConfig, colHeaders }) => {
-  const { startDate, endDate, cellCount, gridLabel } = gridConfig;
-  const { colCount, eventStyle, cellStyle } = gridStyle;
+export default function MonthGrid(props: MonthGridProps) {
+  const { updateEventCallback, deleteEventCallback, colHeaders } = props
+  const { startDate, endDate, cellCount, gridLabel, } = props.gridConfig;
+  const { colCount, eventStyle, cellStyle } = props.gridStyle;
   const dispatch = ourUseDispatch();
 
   // common selectors
@@ -60,15 +64,12 @@ const MonthGrid: React.FC<MonthGridProps> = ({ gridStyle, gridConfig, colHeaders
   // fetch events and availability when date range changes
   useEffect(() => {
     const { start, end } = getGridStartEnd();
-
     const timeoutId1 = setTimeout(() => {
       dispatch(getEvents({ start, end }));
     }, 300);
-
     const timeoutId2 = setTimeout(() => {
       dispatch(getDayAvailabilitys({ iana_timezone: selectedTz, start_datetime: start, end_datetime: end }));
     }, 300);
-
     return () => {
       clearTimeout(timeoutId1);
       clearTimeout(timeoutId2);
@@ -211,12 +212,8 @@ const MonthGrid: React.FC<MonthGridProps> = ({ gridStyle, gridConfig, colHeaders
                   <EventBar
                     key={evp.key}
                     eventProps={evp}
-                    updateEvent={async (ev) => {
-                      await dispatch(updateEvent(ev))
-                      const { start, end } = getGridStartEnd();
-                      dispatch(getDayAvailabilitys({ iana_timezone: selectedTz, start_datetime: start, end_datetime: end }));
-                    }}
-                    deleteEvent={(uuid) => dispatch(deleteEvent(uuid))}
+                    updateEvent={updateEventCallback}
+                    deleteEvent={deleteEventCallback}
                   />
                 ))}
               </div>
@@ -227,7 +224,3 @@ const MonthGrid: React.FC<MonthGridProps> = ({ gridStyle, gridConfig, colHeaders
     </div>
   );
 };
-
-export { MonthGrid };
-export type { MonthGridProps as GridProps, MonthGridStyle as GridStyle };
-

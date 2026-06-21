@@ -3,7 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { NotFound } from './pages/NotFound'
 import { LoginForm } from './pages/Login';
 import { RegisterForm } from './pages/Register';
-import { CalendarView } from './pages/CalendarView';
+import CalendarView from './pages/CalendarView';
 import { Settings } from './pages/Settings';
 
 import { Navbar } from './components/Navbar';

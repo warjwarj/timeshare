@@ -6,8 +6,8 @@ Run with: cd backend && pytest tests/unit -v
 """
 import pytest
 from datetime import datetime, timedelta, timezone
-from uuid import uuid4
 
+from tests.unit.helpers import make_ctx, make_event_dto
 from src.services.events_service import (
     create_event,
     update_event,
@@ -15,7 +15,6 @@ from src.services.events_service import (
     get_all_events,
     sanitiseEvent,
 )
-from src.schemas.dtos.event_dto import EventDTO
 from src.schemas.responses.events_responses import SafeEventDTO
 from src.schemas.requests.event_requests import (
     CreateEventRequest,
@@ -23,19 +22,6 @@ from src.schemas.requests.event_requests import (
 )
 
 pytestmark = pytest.mark.unit
-
-
-def make_event_dto() -> EventDTO:
-  now = datetime.now(timezone.utc)
-  return EventDTO(
-      id=1,
-      uuid=uuid4(),
-      start=now,
-      end=now + timedelta(hours=1),
-      iana_timezone="Europe/London",
-      name="Test Event",
-      colour="#4A90E2",
-  )
 
 
 def make_create_request() -> CreateEventRequest:
@@ -46,6 +32,7 @@ def make_create_request() -> CreateEventRequest:
       iana_timezone="Europe/London",
       start=now,
       end=now + timedelta(hours=1),
+      blocking=True,
   )
 
 
@@ -56,6 +43,7 @@ def make_update_request() -> UpdateEventRequest:
       colour="#4A90E2",
       start=now,
       end=now + timedelta(hours=1),
+      blocking=True,
   )
 
 
@@ -89,8 +77,10 @@ def test_create_event_repo_none_returns_none(mocker):
 def test_update_event_returns_safe_dto(mocker):
   mock_repo = mocker.patch("src.services.events_service.events_repo")
   mock_repo.update_record.return_value = make_event_dto()
+  mock_repo = mocker.patch("src.services.events_service.user_event_repo")
+  mock_repo.get_multiple_records.return_value = [make_user_eventa()]
 
-  result = update_event("some-uuid", make_update_request())
+  result = update_event(make_ctx(), "some-uuid", make_update_request())
 
   assert isinstance(result, SafeEventDTO)
 
@@ -99,7 +89,7 @@ def test_update_event_repo_none_returns_none(mocker):
   mock_repo = mocker.patch("src.services.events_service.events_repo")
   mock_repo.update_record.return_value = None
 
-  result = update_event("some-uuid", make_update_request())
+  result = update_event(make_ctx(), "some-uuid", make_update_request())
 
   assert result is None
 
