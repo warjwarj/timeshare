@@ -241,6 +241,7 @@ def calculate_day_availability(ctx: RequestContextDep, req: GetAvailabilityReque
       for blocking_range in flattened_blocking_ranges:
 
         curr_date = rule_dt.date()
+
         br_start_date = blocking_range.start.date()
         br_end_date = blocking_range.end.date()
         br_start_time = blocking_range.start.time()
@@ -249,22 +250,24 @@ def calculate_day_availability(ctx: RequestContextDep, req: GetAvailabilityReque
         if curr_date == br_start_date:
           # account for range (event) start and end times not just avail start and end times
           if avail.start_time and avail.end_time:
-            # avail.end_time = avail.end_time if avail.end_time < blocking_range.start.time() else blocking_range.start.time()
+            avail_start_dt = datetime.combine(curr_date, avail.start_time).replace(tzinfo=timezone.utc).astimezone(ZoneInfo(rule.iana_timezone))
+            avail_end_dt = datetime.combine(curr_date, avail.end_time).replace(tzinfo=timezone.utc).astimezone(ZoneInfo(rule.iana_timezone))
             if avail.start_time < br_start_time and avail.end_time > br_start_time:
               avail.end_time = br_start_time
               avail.brief = "Part Day"
-            elif avail.start_time >= br_start_time and br_end_time > avail.end_time or avail.end_time < avail.start_time:
+            elif blocking_range.start < avail_start_dt and blocking_range.end > avail_end_dt:
               avail.start_time, avail.end_time = None, None
               avail.brief = "None"
 
         elif curr_date == br_end_date:
           # account for range (event) start and end times not just avail start and end times
           if avail.start_time and avail.end_time:
-            # avail.start_time = avail.start_time if avail.start_time > blocking_range.end.time() else blocking_range.end.time()
+            avail_start_dt = datetime.combine(curr_date, avail.start_time).replace(tzinfo=timezone.utc).astimezone(ZoneInfo(rule.iana_timezone))
+            avail_end_dt = datetime.combine(curr_date, avail.end_time).replace(tzinfo=timezone.utc).astimezone(ZoneInfo(rule.iana_timezone))
             if avail.start_time < br_end_time and avail.end_time > br_end_time:
               avail.start_time = br_end_time
               avail.brief = "Part Day"
-            elif avail.end_time <= br_end_time and br_start_time < avail.start_time:
+            elif blocking_range.end > avail_end_dt and blocking_range.start < avail_start_dt:
               avail.start_time, avail.end_time = None, None
               avail.brief = "None"
 
