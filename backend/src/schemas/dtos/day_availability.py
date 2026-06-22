@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime, time
-from typing import Literal
+from typing import List, Literal, Tuple
 
 
 @dataclass
@@ -14,3 +14,4 @@ class DayAvailability():
   brief: Literal["Full Day", "Part Day", "None"]
   start_time: time
   end_time: time
+  blocked_segments: List[Tuple[time, time]]

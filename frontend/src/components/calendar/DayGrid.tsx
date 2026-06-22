@@ -84,6 +84,15 @@ export default function DayGrid(props: DayGridProps) {
     const slotMins = parseTimeToMinutes(label);
     const dayStartTimeMins = parseTimeToMinutes(availForDate?.start_time);
     const dayEndTimeMins = parseTimeToMinutes(availForDate?.end_time);
+
+    for (const [start, end] of availForDate.blocked_segments) {
+      const segStart = parseTimeToMinutes(start);
+      const segEnd = parseTimeToMinutes(end);
+      if (slotMins > (segStart - 60) && slotMins <= (segEnd - 60)) {
+        return "bg-red-200 dark:bg-red-900 text-red-900 dark:text-red-100";
+      }
+    }
+
     if (slotMins === -1 || dayStartTimeMins === -1 || dayEndTimeMins === -1) {
       return "";
     } else if (slotMins > (dayStartTimeMins - 60) && slotMins < dayStartTimeMins || slotMins > (dayEndTimeMins - 60) && slotMins < dayEndTimeMins) {
