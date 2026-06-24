@@ -268,8 +268,6 @@ def calculate_day_availability(ctx: RequestContextDep, req: GetAvailabilityReque
 
         elif curr_date == br_start_date:
           if avail.start_time and avail.end_time:
-            avail_start_dt = datetime.combine(curr_date, avail.start_time).replace(tzinfo=timezone.utc).astimezone(ZoneInfo(rule.iana_timezone))
-            avail_end_dt = datetime.combine(curr_date, avail.end_time).replace(tzinfo=timezone.utc).astimezone(ZoneInfo(rule.iana_timezone))
             if avail.start_time < br_start_time and avail.end_time > br_start_time:
               avail.end_time = br_start_time
               avail.brief = "Part Day"
@@ -279,8 +277,6 @@ def calculate_day_availability(ctx: RequestContextDep, req: GetAvailabilityReque
 
         elif curr_date == br_end_date:
           if avail.start_time and avail.end_time:
-            avail_start_dt = datetime.combine(curr_date, avail.start_time).replace(tzinfo=timezone.utc).astimezone(ZoneInfo(rule.iana_timezone))
-            avail_end_dt = datetime.combine(curr_date, avail.end_time).replace(tzinfo=timezone.utc).astimezone(ZoneInfo(rule.iana_timezone))
             if avail.start_time < br_end_time and avail.end_time > br_end_time:
               avail.start_time = br_end_time
               avail.brief = "Part Day"
