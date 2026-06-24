@@ -15,6 +15,11 @@ import { makeDayAvailabilitySelectors } from "../../store/slices/availabilitySli
 import type { ProcessedDayAvailabilityDTO } from "../../types/DayAvailabilityDTO";
 import type { ProcessedEventDTO } from "../../types/EventDTO";
 
+const greenSlot = "bg-green-200 dark:bg-green-800 text-green-900 dark:text-green-100";
+const yellowSlot = "bg-yellow-200 dark:bg-yellow-900 text-yellow-900 dark:text-yellow-100";
+const redSlot = "bg-red-200 dark:bg-red-900 text-red-900 dark:text-red-100";
+
+
 export type DayGridStyle = {
   eventStyle: EventBarStyle;
 }
@@ -79,7 +84,7 @@ export default function DayGrid(props: DayGridProps) {
 
   const getSlotColourFromTimeLabel = (availForDate: ProcessedDayAvailabilityDTO | undefined, label: string): string => {
     if (!availForDate?.start_time || !availForDate.end_time) {
-      return "bg-red-200 dark:bg-red-900 text-red-900 dark:text-red-100";
+      return redSlot;
     }
     const slotMins = parseTimeToMinutes(label);
     const dayStartTimeMins = parseTimeToMinutes(availForDate?.start_time);
@@ -89,18 +94,18 @@ export default function DayGrid(props: DayGridProps) {
       const segStart = parseTimeToMinutes(start);
       const segEnd = parseTimeToMinutes(end);
       if (slotMins > (segStart - 60) && slotMins <= (segEnd - 60)) {
-        return "bg-red-200 dark:bg-red-900 text-red-900 dark:text-red-100";
+        return redSlot;
       }
     }
 
     if (slotMins === -1 || dayStartTimeMins === -1 || dayEndTimeMins === -1) {
       return "";
     } else if (slotMins > (dayStartTimeMins - 60) && slotMins < dayStartTimeMins || slotMins > (dayEndTimeMins - 60) && slotMins < dayEndTimeMins) {
-      return "bg-yellow-200 dark:bg-yellow-900 text-yellow-900 dark:text-yellow-100";
+      return yellowSlot;
     } else if (slotMins < dayStartTimeMins || slotMins >= dayEndTimeMins) {
-      return "bg-red-200 dark:bg-red-900 text-red-900 dark:text-red-100";
+      return redSlot;
     } else if (slotMins >= dayStartTimeMins && slotMins <= dayEndTimeMins) {
-      return "bg-green-200 dark:bg-green-800 text-green-900 dark:text-green-100";
+      return greenSlot;
     }
     return "";
   }

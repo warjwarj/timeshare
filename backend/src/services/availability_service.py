@@ -273,7 +273,7 @@ def calculate_day_availability(ctx: RequestContextDep, req: GetAvailabilityReque
             if avail.start_time < br_start_time and avail.end_time > br_start_time:
               avail.end_time = br_start_time
               avail.brief = "Part Day"
-            elif blocking_range.start < avail_start_dt and br_start_date > avail_end_dt:
+            elif br_start_time < avail.start_time and br_end_date > br_start_date:
               avail.start_time, avail.end_time = None, None
               avail.brief = "None"
 
@@ -284,7 +284,7 @@ def calculate_day_availability(ctx: RequestContextDep, req: GetAvailabilityReque
             if avail.start_time < br_end_time and avail.end_time > br_end_time:
               avail.start_time = br_end_time
               avail.brief = "Part Day"
-            elif blocking_range.end > avail_end_dt and br_start_date < avail_start_dt:
+            elif avail.end_time > avail.end_time and br_end_date > br_start_date:
               avail.start_time, avail.end_time = None, None
               avail.brief = "None"
 
