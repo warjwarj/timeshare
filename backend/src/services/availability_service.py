@@ -7,7 +7,7 @@ from zoneinfo import ZoneInfo
 
 from src.schemas.dtos.event_dto import EventDTO
 from src.repositories.events_repository import EventsRepository
-from src.dependancies.auth import RequestContextDep
+from src.dependancies.auth import RequestCtxDep
 from src.schemas.dtos.day_availability import DayAvailability
 from src.repositories.users_repository import UserRepository
 from src.repositories.availability_repository import AvailabilityRepository
@@ -93,7 +93,7 @@ def get_availability_rule(rule_uuid: str) -> SafeAvailabilityRuleDTO | None:
   return sanitise_availability_rule(rule) if rule else None
 
 
-def update_availability_rule(ctx: RequestContextDep, rule_uuid: str, rule: UpdateAvailabilityRuleRequest) -> SafeAvailabilityRuleDTO | None:
+def update_availability_rule(ctx: RequestCtxDep, rule_uuid: str, rule: UpdateAvailabilityRuleRequest) -> SafeAvailabilityRuleDTO | None:
   """
   Update availability rule by uuid
 
@@ -108,7 +108,7 @@ def update_availability_rule(ctx: RequestContextDep, rule_uuid: str, rule: Updat
   return sanitise_availability_rule(rec) if rec else None
 
 
-def delete_availability_rule(ctx: RequestContextDep, rule_uuid: str) -> SafeAvailabilityRuleDTO | None:
+def delete_availability_rule(ctx: RequestCtxDep, rule_uuid: str) -> SafeAvailabilityRuleDTO | None:
   """
   Delete an avaiability rule
 
@@ -122,7 +122,7 @@ def delete_availability_rule(ctx: RequestContextDep, rule_uuid: str) -> SafeAvai
   return sanitise_availability_rule(rec) if rec else None
 
 
-def get_availability_for_user(ctx: RequestContextDep, req: GetAvailabilityRequest) -> GetAvailabilityResponse | None:
+def get_availability_for_user(ctx: RequestCtxDep, req: GetAvailabilityRequest) -> GetAvailabilityResponse | None:
   """
   Get availability for the given user within the date range
 
@@ -137,7 +137,7 @@ def get_availability_for_user(ctx: RequestContextDep, req: GetAvailabilityReques
   return calculate_day_availability(ctx, req, rules)
 
 
-def calculate_day_availability(ctx: RequestContextDep, req: GetAvailabilityRequest, rules: AvailabilityRuleDTO) -> GetAvailabilityResponse:
+def calculate_day_availability(ctx: RequestCtxDep, req: GetAvailabilityRequest, rules: AvailabilityRuleDTO) -> GetAvailabilityResponse:
   """
   Get availability for days within date range.
 
@@ -247,6 +247,7 @@ def calculate_day_availability(ctx: RequestContextDep, req: GetAvailabilityReque
         br_start_time = blocking_range.start.time()
         br_end_time = blocking_range.end.time()
 
+        # events spanning one day
         if curr_date == br_start_date and curr_date == br_end_date:
           if avail.start_time and avail.end_time:
             if br_start_time < avail.start_time and br_end_time < avail.end_time:
@@ -266,6 +267,7 @@ def calculate_day_availability(ctx: RequestContextDep, req: GetAvailabilityReque
               avail.blocked_segments.append((br_start_time, br_end_time))
               avail.brief = "Part Day"
 
+        # end day of a blocking range
         elif curr_date == br_start_date:
           if avail.start_time and avail.end_time:
             if avail.start_time < br_start_time and avail.end_time > br_start_time:
@@ -275,6 +277,7 @@ def calculate_day_availability(ctx: RequestContextDep, req: GetAvailabilityReque
               avail.start_time, avail.end_time = None, None
               avail.brief = "None"
 
+        # start day of a blocking range
         elif curr_date == br_end_date:
           if avail.start_time and avail.end_time:
             if avail.start_time < br_end_time and avail.end_time > br_end_time:
@@ -284,7 +287,7 @@ def calculate_day_availability(ctx: RequestContextDep, req: GetAvailabilityReque
               avail.start_time, avail.end_time = None, None
               avail.brief = "None"
 
-        # day falls within blocking range
+        # within a blocking range
         elif curr_date < br_end_date and curr_date > br_start_date:
           avail.start_time, avail.end_time = None, None
           avail.brief = "None"

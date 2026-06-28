@@ -2,7 +2,7 @@ from fastapi import APIRouter
 import logging
 from http import HTTPStatus
 
-from src.dependancies.auth import RequestContextDep
+from src.dependancies.auth import RequestCtxDep
 from src.services.orgusers_service import search_users
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 
 @orgusers_router.get("/search/{term}", status_code=HTTPStatus.OK)
-async def search(_: RequestContextDep, term: str):
+async def search(_: RequestCtxDep, term: str):
   """
   Get all users matching a name.
   """

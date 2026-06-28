@@ -4,10 +4,10 @@ from sqlalchemy.orm import Mapped, mapped_column
 from src.utils.organisation_user_role import OrganisationUserRole
 from src.schemas.dtos.organisation_user_dto import OrganisationUserDTO
 from src.models import Base
-from src.models.mixins import TimestampMixin
+from src.models.mixins import TimestampMixin, UUIDMixin
 
 
-class OrganisationUserModel(Base, TimestampMixin):
+class OrganisationUserModel(Base, TimestampMixin, UUIDMixin):
   """
   Junction table for many-to-many relationship between organisations and users.
 

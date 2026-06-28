@@ -1,15 +1,14 @@
 from http import HTTPStatus
 from typing import Annotated
-from fastapi import Depends, HTTPException, Header
+from uuid import UUID
+from fastapi import Depends, HTTPException, Header, Query
 
-import jwt
 
 from src.repositories.organisation_repository import OrganisationRepository
 from src.repositories.organisation_user_repository import OrganisationUserRepository
 from src.repositories.users_repository import UserRepository
 from src.schemas.dtos.request_context import RequestContext
 from src.services.auth_service import decode_token
-from src.schemas.dtos.jwt_payload import JwtPayload
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Module vars
@@ -63,4 +62,43 @@ def get_request_context(
   )
 
 
-RequestContextDep = Annotated[RequestContext, Depends(get_request_context)]
+RequestCtxDep = Annotated[RequestContext, Depends(get_request_context)]
+
+
+def get_request_target_context(
+    org_user_uuid: Annotated[UUID, None, Query(alias="target_uuid")] = None
+) -> RequestTargetCtxDep:
+  """
+  Dependancy for reading request context the query parameters.
+  Get the org user, org and user records.
+  """
+  if org_user_uuid is None:
+    return None
+
+  # get user, org, org user
+  org_user = org_users_repo.get_record(uuid=org_user_uuid)
+  if not org_user:
+    raise HTTPException(
+        status_code=HTTPStatus.UNAUTHORIZED,
+        detail="Could not find organisation user association."
+    )
+  user = users_repo.get_record(id=org_user.user_id)
+  if not user:
+    raise HTTPException(
+        status_code=HTTPStatus.UNAUTHORIZED,
+        detail="Could not find user using given uuid."
+    )
+  org = org_repo.get_record(id=org_user.org_id)
+  if not org:
+    raise HTTPException(
+        status_code=HTTPStatus.UNAUTHORIZED,
+        detail="Could not find organisation using given uuid."
+    )
+  return RequestContext(
+      user,
+      org,
+      org_user
+  )
+
+
+RequestTargetCtxDep = Annotated[RequestContext, Depends(get_request_target_context)]

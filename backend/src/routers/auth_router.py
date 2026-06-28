@@ -4,7 +4,7 @@ from fastapi import APIRouter
 
 from src.services.auth_service import register_orguser, login_user, update_user_account
 from src.schemas.requests.auth_requests import LoginRequest, RegisterRequest, UpdateAccountRequest
-from src.dependancies.auth import RequestContextDep
+from src.dependancies.auth import RequestCtxDep
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Module vars
@@ -39,7 +39,7 @@ async def login(req: LoginRequest):
 
 
 @auth_router.put("/account", status_code=HTTPStatus.OK)
-async def update_account(ctx: RequestContextDep, req: UpdateAccountRequest):
+async def update_account(ctx: RequestCtxDep, req: UpdateAccountRequest):
   """
   Protected route, handle a user account update request
   """

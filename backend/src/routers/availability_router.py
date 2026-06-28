@@ -2,7 +2,7 @@ from fastapi import APIRouter
 import logging
 from http import HTTPStatus
 
-from src.dependancies.auth import RequestContextDep
+from src.dependancies.auth import RequestCtxDep
 from src.services.availability_service import (
     get_availability_for_user,
     get_availability_rules_for_user,
@@ -33,7 +33,7 @@ logger = logging.getLogger(__name__)
 
 
 @availability_router.get("/", status_code=HTTPStatus.OK)
-async def all(ctx: RequestContextDep):
+async def all(ctx: RequestCtxDep):
   """
   Get all availability rules for the user.
   """
@@ -41,7 +41,7 @@ async def all(ctx: RequestContextDep):
 
 
 @availability_router.post("/", status_code=HTTPStatus.CREATED)
-async def create(ctx: RequestContextDep, req: CreateAvailabilityRuleRequest):
+async def create(ctx: RequestCtxDep, req: CreateAvailabilityRuleRequest):
   """
   Create an availability rule.
   """
@@ -49,7 +49,7 @@ async def create(ctx: RequestContextDep, req: CreateAvailabilityRuleRequest):
 
 
 @availability_router.put("/{rule_uuid}", status_code=HTTPStatus.OK)
-async def update(ctx: RequestContextDep, rule_uuid: str, req: UpdateAvailabilityRuleRequest):
+async def update(ctx: RequestCtxDep, rule_uuid: str, req: UpdateAvailabilityRuleRequest):
   """
   Update an availability rule.
   """
@@ -57,7 +57,7 @@ async def update(ctx: RequestContextDep, rule_uuid: str, req: UpdateAvailability
 
 
 @availability_router.delete("/{uuid}", status_code=HTTPStatus.OK)
-async def delete(ctx: RequestContextDep, uuid: str):
+async def delete(ctx: RequestCtxDep, uuid: str):
   """
   Delete an availability rule.
   """
@@ -65,7 +65,7 @@ async def delete(ctx: RequestContextDep, uuid: str):
 
 
 @availability_router.post("/getAvailability", status_code=HTTPStatus.OK)
-async def get_availability(ctx: RequestContextDep, req: GetAvailabilityRequest):
+async def get_availability(ctx: RequestCtxDep, req: GetAvailabilityRequest):
   """
   Get availability for a user, within a set of dates.
   """

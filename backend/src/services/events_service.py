@@ -2,7 +2,7 @@ import logging
 from dataclasses import asdict
 from datetime import datetime
 
-from src.dependancies.auth import RequestContextDep
+from src.dependancies.auth import RequestCtxDep
 from src.repositories.user_event_repository import UserEventRepository
 from src.repositories.events_repository import EventsRepository
 from src.schemas.dtos.event_dto import EventDTO
@@ -68,7 +68,7 @@ def get_all_events(user_id: str, start: datetime, end: datetime) -> list[SafeEve
   return sanitiseEvents(evs) if evs else []
 
 
-def update_event(ctx: RequestContextDep, event_uuid: str, event: UpdateEventRequest) -> SafeEventDTO | None:
+def update_event(ctx: RequestCtxDep, event_uuid: str, event: UpdateEventRequest) -> SafeEventDTO | None:
   """
   Update an event
 
@@ -88,7 +88,7 @@ def update_event(ctx: RequestContextDep, event_uuid: str, event: UpdateEventRequ
   return sanitiseEvent(rec) if rec else None
 
 
-def delete_event(ctx: RequestContextDep, event_uuid: str) -> SafeEventDTO | None:
+def delete_event(ctx: RequestCtxDep, event_uuid: str) -> SafeEventDTO | None:
   """
   Delete an event
   """
